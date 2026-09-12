@@ -3,7 +3,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request, send_from_directory, abort
+from flask import Flask, g, jsonify, request, send_from_directory, abort
 from flask_cors import CORS
 
 load_dotenv()  # loads .env in local dev; no-op on Railway where vars are already set
@@ -20,6 +20,7 @@ from services import achievements
 from services import database as db
 from services import gemini_service
 from services import storage
+from services.auth import require_auth
 from services.storage import IMAGE_DIR
 from utilities.util import initialize_logging, logger
 
@@ -47,6 +48,7 @@ def _ensure_db():
 
 
 @app.errorhandler(400)
+@app.errorhandler(401)
 @app.errorhandler(404)
 @app.errorhandler(413)
 @app.errorhandler(429)
@@ -85,19 +87,22 @@ def get_categories():
 
 
 @app.get("/api/items")
+@require_auth
 def list_items():
-    return jsonify([_item_to_dict(item) for item in db.return_all_items()])
+    return jsonify([_item_to_dict(item) for item in db.return_all_items(g.user_id)])
 
 
 @app.get("/api/items/<int:item_id>")
+@require_auth
 def get_item(item_id):
-    item = db.get_item_by_id(item_id)
+    item = db.get_item_by_id(g.user_id, item_id)
     if item is None:
         abort(404, description="Item not found")
     return jsonify(_item_to_dict(item))
 
 
 @app.post("/api/items/analyze")
+@require_auth
 def analyze_item():
     if "image" not in request.files or request.files["image"].filename == "":
         abort(400, description="An 'image' file is required")
@@ -130,6 +135,7 @@ def _validate_category_fields(category, sub_category, time_period):
 
 
 @app.post("/api/items")
+@require_auth
 def create_item():
     form = request.form
     name = form.get("name")
@@ -159,19 +165,21 @@ def create_item():
         time_period=time_period,
         description=form.get("description"),
         confidence=form.get("confidence", ""),
+        user_id=g.user_id,
     )
     try:
         db.add_item(item)
     finally:
         tmp_image_path.unlink(missing_ok=True)  # add_item copies from this, never deletes it itself
 
-    unlocked = achievements.evaluate_and_unlock()
+    unlocked = achievements.evaluate_and_unlock(g.user_id)
     return jsonify(item=_item_to_dict(item), unlocked=unlocked), 201
 
 
 @app.put("/api/items/<int:item_id>")
+@require_auth
 def update_item(item_id):
-    item = db.get_item_by_id(item_id)
+    item = db.get_item_by_id(g.user_id, item_id)
     if item is None:
         abort(404, description="Item not found")
 
@@ -221,8 +229,9 @@ def update_item(item_id):
 
 
 @app.delete("/api/items/<int:item_id>")
+@require_auth
 def remove_item(item_id):
-    item = db.get_item_by_id(item_id)
+    item = db.get_item_by_id(g.user_id, item_id)
     if item is None:
         abort(404, description="Item not found")
     try:
@@ -237,8 +246,9 @@ def remove_item(item_id):
 
 
 @app.get("/api/achievements")
+@require_auth
 def list_achievements():
-    return jsonify(achievements.get_all_with_progress())
+    return jsonify(achievements.get_all_with_progress(g.user_id))
 
 
 @app.get("/api/images/<path:filename>")

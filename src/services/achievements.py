@@ -12,19 +12,21 @@ end - swap them out for whatever you actually want once you've decided.
 
 from services import database as db
 
+# Every query is scoped to one user via a `user_id = ?` param, so achievements
+# are earned per-account rather than shared across everyone using the app.
 RULE_QUERIES = {
     # Total items logged.
-    "entry_count": "SELECT COUNT(*) FROM items",
+    "entry_count": "SELECT COUNT(*) FROM items WHERE user_id = ?",
     # Items that have a photo attached (every item currently requires one,
     # but this stays useful if that ever becomes optional).
-    "with_photo": "SELECT COUNT(*) FROM items WHERE image_path IS NOT NULL",
+    "with_photo": "SELECT COUNT(*) FROM items WHERE user_id = ? AND image_path IS NOT NULL",
     # How many of the two top-level categories (CULTURAL/NATURAL) appear.
-    "distinct_categories": "SELECT COUNT(DISTINCT category) FROM items",
+    "distinct_categories": "SELECT COUNT(DISTINCT category) FROM items WHERE user_id = ?",
     # How many distinct sub-categories (ART, FOSSIL, etc.) appear.
-    "distinct_sub_categories": "SELECT COUNT(DISTINCT sub_category) FROM items",
+    "distinct_sub_categories": "SELECT COUNT(DISTINCT sub_category) FROM items WHERE user_id = ?",
     # How many distinct time periods (bronze age, jurassic, etc.) appear.
     "distinct_time_periods": (
-        "SELECT COUNT(DISTINCT time_period) FROM items WHERE time_period IS NOT NULL"
+        "SELECT COUNT(DISTINCT time_period) FROM items WHERE user_id = ? AND time_period IS NOT NULL"
     ),
 }
 
@@ -70,14 +72,15 @@ def seed_defaults() -> None:
         db.seed_achievement(**achievement)
 
 
-def evaluate_and_unlock() -> list[dict]:
-    """Check every not-yet-unlocked achievement and unlock any newly earned ones.
+def evaluate_and_unlock(user_id: str) -> list[dict]:
+    """Check every not-yet-unlocked achievement for this user and unlock any
+    newly earned ones.
 
     Call this right after inserting an item. Returns the list of achievements
     unlocked by this call (empty if none) - feed that straight into the API
     response so the frontend can show a toast.
     """
-    already_unlocked = db.get_unlocked_achievement_map()
+    already_unlocked = db.get_unlocked_achievement_map(user_id)
     newly_unlocked = []
 
     for code, name, description, rule_type, threshold, _sort_order in db.get_all_achievements():
@@ -86,22 +89,22 @@ def evaluate_and_unlock() -> list[dict]:
         query = RULE_QUERIES.get(rule_type)
         if query is None:
             continue
-        progress = db.run_count_query(query)
+        progress = db.run_count_query(query, (user_id,))
         if progress >= threshold:
-            db.unlock_achievement(code)
+            db.unlock_achievement(user_id, code)
             newly_unlocked.append({"code": code, "name": name, "description": description})
 
     return newly_unlocked
 
 
-def get_all_with_progress() -> list[dict]:
-    """All achievement definitions, annotated with current progress/unlocked state."""
-    unlocked = db.get_unlocked_achievement_map()
+def get_all_with_progress(user_id: str) -> list[dict]:
+    """All achievement definitions, annotated with this user's progress/unlocked state."""
+    unlocked = db.get_unlocked_achievement_map(user_id)
     results = []
 
     for code, name, description, rule_type, threshold, sort_order in db.get_all_achievements():
         query = RULE_QUERIES.get(rule_type)
-        progress = db.run_count_query(query) if query else 0
+        progress = db.run_count_query(query, (user_id,)) if query else 0
         results.append({
             "code": code,
             "name": name,

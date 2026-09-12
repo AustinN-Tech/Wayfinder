@@ -4,3 +4,4 @@ gunicorn==23.0.0
 google-genai==1.2.0
 Pillow==11.1.0
 python-dotenv==1.0.1
+PyJWT[crypto]==2.9.0
