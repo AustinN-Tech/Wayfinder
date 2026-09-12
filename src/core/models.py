@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 CATEGORIES = [
     "CULTURAL",
@@ -61,7 +62,7 @@ class HeritageItem:
     name: str
     category: str
     sub_category: str
-    image_path: str
+    image_path: Path
     latitude: float | None
     longitude: float | None
     time_period: str
