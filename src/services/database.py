@@ -45,7 +45,7 @@ def db_connection_handling(func):
 
 @error_handling
 @db_connection_handling
-def create_db(conn: sqlite3.Connection) -> None:
+def create_items_db(conn: sqlite3.Connection) -> None:
     with conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS items (
@@ -60,22 +60,6 @@ def create_db(conn: sqlite3.Connection) -> None:
                 time_period TEXT NOT NULL,
                 description TEXT,
                 confidence_score TEXT NOT NULL
-            )
-        """)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS achievements (
-                code TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                description TEXT,
-                rule_type TEXT NOT NULL,
-                threshold INTEGER NOT NULL,
-                sort_order INTEGER NOT NULL DEFAULT 0
-            )
-        """)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS unlocked_achievements (
-                code TEXT PRIMARY KEY REFERENCES achievements(code),
-                unlocked_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
             )
         """)
 
@@ -245,58 +229,62 @@ def full_delete(conn: sqlite3.Connection, item: HeritageItem) -> None:
 
 # --- Achievements ---------------------------------------------------------
 
-ACHIEVEMENT_COLUMNS = "code, name, description, rule_type, threshold, sort_order"
-
-
 @error_handling
 @db_connection_handling
-def seed_achievement(
-    conn: sqlite3.Connection,
-    code: str,
-    name: str,
-    description: str,
-    rule_type: str,
-    threshold: int,
-    sort_order: int = 0,
-) -> None:
-    """Insert an achievement definition if it doesn't already exist (by code)."""
+def create_achievements_db(conn: sqlite3.Connection):
     with conn:
         conn.execute("""
-            INSERT OR IGNORE INTO achievements
-                (code, name, description, rule_type, threshold, sort_order)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (code, name, description, rule_type, threshold, sort_order))
+            CREATE TABLE IF NOT EXISTS achievements (
+                achievement_id INT NOT NULL UNIQUE,
+                code TEXT NOT NULL UNIQUE,
+                name TEXT NOT NULL,
+                description TEXT,
+                category TEXT,
+                rule_type TEXT NOT NULL,
+                threshold INTEGER NOT NULL
+            )
+        """)
 
 
-@error_handling
-@db_connection_handling
-def get_all_achievements(conn: sqlite3.Connection) -> list[tuple]:
-    return conn.execute(
-        f"SELECT {ACHIEVEMENT_COLUMNS} FROM achievements ORDER BY sort_order, code"
-    ).fetchall()
-
-
-@error_handling
-@db_connection_handling
-def get_unlocked_achievement_map(conn: sqlite3.Connection) -> dict[str, int]:
-    """Map of achievement code -> unlocked_at, for everything unlocked so far."""
-    rows = conn.execute("SELECT code, unlocked_at FROM unlocked_achievements").fetchall()
-    return {code: unlocked_at for code, unlocked_at in rows}
-
+# --- Users ---------------------------------------------------------
 
 @error_handling
 @db_connection_handling
-def unlock_achievement(conn: sqlite3.Connection, code: str) -> None:
+def create_user_db(conn: sqlite3.Connection):
     with conn:
-        conn.execute(
-            "INSERT OR IGNORE INTO unlocked_achievements (code) VALUES (?)", (code,)
-        )
-    logger.info("Unlocked achievement: %s", code)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INTEGER NOT NULL UNIQUE,
+                username TEXT NOT NULL UNIQUE,
+                name TEXT NOT NULL,
+                description TEXT,
+                category TEXT,
+                rule_type TEXT NOT NULL,
+                threshold INTEGER NOT NULL
+            )
+        """)
+
+# --- Users achievements: relational table ---------------------------------------------------------
 
 
 @error_handling
 @db_connection_handling
-def run_count_query(conn: sqlite3.Connection, sql: str) -> int:
-    """Run a SELECT COUNT(...)-shaped query with no params and return the scalar result."""
-    row = conn.execute(sql).fetchone()
-    return row[0] if row else 0
+def create_user_achievements_db(conn: sqlite3.Connection):
+    with conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS user_achievements (
+                user_id INTEGER NOT NULL,
+                achievement_id INT NOT NULL,
+                progress INTEGER CHECK (progress BETWEEN 0 AND 100),
+                completed INTEGER CHECK (completed IN (0, 1)),
+                earned_at INTEGER
+
+                PRIMARY KEY (user_id, achievement_id),
+
+                FOREIGN KEY (user_id)
+                    REFERENCES users(user_id),
+
+                FOREIGN KEY (achievement_id)
+                    REFERENCES achievements(achievement_id)
+            )
+        """)
