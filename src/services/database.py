@@ -1,84 +1,176 @@
-import sqlite3
 import functools
 import logging
-from services.storage import SRC_DIR, BASE_DIR
+import sqlite3
+from pathlib import Path
 
+from core.models import HeritageItem
+from services.storage import BASE_DIR, IMAGE_DIR, SRC_DIR
+from utilities.util import error_handling
+
+logger = logging.getLogger(__name__)
 DB_PATH = SRC_DIR / "items.db"
 
+ITEM_COLUMNS = (
+    "id, name, category, sub_category, image_path, latitude, longitude, "
+    "time_taken, time_period, description, confidence_score"
+)
 
-def get_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+UPDATABLE_COLUMNS = {
+    "name": "name",
+    "category": "category",
+    "sub_category": "sub_category",
+    "image_path": "image_path",
+    "latitude": "latitude",
+    "longitude": "longitude",
+    "time_taken": "time_taken",
+    "time_period": "time_period",
+    "description": "description",
+    "confidence": "confidence_score",
+    "confidence_score": "confidence_score",
+}
 
 
-def create_db():
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS items (
-        item_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        category TEXT NOT NULL,
-        sub_category TEXT NOT NULL,
-        image_path TEXT NOT NULL,
-        latitude REAL,
-        longitude REAL,
-        time_taken INTEGER NOT NULL DEFAULT (strftime('%s','now')),
-        time_period TEXT,
-        description TEXT,
-        confidence REAL
+def db_connection_handling(func):
+    """Open a connection for a database operation and always close it."""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            conn.execute("PRAGMA foreign_keys = ON")
+            return func(conn, *args, **kwargs)
+        finally:
+            conn.close()
+    return wrapper
+
+
+@error_handling
+@db_connection_handling
+def create_db(conn: sqlite3.Connection) -> None:
+    with conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                category TEXT NOT NULL,
+                sub_category TEXT NOT NULL,
+                image_path TEXT NOT NULL UNIQUE,
+                latitude REAL,
+                longitude REAL,
+                time_taken INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+                time_period TEXT NOT NULL,
+                description TEXT,
+                confidence_score TEXT NOT NULL
+            )
+        """)
+
+
+def row_to_heritage_item(row) -> HeritageItem:
+    """Convert a row in ITEM_COLUMNS order to a heritage item."""
+    return HeritageItem(
+        id=row[0],
+        name=row[1],
+        category=row[2],
+        sub_category=row[3],
+        image_path=row[4],
+        latitude=row[5],
+        longitude=row[6],
+        time_taken=row[7],
+        time_period=row[8],
+        description=row[9],
+        confidence=row[10],
     )
-    """)
-    conn.commit()
-    conn.close()
 
 
-def insert_item(item):
-    conn = get_connection()
-    cur = conn.execute("""
-        INSERT INTO items (name, category, sub_category, image_path, latitude, longitude, time_period, description, confidence)
-        VALUES (:name, :category, :sub_category, :image_path, :latitude, :longitude, :time_period, :description, :confidence)
-    """, item)
-    conn.commit()
-    item_id = cur.lastrowid
-    conn.close()
-    return item_id
+@error_handling
+@db_connection_handling
+def add_item(conn: sqlite3.Connection, item: HeritageItem) -> None:
+    """Insert an item, then populate its generated ID and capture timestamp."""
+    with conn:
+        c = conn.execute("""
+            INSERT INTO items (
+                name, category, sub_category, image_path, latitude, longitude,
+                 time_period, description, confidence_score
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            item.name, item.category, item.sub_category, str(item.image_path),
+            item.latitude, item.longitude, item.time_period,
+            item.description, item.confidence,
+        ))
+        item_id = c.lastrowid # obtains last inserted id
+        time_taken = conn.execute( # obtain new time from row just inserted
+            "SELECT time_taken FROM items WHERE id = ?", (item_id,)
+        ).fetchone()[0]
+    # update object:
+    item.id = item_id
+    item.time_taken = time_taken
+    logger.info("Added item: %s", item.name)
 
 
-def get_item(item_id):
-    conn = get_connection()
-    row = conn.execute("SELECT * FROM items WHERE item_id = ?", (item_id,)).fetchone()
-    conn.close()
-    return dict(row) if row else None
+@error_handling
+@db_connection_handling
+def delete_item(conn: sqlite3.Connection, item: HeritageItem) -> None:
+    """Delete an item's database row, retaining its image."""
+    with conn:
+        conn.execute("DELETE FROM items WHERE id = ?", (item.id,))
+    logger.info("Deleted item from db: %s", item.name)
 
 
-def get_all_items():
-    conn = get_connection()
-    rows = conn.execute("SELECT * FROM items ORDER BY time_taken DESC").fetchall()
-    conn.close()
-    return [dict(row) for row in rows]
+@error_handling
+@db_connection_handling
+def delete_all_db(conn: sqlite3.Connection) -> None:
+    """Delete all item rows, retaining their images."""
+    with conn:
+        conn.execute("DELETE FROM items")
+    logger.debug("All rows deleted from items.db")
 
 
-def update_item(item_id, fields):
-    if not fields:
-        return False
-    conn = get_connection()
-    columns = ", ".join(f"{key} = :{key}" for key in fields)
-    params = dict(fields)
-    params["item_id"] = item_id
-    cur = conn.execute(f"UPDATE items SET {columns} WHERE item_id = :item_id", params)
-    conn.commit()
-    updated = cur.rowcount > 0
-    conn.close()
-    return updated
+@error_handling
+@db_connection_handling
+def update_item(
+    conn: sqlite3.Connection,
+    item: HeritageItem,
+    column: str,
+    value: str | int | float | None,
+) -> None:
+    """Update a permitted field, accepting confidence or confidence_score."""
+    db_column = UPDATABLE_COLUMNS.get(column) # obtain column
+    if db_column is None: # reject invalid
+        raise ValueError(f"Invalid item column: {column}")
+    with conn:
+        c = conn.execute(
+            f"UPDATE items SET {db_column} = ? WHERE id = ?", (value, item.id)
+        )
+    if c.rowcount:
+        if db_column == "confidence_score":
+            attribute = "confidence"
+        else:
+            attribute = db_column
+        setattr(item, attribute, value) # lets you modify an object's attribute using a string containing the attribute's name (updating the HeritageItem object)
+    logger.info("Updated item '%s', column %s", item.name, db_column)
 
 
-def delete_item(item_id):
-    conn = get_connection()
-    cur = conn.execute("DELETE FROM items WHERE item_id = ?", (item_id,))
-    conn.commit()
-    deleted = cur.rowcount > 0
-    conn.close()
-    return deleted
+@error_handling
+@db_connection_handling
+def return_all_items(conn: sqlite3.Connection) -> list[HeritageItem]:
+    rows = conn.execute(f"SELECT {ITEM_COLUMNS} FROM items ORDER BY id").fetchall()
+    return [row_to_heritage_item(row) for row in rows]
+
+
+@error_handling
+@db_connection_handling
+def get_item_by_name(conn: sqlite3.Connection, name: str) -> HeritageItem | None:
+    """Return the first matching item; names need not be unique."""
+    row = conn.execute(
+        f"SELECT {ITEM_COLUMNS} FROM items WHERE name = ? ORDER BY id LIMIT 1",
+        (name,),
+    ).fetchone()
+    return row_to_heritage_item(row) if row is not None else None
+
+
+@error_handling
+@db_connection_handling
+def get_item_by_id(conn: sqlite3.Connection, item_id: int) -> HeritageItem | None:
+    row = conn.execute(
+        f"SELECT {ITEM_COLUMNS} FROM items WHERE id = ?", (item_id,)
+    ).fetchone()
+    return row_to_heritage_item(row) if row is not None else None

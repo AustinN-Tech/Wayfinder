@@ -1,4 +1,5 @@
 import os
+from dataclasses import asdict
 
 from flask import Flask, jsonify, request, send_from_directory, abort
 from flask_cors import CORS
@@ -9,8 +10,9 @@ from core.models import (
     NATURAL_SUBCATEGORIES,
     CULTURAL_TIME_PERIODS,
     NATURAL_TIME_PERIODS,
+    HeritageItem,
 )
-from services import database
+from services import database as db
 from services import gemini_service
 from services.storage import IMAGE_DIR, save_image, delete_image
 from utilities.util import initialize_logging, logger
@@ -34,7 +36,7 @@ TIME_PERIODS_BY_CATEGORY = {
 
 @app.before_request
 def _ensure_db():
-    database.create_db()
+    db.create_db()
 
 
 @app.errorhandler(400)
@@ -62,15 +64,15 @@ def get_categories():
 
 @app.get("/api/items")
 def list_items():
-    return jsonify(database.get_all_items())
+    return jsonify([asdict(item) for item in db.return_all_items()])
 
 
 @app.get("/api/items/<int:item_id>")
 def get_item(item_id):
-    item = database.get_item(item_id)
+    item = db.get_item_by_id(item_id)
     if item is None:
         abort(404, description="Item not found")
-    return jsonify(item)
+    return jsonify(asdict(item))
 
 
 @app.post("/api/items/analyze")
@@ -91,23 +93,26 @@ def analyze_item():
     return jsonify(suggestions=suggestions)
 
 
+def _validate_category_fields(category, sub_category, time_period):
+    if category not in CATEGORIES:
+        abort(400, description=f"category must be one of {CATEGORIES}")
+    if sub_category not in SUBCATEGORIES_BY_CATEGORY.get(category, []):
+        abort(400, description=f"sub_category must be one of {SUBCATEGORIES_BY_CATEGORY.get(category, [])}")
+    if time_period and time_period not in TIME_PERIODS_BY_CATEGORY.get(category, []):
+        abort(400, description=f"time_period must be one of {TIME_PERIODS_BY_CATEGORY.get(category, [])}")
+
+
 @app.post("/api/items")
 def create_item():
     form = request.form
     name = form.get("name")
     category = form.get("category")
     sub_category = form.get("sub_category")
+    time_period = form.get("time_period")
 
     if not name or not category or not sub_category:
         abort(400, description="name, category, and sub_category are required")
-    if category not in CATEGORIES:
-        abort(400, description=f"category must be one of {CATEGORIES}")
-    if sub_category not in SUBCATEGORIES_BY_CATEGORY.get(category, []):
-        abort(400, description=f"sub_category must be one of {SUBCATEGORIES_BY_CATEGORY.get(category, [])}")
-
-    time_period = form.get("time_period")
-    if time_period and time_period not in TIME_PERIODS_BY_CATEGORY.get(category, []):
-        abort(400, description=f"time_period must be one of {TIME_PERIODS_BY_CATEGORY.get(category, [])}")
+    _validate_category_fields(category, sub_category, time_period)
 
     if "image" not in request.files or request.files["image"].filename == "":
         abort(400, description="An 'image' file is required - you have to record what you actually saw")
@@ -117,68 +122,73 @@ def create_item():
     except ValueError as exc:
         abort(400, description=str(exc))
 
-    item = {
-        "name": name,
-        "category": category,
-        "sub_category": sub_category,
-        "image_path": image_path,
-        "latitude": form.get("latitude", type=float),
-        "longitude": form.get("longitude", type=float),
-        "time_period": time_period,
-        "description": form.get("description"),
-        "confidence": form.get("confidence", type=float),
-    }
-    item_id = database.insert_item(item)
-    return jsonify(database.get_item(item_id)), 201
+    item = HeritageItem(
+        name=name,
+        category=category,
+        sub_category=sub_category,
+        image_path=image_path,
+        latitude=form.get("latitude", type=float),
+        longitude=form.get("longitude", type=float),
+        time_period=time_period,
+        description=form.get("description"),
+        confidence=form.get("confidence", ""),
+    )
+    db.add_item(item)
+    return jsonify(asdict(item)), 201
 
 
 @app.put("/api/items/<int:item_id>")
 def update_item(item_id):
-    existing = database.get_item(item_id)
-    if existing is None:
+    item = db.get_item_by_id(item_id)
+    if item is None:
         abort(404, description="Item not found")
 
     form = request.form
-    fields = {}
-    for key in ("name", "category", "sub_category", "time_period", "description"):
-        if key in form:
-            fields[key] = form.get(key)
-    for key in ("latitude", "longitude", "confidence"):
-        if key in form:
-            fields[key] = form.get(key, type=float)
+    effective_category = form.get("category", item.category)
+    effective_time_period = form.get("time_period", item.time_period)
+    if "category" in form or "sub_category" in form:
+        _validate_category_fields(
+            effective_category,
+            form.get("sub_category", item.sub_category),
+            None,
+        )
+    if "time_period" in form and effective_time_period:
+        if effective_time_period not in TIME_PERIODS_BY_CATEGORY.get(effective_category, []):
+            abort(400, description=f"time_period must be one of {TIME_PERIODS_BY_CATEGORY.get(effective_category, [])}")
 
-    effective_category = fields.get("category", existing["category"])
-    if "category" in fields and fields["category"] not in CATEGORIES:
-        abort(400, description=f"category must be one of {CATEGORIES}")
-    if "sub_category" in fields and fields["sub_category"] not in SUBCATEGORIES_BY_CATEGORY.get(effective_category, []):
-        abort(400, description=f"sub_category must be one of {SUBCATEGORIES_BY_CATEGORY.get(effective_category, [])}")
-    if fields.get("time_period") and fields["time_period"] not in TIME_PERIODS_BY_CATEGORY.get(effective_category, []):
-        abort(400, description=f"time_period must be one of {TIME_PERIODS_BY_CATEGORY.get(effective_category, [])}")
+    updated_any = False
+    for key in ("name", "category", "sub_category", "time_period", "description", "confidence"):
+        if key in form:
+            db.update_item(item, key, form.get(key))
+            updated_any = True
+    for key in ("latitude", "longitude"):
+        if key in form:
+            db.update_item(item, key, form.get(key, type=float))
+            updated_any = True
 
     if "image" in request.files and request.files["image"].filename != "":
         try:
             new_image = save_image(request.files["image"])
         except ValueError as exc:
             abort(400, description=str(exc))
-        if new_image:
-            old_item = database.get_item(item_id)
-            delete_image(old_item.get("image_path"))
-            fields["image_path"] = new_image
+        old_image_path = item.image_path
+        db.update_item(item, "image_path", new_image)
+        delete_image(old_image_path)
+        updated_any = True
 
-    if not fields:
+    if not updated_any:
         abort(400, description="No fields provided to update")
 
-    database.update_item(item_id, fields)
-    return jsonify(database.get_item(item_id))
+    return jsonify(asdict(item))
 
 
 @app.delete("/api/items/<int:item_id>")
 def remove_item(item_id):
-    item = database.get_item(item_id)
+    item = db.get_item_by_id(item_id)
     if item is None:
         abort(404, description="Item not found")
-    delete_image(item.get("image_path"))
-    database.delete_item(item_id)
+    delete_image(item.image_path)
+    db.delete_item(item)
     return "", 204
 
 
@@ -188,6 +198,6 @@ def get_image(filename):
 
 
 if __name__ == "__main__":
-    database.create_db()
+    db.create_db()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

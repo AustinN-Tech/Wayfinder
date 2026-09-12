@@ -57,15 +57,15 @@ CULTURAL_TIME_PERIODS = [
 ]
 
 @dataclass
-class heritage_item:
-    id: int
+class HeritageItem:
     name: str
     category: str
     sub_category: str
     image_path: str
-    latitude: int
-    longitude: int
-    time_taken: int
+    latitude: float | None
+    longitude: float | None
     time_period: str
-    description: str
+    description: str | None
     confidence: str
+    id: int | None = None
+    time_taken: int | None = None
