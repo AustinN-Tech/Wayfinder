@@ -1,5 +1,6 @@
 import os
 from dataclasses import asdict
+from pathlib import Path
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, send_from_directory, abort
@@ -18,7 +19,8 @@ from core.models import (
 from services import achievements
 from services import database as db
 from services import gemini_service
-from services.storage import IMAGE_DIR, save_image, delete_image
+from services import storage
+from services.storage import IMAGE_DIR
 from utilities.util import initialize_logging, logger
 
 initialize_logging()
@@ -54,6 +56,20 @@ def _json_error(err):
     return jsonify(error=err.description), err.code
 
 
+@app.errorhandler(500)
+def _json_server_error(err):
+    logger.exception("Unhandled server error")
+    return jsonify(error="Internal server error"), 500
+
+
+def _item_to_dict(item):
+    """Serialize a HeritageItem for the API - image_path becomes just the
+    stored filename (not the server's absolute filesystem path)."""
+    data = asdict(item)
+    data["image_path"] = Path(item.image_path).name
+    return data
+
+
 @app.get("/health")
 def health():
     return jsonify(status="ok")
@@ -70,7 +86,7 @@ def get_categories():
 
 @app.get("/api/items")
 def list_items():
-    return jsonify([asdict(item) for item in db.return_all_items()])
+    return jsonify([_item_to_dict(item) for item in db.return_all_items()])
 
 
 @app.get("/api/items/<int:item_id>")
@@ -78,7 +94,7 @@ def get_item(item_id):
     item = db.get_item_by_id(item_id)
     if item is None:
         abort(404, description="Item not found")
-    return jsonify(asdict(item))
+    return jsonify(_item_to_dict(item))
 
 
 @app.post("/api/items/analyze")
@@ -129,7 +145,7 @@ def create_item():
         abort(400, description="An 'image' file is required - you have to record what you actually saw")
 
     try:
-        image_path = save_image(request.files["image"])
+        tmp_image_path = storage.save_upload_to_tempfile(request.files["image"])
     except ValueError as exc:
         abort(400, description=str(exc))
 
@@ -137,16 +153,20 @@ def create_item():
         name=name,
         category=category,
         sub_category=sub_category,
-        image_path=image_path,
+        image_path=tmp_image_path,
         latitude=form.get("latitude", type=float),
         longitude=form.get("longitude", type=float),
         time_period=time_period,
         description=form.get("description"),
         confidence=form.get("confidence", ""),
     )
-    db.add_item(item)
+    try:
+        db.add_item(item)
+    finally:
+        tmp_image_path.unlink(missing_ok=True)  # add_item copies from this, never deletes it itself
+
     unlocked = achievements.evaluate_and_unlock()
-    return jsonify(item=asdict(item), unlocked=unlocked), 201
+    return jsonify(item=_item_to_dict(item), unlocked=unlocked), 201
 
 
 @app.put("/api/items/<int:item_id>")
@@ -169,29 +189,35 @@ def update_item(item_id):
             abort(400, description=f"time_period must be one of {TIME_PERIODS_BY_CATEGORY.get(effective_category, [])}")
 
     updated_any = False
-    for key in ("name", "category", "sub_category", "time_period", "description", "confidence"):
-        if key in form:
-            db.update_item(item, key, form.get(key))
-            updated_any = True
-    for key in ("latitude", "longitude"):
-        if key in form:
-            db.update_item(item, key, form.get(key, type=float))
-            updated_any = True
+    try:
+        for key in ("name", "category", "sub_category", "time_period", "description", "confidence"):
+            if key in form:
+                db.update_item(item, key, form.get(key))
+                updated_any = True
+        for key in ("latitude", "longitude"):
+            if key in form:
+                db.update_item(item, key, form.get(key, type=float))
+                updated_any = True
+    except ValueError:
+        abort(404, description="Item not found")
 
     if "image" in request.files and request.files["image"].filename != "":
         try:
-            new_image = save_image(request.files["image"])
+            tmp_image_path = storage.save_upload_to_tempfile(request.files["image"])
         except ValueError as exc:
             abort(400, description=str(exc))
-        old_image_path = item.image_path
-        db.update_item(item, "image_path", new_image)
-        delete_image(old_image_path)
+        try:
+            db.update_item(item, "image_path", tmp_image_path)
+        except ValueError:
+            abort(404, description="Item not found")
+        finally:
+            tmp_image_path.unlink(missing_ok=True)  # update_item copies from this, never deletes it itself
         updated_any = True
 
     if not updated_any:
         abort(400, description="No fields provided to update")
 
-    return jsonify(asdict(item))
+    return jsonify(_item_to_dict(item))
 
 
 @app.delete("/api/items/<int:item_id>")
@@ -199,8 +225,14 @@ def remove_item(item_id):
     item = db.get_item_by_id(item_id)
     if item is None:
         abort(404, description="Item not found")
-    delete_image(item.image_path)
-    db.delete_item(item)
+    try:
+        db.full_delete(item)
+    except OSError as exc:
+        # The image file was locked/in-use at this instant (e.g. still being
+        # served to another request) - the DB change was rolled back, so the
+        # item is untouched and safe to retry.
+        logger.warning("Delete failed, image file was busy: %s", exc)
+        abort(503, description="Could not delete right now - please try again")
     return "", 204
 
 
