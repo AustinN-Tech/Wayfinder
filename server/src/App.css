@@ -430,10 +430,73 @@
   /* top padding leaves room for the tabs standing above the page */
   padding: calc(clamp(0.75rem, 2.5vw, 1.5rem) + 34px) clamp(0.5rem, 2vw, 1.5rem)
     clamp(0.75rem, 2.5vw, 1.5rem);
+  position: relative;
+  z-index: 2;
+  background: transparent;
+}
+
+/* ---------- drifting backdrop ---------- */
+
+.backdrop {
+  position: fixed;
+  /* overhangs the viewport so the blur's soft edge never reaches a border */
+  inset: -70px;
+  z-index: 0;
+  overflow: hidden;
+  filter: blur(26px) saturate(0.95) sepia(0.18);
+}
+
+.backdrop-slide {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  opacity: 0;
+  animation: backdrop-drift 72s linear infinite;
+}
+
+@keyframes backdrop-drift {
+  0% {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+  3% {
+    opacity: 1;
+  }
+  14% {
+    opacity: 1;
+  }
+  18% {
+    opacity: 0;
+  }
+  20%,
+  100% {
+    opacity: 0;
+    transform: scale(1.18) translate3d(-2%, -1.5%, 0);
+  }
+}
+
+/* warm wash that keeps the page light and the imagery subordinate */
+.backdrop-wash {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
   background:
-    radial-gradient(circle at 25% 15%, rgba(255, 248, 232, 0.5), transparent 60%),
-    radial-gradient(circle at 80% 85%, rgba(139, 115, 85, 0.35), transparent 65%),
-    #c4ad8b;
+    radial-gradient(circle at 25% 15%, rgba(255, 248, 232, 0.35), transparent 60%),
+    radial-gradient(circle at 80% 85%, rgba(139, 115, 85, 0.3), transparent 65%),
+    rgba(196, 173, 139, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop-slide {
+    animation: none;
+    opacity: 0;
+  }
+
+  .backdrop-slide:first-child {
+    opacity: 1;
+  }
 }
 
 .journal {
