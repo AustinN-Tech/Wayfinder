@@ -89,6 +89,9 @@ def analyze_item():
         abort(503, description=str(exc))
     except ValueError as exc:
         abort(502, description=str(exc))
+    except Exception as exc:
+        logger.exception("Gemini analysis failed")
+        abort(502, description=f"{type(exc).__name__}: {exc}")
 
     return jsonify(suggestions=suggestions)
 

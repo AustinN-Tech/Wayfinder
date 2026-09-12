@@ -1,5 +1,6 @@
 import { NavLink } from "react-router";
-import { House, Newspaper, Map, Camera } from "lucide-react";
+import { Camera } from "lucide-react";
+import { CompassRose, OpenBook, FoldedMap } from "./icons";
 import "../App.css";
 
 export default function BottomTabBar() {
@@ -11,7 +12,7 @@ export default function BottomTabBar() {
           end
           className={({ isActive }) => `tab ${isActive ? "active" : ""}`}
         >
-          <House size={22} />
+          <CompassRose size={28} />
           <span>Home</span>
         </NavLink>
 
@@ -19,13 +20,13 @@ export default function BottomTabBar() {
           to="/feed"
           className={({ isActive }) => `tab ${isActive ? "active" : ""}`}
         >
-          <Newspaper size={22} />
+          <OpenBook size={28} />
           <span>Feed</span>
         </NavLink>
       </div>
 
       <NavLink to="/camera" className="camera-tab" aria-label="Open camera">
-        <Camera size={27} />
+        <Camera size={30} />
       </NavLink>
 
       <div className="nav-right">
@@ -33,7 +34,7 @@ export default function BottomTabBar() {
           to="/map"
           className={({ isActive }) => `tab ${isActive ? "active" : ""}`}
         >
-          <Map size={22} />
+          <FoldedMap size={28} />
           <span>Map</span>
         </NavLink>
       </div>
