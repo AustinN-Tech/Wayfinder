@@ -32,3 +32,6 @@ app_log.log
 
 # Local image storage (use Railway Volume in production)
 /image_storage/
+
+# Local secrets - never commit
+.env

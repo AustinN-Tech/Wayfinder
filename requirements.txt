@@ -3,3 +3,4 @@ Flask-Cors==5.0.0
 gunicorn==23.0.0
 google-genai==1.2.0
 Pillow==11.1.0
+python-dotenv==1.0.1
