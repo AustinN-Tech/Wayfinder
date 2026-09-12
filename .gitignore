@@ -41,3 +41,5 @@ test_database_package.py
 test_achievement_persistence.py
 test_item_persistence.py
 test_user_persistence.py
+test_user_achievement_persistence.py
+test_user_service.py

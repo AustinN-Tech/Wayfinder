@@ -93,3 +93,12 @@ class User:
     display_name: str | None = None
     user_id: int | None = None
     created_at: int | None = None
+
+
+@dataclass
+class UserAchievement:
+    user_id: int
+    achievement_id: int
+    progress: int | None = 0
+    completed: int | None = 0
+    earned_at: int | None = None

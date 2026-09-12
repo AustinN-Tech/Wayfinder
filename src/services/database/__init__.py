@@ -49,3 +49,13 @@ from .user_table import (
     update_user,
     delete_user,
 )
+from .user_achievements_table import (
+    row_to_user_achievement,
+    add_user_achievement,
+    get_user_achievement,
+    get_user_achievements_by_user_id,
+    get_user_achievements_by_achievement_id,
+    return_all_user_achievements,
+    update_user_achievement,
+    delete_user_achievement,
+)

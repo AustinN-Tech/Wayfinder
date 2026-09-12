@@ -25,6 +25,23 @@ def create_items_db(conn: sqlite3.Connection) -> None:
 
 @error_handling
 @db_connection_handling
+def create_achievements_db(conn: sqlite3.Connection) -> None:
+    with conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS achievements (
+                achievement_id INT NOT NULL UNIQUE,
+                code TEXT NOT NULL UNIQUE,
+                name TEXT NOT NULL,
+                description TEXT,
+                category TEXT,
+                rule_type TEXT NOT NULL,
+                threshold INTEGER NOT NULL
+            )
+        """)
+
+
+@error_handling
+@db_connection_handling
 def create_users_db(conn: sqlite3.Connection) -> None:
     with conn:
         conn.execute("""
@@ -41,7 +58,6 @@ def create_users_db(conn: sqlite3.Connection) -> None:
             )
         """)
 
-        
 
 @error_handling
 @db_connection_handling
@@ -62,23 +78,6 @@ def create_user_achievements_db(conn: sqlite3.Connection) -> None:
 
                 FOREIGN KEY (achievement_id)
                     REFERENCES achievements(achievement_id)
-            )
-        """)
-
-
-@error_handling
-@db_connection_handling
-def create_achievements_db(conn: sqlite3.Connection) -> None:
-    with conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS achievements (
-                achievement_id INT NOT NULL UNIQUE,
-                code TEXT NOT NULL UNIQUE,
-                name TEXT NOT NULL,
-                description TEXT,
-                category TEXT,
-                rule_type TEXT NOT NULL,
-                threshold INTEGER NOT NULL
             )
         """)
 
