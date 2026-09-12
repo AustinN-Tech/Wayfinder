@@ -70,9 +70,14 @@ def create_db(conn: sqlite3.Connection) -> None:
                 description TEXT,
                 rule_type TEXT NOT NULL,
                 threshold INTEGER NOT NULL,
-                sort_order INTEGER NOT NULL DEFAULT 0
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                target_value TEXT
             )
         """)
+        # Migration guard: older local dbs created before target_value existed.
+        achievement_cols = [row[1] for row in conn.execute("PRAGMA table_info(achievements)")]
+        if "target_value" not in achievement_cols:
+            conn.execute("ALTER TABLE achievements ADD COLUMN target_value TEXT")
         conn.execute("""
             CREATE TABLE IF NOT EXISTS unlocked_achievements (
                 user_id TEXT NOT NULL,
@@ -257,7 +262,7 @@ def full_delete(conn: sqlite3.Connection, item: HeritageItem) -> None:
 
 # --- Achievements ---------------------------------------------------------
 
-ACHIEVEMENT_COLUMNS = "code, name, description, rule_type, threshold, sort_order"
+ACHIEVEMENT_COLUMNS = "code, name, description, rule_type, threshold, sort_order, target_value"
 
 
 @error_handling
@@ -270,14 +275,15 @@ def seed_achievement(
     rule_type: str,
     threshold: int,
     sort_order: int = 0,
+    target_value: str | None = None,
 ) -> None:
     """Insert an achievement definition if it doesn't already exist (by code)."""
     with conn:
         conn.execute("""
             INSERT OR IGNORE INTO achievements
-                (code, name, description, rule_type, threshold, sort_order)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (code, name, description, rule_type, threshold, sort_order))
+                (code, name, description, rule_type, threshold, sort_order, target_value)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (code, name, description, rule_type, threshold, sort_order, target_value))
 
 
 @error_handling
