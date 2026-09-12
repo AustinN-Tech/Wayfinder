@@ -1,8 +1,11 @@
 import os
 from dataclasses import asdict
 
+from dotenv import load_dotenv
 from flask import Flask, jsonify, request, send_from_directory, abort
 from flask_cors import CORS
+
+load_dotenv()  # loads .env in local dev; no-op on Railway where vars are already set
 
 from core.models import (
     CATEGORIES,
@@ -12,6 +15,7 @@ from core.models import (
     NATURAL_TIME_PERIODS,
     HeritageItem,
 )
+from services import achievements
 from services import database as db
 from services import gemini_service
 from services.storage import IMAGE_DIR, save_image, delete_image
@@ -37,11 +41,13 @@ TIME_PERIODS_BY_CATEGORY = {
 @app.before_request
 def _ensure_db():
     db.create_db()
+    achievements.seed_defaults()
 
 
 @app.errorhandler(400)
 @app.errorhandler(404)
 @app.errorhandler(413)
+@app.errorhandler(429)
 @app.errorhandler(502)
 @app.errorhandler(503)
 def _json_error(err):
@@ -85,6 +91,8 @@ def analyze_item():
 
     try:
         suggestions = gemini_service.analyze_image(image_file.read(), mime_type)
+    except gemini_service.QuotaExceededError as exc:
+        abort(429, description=str(exc))
     except RuntimeError as exc:
         abort(503, description=str(exc))
     except ValueError as exc:
@@ -134,7 +142,8 @@ def create_item():
         confidence=form.get("confidence", ""),
     )
     db.add_item(item)
-    return jsonify(asdict(item)), 201
+    unlocked = achievements.evaluate_and_unlock()
+    return jsonify(item=asdict(item), unlocked=unlocked), 201
 
 
 @app.put("/api/items/<int:item_id>")
@@ -190,6 +199,11 @@ def remove_item(item_id):
     delete_image(item.image_path)
     db.delete_item(item)
     return "", 204
+
+
+@app.get("/api/achievements")
+def list_achievements():
+    return jsonify(achievements.get_all_with_progress())
 
 
 @app.get("/api/images/<path:filename>")

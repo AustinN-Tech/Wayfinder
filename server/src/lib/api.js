@@ -20,6 +20,8 @@ export async function analyzeItem(imageBlob) {
   return data.suggestions;
 }
 
+// Resolves to { item, unlocked } - `unlocked` is any achievements newly
+// earned by saving this item, ready to drive a toast/celebration in the UI.
 export async function createItem(fields, imageBlob) {
   const formData = new FormData();
   Object.entries(fields).forEach(([key, value]) => {
@@ -38,6 +40,11 @@ export async function createItem(fields, imageBlob) {
 
 export async function getCategories() {
   const response = await fetch(`${API_BASE_URL}/api/categories`);
+  return parseOrThrow(response);
+}
+
+export async function getAchievements() {
+  const response = await fetch(`${API_BASE_URL}/api/achievements`);
   return parseOrThrow(response);
 }
 
