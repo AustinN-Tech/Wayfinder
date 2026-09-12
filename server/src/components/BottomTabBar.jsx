@@ -1,6 +1,6 @@
 import { NavLink } from "react-router";
 import { Camera } from "lucide-react";
-import { CompassRose, OpenBook, FoldedMap } from "./icons";
+import { CompassRose, OpenBook, FoldedMap, Medal } from "./icons";
 import "../App.css";
 
 export default function BottomTabBar() {
@@ -30,6 +30,11 @@ export default function BottomTabBar() {
       </NavLink>
 
       <div className="nav-right">
+        <button type="button" className="tab tab-button">
+          <Medal size={28} />
+          <span>Awards</span>
+        </button>
+
         <NavLink
           to="/map"
           className={({ isActive }) => `tab ${isActive ? "active" : ""}`}

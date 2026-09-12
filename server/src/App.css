@@ -450,6 +450,15 @@
 .nav-right {
   display: flex;
   justify-content: flex-end;
+  gap: 1.5rem;
+}
+
+/* a .tab that's a <button> rather than a link */
+.tab-button {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
 }
 
 .camera-tab {

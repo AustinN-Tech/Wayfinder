@@ -53,6 +53,30 @@ export function OpenBook({ size = 28, ...props }) {
   );
 }
 
+export function Medal({ size = 28, ...props }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M8.3 2.9c.7 2.5 1.5 5 2.4 7.4M15.7 2.9c-.7 2.5-1.5 5-2.4 7.4" />
+      <path d="M12 9.7c3-.1 5.6 2.3 5.8 5.3.2 3-2.1 5.7-5.1 5.9-3 .2-5.8-1.9-6.1-4.9-.3-3 1.9-5.9 4.9-6.2z" />
+      <path
+        d="M12 11.8 12.85 13.9 15.14 14.05 13.38 15.5 13.94 17.7 12 16.5 10.06 17.7 10.62 15.5 8.86 14.05 11.15 13.9Z"
+        fill="currentColor"
+        strokeWidth="0.7"
+      />
+    </svg>
+  );
+}
+
 export function FoldedMap({ size = 28, ...props }) {
   return (
     <svg
