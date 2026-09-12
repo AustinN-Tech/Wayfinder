@@ -7,7 +7,6 @@ const ITEMS = [
   { to: "/feed", label: "Entries", Icon: OpenBook, color: "#8f6518" },
   { to: "/map", label: "Map", Icon: FoldedMap, color: "#3f6b4e" },
   { label: "Awards", Icon: Medal, color: "#6b4a7d" },
-  { to: "/camera", label: "New Entry", Icon: Camera, color: "#2f6b7a" },
 ];
 
 function matches(item, pathname) {
@@ -92,7 +91,15 @@ export default function JournalShell({ children }) {
           })}
         </nav>
 
-        <div className="page">{children}</div>
+        <div className="page">
+          {children}
+
+          <div className="page-seal-row">
+            <NavLink to="/camera" className="page-seal" aria-label="New entry">
+              <Camera size={26} />
+            </NavLink>
+          </div>
+        </div>
       </div>
     </div>
   );

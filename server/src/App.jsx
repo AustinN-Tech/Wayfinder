@@ -5,6 +5,7 @@ import Map from "./pages/Map";
 import JournalShell from "./components/JournalShell";
 import Camera from "./pages/Camera";
 import Result from "./pages/Result";
+import Entry from "./pages/Entry";
 import "./App.css";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
       <Route path="/map" element={<Map />} />
       <Route path="/camera" element={<Camera />} />
       <Route path="/result" element={<Result />} />
+      <Route path="/entry/:id" element={<Entry />} />
     </Routes>
   );
 
