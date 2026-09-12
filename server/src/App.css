@@ -340,13 +340,16 @@
   margin-top: 1rem;
 }
 
-.result-actions button {
+.result-actions button,
+.result-actions a {
   flex: 1;
   padding: 0.75rem;
   border-radius: 10px;
   border: none;
   font: inherit;
   cursor: pointer;
+  text-align: center;
+  text-decoration: none;
 }
 
 .result-actions .primary {
