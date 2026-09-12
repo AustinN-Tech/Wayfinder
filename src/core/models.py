@@ -68,5 +68,6 @@ class HeritageItem:
     time_period: str
     description: str | None
     confidence: str
+    user_id: str
     id: int | None = None
     time_taken: int | None = None
