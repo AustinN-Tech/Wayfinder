@@ -4,7 +4,7 @@ import sqlite3
 from pathlib import Path
 
 from core.models import HeritageItem
-from services.storage import BASE_DIR, IMAGE_DIR, SRC_DIR
+from services.storage import SRC_DIR, image_addition, image_replacement, image_deletion
 from utilities.util import error_handling
 
 logger = logging.getLogger(__name__)
@@ -87,7 +87,7 @@ def row_to_heritage_item(row) -> HeritageItem:
         name=row[1],
         category=row[2],
         sub_category=row[3],
-        image_path=row[4],
+        image_path=Path(row[4]),
         latitude=row[5],
         longitude=row[6],
         time_taken=row[7],
@@ -101,24 +101,27 @@ def row_to_heritage_item(row) -> HeritageItem:
 @db_connection_handling
 def add_item(conn: sqlite3.Connection, item: HeritageItem) -> None:
     """Insert an item, then populate its generated ID and capture timestamp."""
-    with conn:
-        c = conn.execute("""
-            INSERT INTO items (
-                name, category, sub_category, image_path, latitude, longitude,
-                 time_period, description, confidence_score
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            item.name, item.category, item.sub_category, str(item.image_path),
-            item.latitude, item.longitude, item.time_period,
-            item.description, item.confidence,
-        ))
-        item_id = c.lastrowid # obtains last inserted id
-        time_taken = conn.execute( # obtain new time from row just inserted
-            "SELECT time_taken FROM items WHERE id = ?", (item_id,)
-        ).fetchone()[0]
+
+    with image_addition(item.image_path) as image_path:
+        with conn:
+            c = conn.execute("""
+                INSERT INTO items (
+                    name, category, sub_category, image_path, latitude, longitude,
+                    time_period, description, confidence_score
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                item.name, item.category, item.sub_category, str(image_path),
+                item.latitude, item.longitude, item.time_period,
+                item.description, item.confidence,
+            ))
+            item_id = c.lastrowid
+            time_taken = conn.execute(
+                "SELECT time_taken FROM items WHERE id = ?", (item_id,)
+            ).fetchone()[0]
     # update object:
     item.id = item_id
     item.time_taken = time_taken
+    item.image_path = image_path
     logger.info("Added item: %s", item.name)
 
 
@@ -146,16 +149,42 @@ def update_item(
     conn: sqlite3.Connection,
     item: HeritageItem,
     column: str,
-    value: str | int | float | None,
+    value: str | Path | int | float | None,
 ) -> None:
-    """Update a permitted field, accepting confidence or confidence_score."""
+    """Update a field; for image_path, value is the replacement source file."""
     db_column = UPDATABLE_COLUMNS.get(column) # obtain column
     if db_column is None: # reject invalid
         raise ValueError(f"Invalid item column: {column}")
+    if db_column == "image_path":
+        if not isinstance(value, (str, Path)):
+            raise TypeError("image_path must be a string or Path")
+        # Lock before reading so cleanup uses the current persisted image.
+        try:
+            conn.execute("BEGIN IMMEDIATE") # the write operation so that only the current function can write
+            row = conn.execute(
+                f"SELECT {ITEM_COLUMNS} FROM items WHERE id = ?", (item.id,)
+            ).fetchone()
+            if row is None:
+                raise ValueError(f"Item {item.id} does not exist")
+            stored_item = row_to_heritage_item(row)
+            with image_replacement(stored_item, value) as new_path:
+                with conn:
+                    conn.execute(
+                        "UPDATE items SET image_path = ? WHERE id = ?",
+                        (str(new_path), item.id),
+                    )
+        except Exception:
+            conn.rollback() # if terrible things happen, undo them.
+            raise
+        item.image_path = new_path
+        logger.info("Updated image for item '%s'", item.name)
+        return
     with conn:
         c = conn.execute(
             f"UPDATE items SET {db_column} = ? WHERE id = ?", (value, item.id)
         )
+        if not c.rowcount:
+            raise ValueError(f"Item {item.id} does not exist")
     if c.rowcount:
         if db_column == "confidence_score":
             attribute = "confidence"
@@ -190,6 +219,28 @@ def get_item_by_id(conn: sqlite3.Connection, item_id: int) -> HeritageItem | Non
         f"SELECT {ITEM_COLUMNS} FROM items WHERE id = ?", (item_id,)
     ).fetchone()
     return row_to_heritage_item(row) if row is not None else None
+
+
+@error_handling
+@db_connection_handling
+def full_delete(conn: sqlite3.Connection, item: HeritageItem) -> None:
+    """Delete the persisted item and its image, allowing an already-missing file."""
+    try:
+        conn.execute("BEGIN IMMEDIATE") # the write operation so that only the current function can write
+        row = conn.execute(
+            f"SELECT {ITEM_COLUMNS} FROM items WHERE id = ?", (item.id,)
+        ).fetchone()
+        if row is None:
+            conn.rollback() # if terrible things happen (try to delete something that doesn't exist), undo them
+            return
+        stored_item = row_to_heritage_item(row)
+        with image_deletion(stored_item):
+            with conn:
+                conn.execute("DELETE FROM items WHERE id = ?", (item.id,))
+    except Exception:
+        conn.rollback()
+        raise
+    logger.info("Deleted item and image: %s", stored_item.name)
 
 
 # --- Achievements ---------------------------------------------------------
