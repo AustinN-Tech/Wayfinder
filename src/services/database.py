@@ -62,6 +62,22 @@ def create_db(conn: sqlite3.Connection) -> None:
                 confidence_score TEXT NOT NULL
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS achievements (
+                code TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT,
+                rule_type TEXT NOT NULL,
+                threshold INTEGER NOT NULL,
+                sort_order INTEGER NOT NULL DEFAULT 0
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS unlocked_achievements (
+                code TEXT PRIMARY KEY REFERENCES achievements(code),
+                unlocked_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+            )
+        """)
 
 
 def row_to_heritage_item(row) -> HeritageItem:
@@ -174,3 +190,62 @@ def get_item_by_id(conn: sqlite3.Connection, item_id: int) -> HeritageItem | Non
         f"SELECT {ITEM_COLUMNS} FROM items WHERE id = ?", (item_id,)
     ).fetchone()
     return row_to_heritage_item(row) if row is not None else None
+
+
+# --- Achievements ---------------------------------------------------------
+
+ACHIEVEMENT_COLUMNS = "code, name, description, rule_type, threshold, sort_order"
+
+
+@error_handling
+@db_connection_handling
+def seed_achievement(
+    conn: sqlite3.Connection,
+    code: str,
+    name: str,
+    description: str,
+    rule_type: str,
+    threshold: int,
+    sort_order: int = 0,
+) -> None:
+    """Insert an achievement definition if it doesn't already exist (by code)."""
+    with conn:
+        conn.execute("""
+            INSERT OR IGNORE INTO achievements
+                (code, name, description, rule_type, threshold, sort_order)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (code, name, description, rule_type, threshold, sort_order))
+
+
+@error_handling
+@db_connection_handling
+def get_all_achievements(conn: sqlite3.Connection) -> list[tuple]:
+    return conn.execute(
+        f"SELECT {ACHIEVEMENT_COLUMNS} FROM achievements ORDER BY sort_order, code"
+    ).fetchall()
+
+
+@error_handling
+@db_connection_handling
+def get_unlocked_achievement_map(conn: sqlite3.Connection) -> dict[str, int]:
+    """Map of achievement code -> unlocked_at, for everything unlocked so far."""
+    rows = conn.execute("SELECT code, unlocked_at FROM unlocked_achievements").fetchall()
+    return {code: unlocked_at for code, unlocked_at in rows}
+
+
+@error_handling
+@db_connection_handling
+def unlock_achievement(conn: sqlite3.Connection, code: str) -> None:
+    with conn:
+        conn.execute(
+            "INSERT OR IGNORE INTO unlocked_achievements (code) VALUES (?)", (code,)
+        )
+    logger.info("Unlocked achievement: %s", code)
+
+
+@error_handling
+@db_connection_handling
+def run_count_query(conn: sqlite3.Connection, sql: str) -> int:
+    """Run a SELECT COUNT(...)-shaped query with no params and return the scalar result."""
+    row = conn.execute(sql).fetchone()
+    return row[0] if row else 0

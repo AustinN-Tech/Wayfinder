@@ -3,7 +3,7 @@ import json
 import logging
 
 from google import genai
-from google.genai import types
+from google.genai import errors, types
 
 from core.models import (
     CATEGORIES,
@@ -15,7 +15,11 @@ from core.models import (
 
 logger = logging.getLogger(__name__)
 
-MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
+
+
+class QuotaExceededError(RuntimeError):
+    """Raised when Gemini's rate limit or daily quota has been hit."""
 
 ALL_SUBCATEGORIES = sorted(set(CULTURAL_SUBCATEGORIES) | set(NATURAL_SUBCATEGORIES))
 ALL_TIME_PERIODS = CULTURAL_TIME_PERIODS + NATURAL_TIME_PERIODS
@@ -78,17 +82,30 @@ Return only the structured data.
 def analyze_image(image_bytes, mime_type):
     """Ask Gemini for 3 candidate classifications/descriptions for an item photo."""
     client = _get_client()
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=[
-            types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-            PROMPT,
-        ],
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=SUGGESTION_SCHEMA,
-        ),
-    )
+    try:
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=[
+                types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                PROMPT,
+            ],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=SUGGESTION_SCHEMA,
+            ),
+        )
+    except errors.ClientError as exc:
+        if getattr(exc, "code", None) == 429:
+            logger.warning("Gemini quota/rate limit hit: %s", exc)
+            raise QuotaExceededError(
+                "Gemini API quota exceeded - wait a bit and try again, or check "
+                "your plan/billing at https://ai.google.dev/gemini-api/docs/rate-limits"
+            ) from exc
+        logger.error("Gemini client error: %s", exc)
+        raise ValueError(f"Gemini request failed: {exc}") from exc
+    except errors.APIError as exc:
+        logger.error("Gemini API error: %s", exc)
+        raise ValueError(f"Gemini request failed: {exc}") from exc
 
     try:
         parsed = json.loads(response.text)
