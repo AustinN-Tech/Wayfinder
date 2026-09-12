@@ -6,6 +6,7 @@ import JournalShell from "./components/JournalShell";
 import Camera from "./pages/Camera";
 import Result from "./pages/Result";
 import Entry from "./pages/Entry";
+import CategoryEntries from "./pages/CategoryEntries";
 import "./App.css";
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
       <Route path="/camera" element={<Camera />} />
       <Route path="/result" element={<Result />} />
       <Route path="/entry/:id" element={<Entry />} />
+      <Route path="/feed/:category/:subCategory" element={<CategoryEntries />} />
     </Routes>
   );
 
