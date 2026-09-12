@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router";
+import { Routes, Route, useLocation } from "react-router";
 import Home from "./pages/Home";
 import Feed from "./pages/Feed";
 import Map from "./pages/Map";
@@ -8,6 +8,9 @@ import Result from "./pages/Result";
 import "./App.css";
 
 function App() {
+  const location = useLocation();
+  const hideTabBar = ["/camera", "/result"].includes(location.pathname);
+
   return (
     <>
       <Routes>
@@ -18,7 +21,7 @@ function App() {
         <Route path="/result" element={<Result />} />
       </Routes>
 
-      <BottomTabBar />
+      {!hideTabBar && <BottomTabBar />}
     </>
   );
 }
