@@ -1,14 +1,13 @@
-import functools
 import logging
 import sqlite3
 from pathlib import Path
 
 from core.models import HeritageItem
-from services.storage import SRC_DIR, image_addition, image_replacement, image_deletion
+from services.storage import image_addition, image_replacement, image_deletion
 from utilities.util import error_handling
+from .connections import db_connection_handling
 
 logger = logging.getLogger(__name__)
-DB_PATH = SRC_DIR / "items.db"
 
 ITEM_COLUMNS = (
     "id, name, category, sub_category, image_path, latitude, longitude, "
@@ -28,41 +27,6 @@ UPDATABLE_COLUMNS = {
     "confidence": "confidence_score",
     "confidence_score": "confidence_score",
 }
-
-
-def db_connection_handling(func):
-    """Open a connection for a database operation and always close it."""
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        conn = sqlite3.connect(DB_PATH)
-        try:
-            conn.execute("PRAGMA foreign_keys = ON")
-            return func(conn, *args, **kwargs)
-        finally:
-            conn.close()
-    return wrapper
-
-
-@error_handling
-@db_connection_handling
-def create_items_db(conn: sqlite3.Connection) -> None:
-    with conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                category TEXT NOT NULL,
-                sub_category TEXT NOT NULL,
-                image_path TEXT NOT NULL UNIQUE,
-                latitude REAL,
-                longitude REAL,
-                time_taken INTEGER NOT NULL DEFAULT (strftime('%s','now')),
-                time_period TEXT NOT NULL,
-                description TEXT,
-                confidence_score TEXT NOT NULL
-            )
-        """)
-
 
 def row_to_heritage_item(row) -> HeritageItem:
     """Convert a row in ITEM_COLUMNS order to a heritage item."""
@@ -204,7 +168,6 @@ def get_item_by_id(conn: sqlite3.Connection, item_id: int) -> HeritageItem | Non
     ).fetchone()
     return row_to_heritage_item(row) if row is not None else None
 
-
 @error_handling
 @db_connection_handling
 def full_delete(conn: sqlite3.Connection, item: HeritageItem) -> None:
@@ -226,65 +189,3 @@ def full_delete(conn: sqlite3.Connection, item: HeritageItem) -> None:
         raise
     logger.info("Deleted item and image: %s", stored_item.name)
 
-
-# --- Achievements ---------------------------------------------------------
-
-@error_handling
-@db_connection_handling
-def create_achievements_db(conn: sqlite3.Connection):
-    with conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS achievements (
-                achievement_id INT NOT NULL UNIQUE,
-                code TEXT NOT NULL UNIQUE,
-                name TEXT NOT NULL,
-                description TEXT,
-                category TEXT,
-                rule_type TEXT NOT NULL,
-                threshold INTEGER NOT NULL
-            )
-        """)
-
-
-# --- Users ---------------------------------------------------------
-
-@error_handling
-@db_connection_handling
-def create_user_db(conn: sqlite3.Connection):
-    with conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER NOT NULL UNIQUE,
-                username TEXT NOT NULL UNIQUE,
-                name TEXT NOT NULL,
-                description TEXT,
-                category TEXT,
-                rule_type TEXT NOT NULL,
-                threshold INTEGER NOT NULL
-            )
-        """)
-
-# --- Users achievements: relational table ---------------------------------------------------------
-
-
-@error_handling
-@db_connection_handling
-def create_user_achievements_db(conn: sqlite3.Connection):
-    with conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS user_achievements (
-                user_id INTEGER NOT NULL,
-                achievement_id INT NOT NULL,
-                progress INTEGER CHECK (progress BETWEEN 0 AND 100),
-                completed INTEGER CHECK (completed IN (0, 1)),
-                earned_at INTEGER
-
-                PRIMARY KEY (user_id, achievement_id),
-
-                FOREIGN KEY (user_id)
-                    REFERENCES users(user_id),
-
-                FOREIGN KEY (achievement_id)
-                    REFERENCES achievements(achievement_id)
-            )
-        """)

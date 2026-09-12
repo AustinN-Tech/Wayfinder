@@ -70,3 +70,14 @@ class HeritageItem:
     confidence: str
     id: int | None = None
     time_taken: int | None = None
+
+
+@dataclass
+class Achievement:
+    achievement_id: int
+    code: str
+    name: str
+    rule_type: str
+    threshold: int
+    description: str | None = None
+    category: str | None = None
