@@ -14,38 +14,12 @@ function matches(item, pathname) {
   return item.end ? pathname === item.to : pathname.startsWith(item.to);
 }
 
-const BACKDROP_COUNT = 6;
-const BACKDROP_STEP = 12; // seconds each image holds before the next fades up
-
-// Slow drifting collage of public-domain landscapes, botanical plates and
-// antiquities, blurred far past legibility so it reads as colour and movement.
-function Backdrop() {
-  return (
-    <>
-      <div className="backdrop" aria-hidden="true">
-        {Array.from({ length: BACKDROP_COUNT }, (_, i) => (
-          <div
-            key={i}
-            className="backdrop-slide"
-            style={{
-              backgroundImage: `url(/backdrop/backdrop-${i + 1}.jpg)`,
-              animationDelay: `${i * BACKDROP_STEP}s`,
-            }}
-          />
-        ))}
-      </div>
-      <div className="backdrop-wash" aria-hidden="true" />
-    </>
-  );
-}
-
 export default function JournalShell({ children }) {
   const { pathname } = useLocation();
   const activeIndex = ITEMS.findIndex((item) => matches(item, pathname));
 
   return (
     <div className="desk">
-      <Backdrop />
       <div className="journal">
         <nav className="bookmarks" aria-label="Journal sections">
           {ITEMS.map((item, index) => {

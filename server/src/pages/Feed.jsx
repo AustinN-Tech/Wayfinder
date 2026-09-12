@@ -1,23 +1,19 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
 import PageDoodles from "../components/PageDoodles";
-import { getItems, imageUrl } from "../lib/api";
-
-function formatWhen(timeTaken) {
-  if (!timeTaken) return null;
-  return new Date(timeTaken * 1000).toLocaleDateString(undefined, {
-    dateStyle: "medium",
-  });
-}
+import CategoryAlbum from "../components/CategoryAlbum";
+import { getItems, getCategories } from "../lib/api";
 
 export default function Feed() {
   const [items, setItems] = useState(null);
+  const [categoryData, setCategoryData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    getItems()
-      // the API returns oldest first; the journal reads newest first
-      .then((list) => setItems([...list].reverse()))
+    Promise.all([getItems(), getCategories()])
+      .then(([itemList, categories]) => {
+        setItems(itemList);
+        setCategoryData(categories);
+      })
       .catch((err) => setErrorMessage(err.message));
   }, []);
 
@@ -33,20 +29,8 @@ export default function Feed() {
         <p>Nothing catalogued yet — press the seal at the foot of the page to add your first find.</p>
       )}
 
-      {items?.length > 0 && (
-        <ul className="entry-grid">
-          {items.map((item) => (
-            <li key={item.id}>
-              <Link to={`/entry/${item.id}`} className="entry-card">
-                <span className="entry-card-frame">
-                  <img src={imageUrl(item.image_path)} alt="" loading="lazy" />
-                </span>
-                <strong>{item.name}</strong>
-                <span className="entry-card-date">{formatWhen(item.time_taken)}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+      {items && categoryData && (
+        <CategoryAlbum items={items} subcategoriesByCategory={categoryData.subcategories} />
       )}
     </main>
   );
