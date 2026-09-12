@@ -59,6 +59,7 @@ CULTURAL_TIME_PERIODS = [
     "contemporary"
 ]
 
+
 @dataclass
 class HeritageItem:
     name: str
@@ -83,3 +84,12 @@ class Achievement:
     threshold: int
     description: str | None = None
     category: str | None = None
+
+
+@dataclass
+class User:
+    auth0_id: str
+    username: str | None = None
+    display_name: str | None = None
+    user_id: int | None = None
+    created_at: int | None = None

@@ -40,3 +40,4 @@ app_log.log
 test_database_package.py
 test_achievement_persistence.py
 test_item_persistence.py
+test_user_persistence.py

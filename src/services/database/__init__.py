@@ -11,6 +11,7 @@ from .schema import (
     create_items_db,
     create_achievements_db,
     create_user_db,
+    create_users_db,
     create_user_achievements_db,
 )
 from .items_table import (
@@ -36,4 +37,15 @@ from .achievements_table import (
     return_all_achievements,
     update_achievement,
     delete_achievement,
+)
+from .user_table import (
+    USER_COLUMNS,
+    USER_UPDATABLE_COLUMNS,
+    row_to_user,
+    add_user,
+    get_user_by_id,
+    get_user_by_auth0_id,
+    return_all_users,
+    update_user,
+    delete_user,
 )

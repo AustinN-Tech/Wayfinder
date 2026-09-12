@@ -25,17 +25,19 @@ def create_items_db(conn: sqlite3.Connection) -> None:
 
 @error_handling
 @db_connection_handling
-def create_user_db(conn: sqlite3.Connection) -> None:
+def create_users_db(conn: sqlite3.Connection) -> None:
     with conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER NOT NULL UNIQUE,
-                username TEXT NOT NULL UNIQUE,
-                name TEXT NOT NULL,
-                description TEXT,
-                category TEXT,
-                rule_type TEXT NOT NULL,
-                threshold INTEGER NOT NULL
+                user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                auth0_id TEXT NOT NULL UNIQUE,
+
+                username TEXT,
+                display_name TEXT,
+
+                created_at INTEGER NOT NULL
+                    DEFAULT (strftime('%s','now'))
             )
         """)
 
@@ -83,3 +85,4 @@ def create_achievements_db(conn: sqlite3.Connection) -> None:
 
 # Preserve the existing item-table initialization API.
 create_db = create_items_db
+create_user_db = create_users_db
