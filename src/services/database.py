@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 DB_PATH = SRC_DIR / "items.db"
 
 ITEM_COLUMNS = (
-    "id, name, category, sub_category, image_path, latitude, longitude, "
+    "id, user_id, name, category, sub_category, image_path, latitude, longitude, "
     "time_taken, time_period, description, confidence_score"
 )
 
@@ -50,6 +50,7 @@ def create_db(conn: sqlite3.Connection) -> None:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
                 name TEXT NOT NULL,
                 category TEXT NOT NULL,
                 sub_category TEXT NOT NULL,
@@ -74,8 +75,10 @@ def create_db(conn: sqlite3.Connection) -> None:
         """)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS unlocked_achievements (
-                code TEXT PRIMARY KEY REFERENCES achievements(code),
-                unlocked_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+                user_id TEXT NOT NULL,
+                code TEXT NOT NULL REFERENCES achievements(code),
+                unlocked_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+                PRIMARY KEY (user_id, code)
             )
         """)
 
@@ -84,16 +87,17 @@ def row_to_heritage_item(row) -> HeritageItem:
     """Convert a row in ITEM_COLUMNS order to a heritage item."""
     return HeritageItem(
         id=row[0],
-        name=row[1],
-        category=row[2],
-        sub_category=row[3],
-        image_path=Path(row[4]),
-        latitude=row[5],
-        longitude=row[6],
-        time_taken=row[7],
-        time_period=row[8],
-        description=row[9],
-        confidence=row[10],
+        user_id=row[1],
+        name=row[2],
+        category=row[3],
+        sub_category=row[4],
+        image_path=Path(row[5]),
+        latitude=row[6],
+        longitude=row[7],
+        time_taken=row[8],
+        time_period=row[9],
+        description=row[10],
+        confidence=row[11],
     )
 
 
@@ -106,11 +110,11 @@ def add_item(conn: sqlite3.Connection, item: HeritageItem) -> None:
         with conn:
             c = conn.execute("""
                 INSERT INTO items (
-                    name, category, sub_category, image_path, latitude, longitude,
+                    user_id, name, category, sub_category, image_path, latitude, longitude,
                     time_period, description, confidence_score
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                item.name, item.category, item.sub_category, str(image_path),
+                item.user_id, item.name, item.category, item.sub_category, str(image_path),
                 item.latitude, item.longitude, item.time_period,
                 item.description, item.confidence,
             ))
@@ -130,7 +134,7 @@ def add_item(conn: sqlite3.Connection, item: HeritageItem) -> None:
 def delete_item(conn: sqlite3.Connection, item: HeritageItem) -> None:
     """Delete an item's database row, retaining its image."""
     with conn:
-        conn.execute("DELETE FROM items WHERE id = ?", (item.id,))
+        conn.execute("DELETE FROM items WHERE id = ? AND user_id = ?", (item.id, item.user_id))
     logger.info("Deleted item from db: %s", item.name)
 
 
@@ -162,7 +166,8 @@ def update_item(
         try:
             conn.execute("BEGIN IMMEDIATE") # the write operation so that only the current function can write
             row = conn.execute(
-                f"SELECT {ITEM_COLUMNS} FROM items WHERE id = ?", (item.id,)
+                f"SELECT {ITEM_COLUMNS} FROM items WHERE id = ? AND user_id = ?",
+                (item.id, item.user_id),
             ).fetchone()
             if row is None:
                 raise ValueError(f"Item {item.id} does not exist")
@@ -170,8 +175,8 @@ def update_item(
             with image_replacement(stored_item, value) as new_path:
                 with conn:
                     conn.execute(
-                        "UPDATE items SET image_path = ? WHERE id = ?",
-                        (str(new_path), item.id),
+                        "UPDATE items SET image_path = ? WHERE id = ? AND user_id = ?",
+                        (str(new_path), item.id, item.user_id),
                     )
         except Exception:
             conn.rollback() # if terrible things happen, undo them.
@@ -181,7 +186,8 @@ def update_item(
         return
     with conn:
         c = conn.execute(
-            f"UPDATE items SET {db_column} = ? WHERE id = ?", (value, item.id)
+            f"UPDATE items SET {db_column} = ? WHERE id = ? AND user_id = ?",
+            (value, item.id, item.user_id),
         )
         if not c.rowcount:
             raise ValueError(f"Item {item.id} does not exist")
@@ -196,27 +202,29 @@ def update_item(
 
 @error_handling
 @db_connection_handling
-def return_all_items(conn: sqlite3.Connection) -> list[HeritageItem]:
-    rows = conn.execute(f"SELECT {ITEM_COLUMNS} FROM items ORDER BY id").fetchall()
+def return_all_items(conn: sqlite3.Connection, user_id: str) -> list[HeritageItem]:
+    rows = conn.execute(
+        f"SELECT {ITEM_COLUMNS} FROM items WHERE user_id = ? ORDER BY id", (user_id,)
+    ).fetchall()
     return [row_to_heritage_item(row) for row in rows]
 
 
 @error_handling
 @db_connection_handling
-def get_item_by_name(conn: sqlite3.Connection, name: str) -> HeritageItem | None:
-    """Return the first matching item; names need not be unique."""
+def get_item_by_name(conn: sqlite3.Connection, user_id: str, name: str) -> HeritageItem | None:
+    """Return the first matching item for this user; names need not be unique."""
     row = conn.execute(
-        f"SELECT {ITEM_COLUMNS} FROM items WHERE name = ? ORDER BY id LIMIT 1",
-        (name,),
+        f"SELECT {ITEM_COLUMNS} FROM items WHERE user_id = ? AND name = ? ORDER BY id LIMIT 1",
+        (user_id, name),
     ).fetchone()
     return row_to_heritage_item(row) if row is not None else None
 
 
 @error_handling
 @db_connection_handling
-def get_item_by_id(conn: sqlite3.Connection, item_id: int) -> HeritageItem | None:
+def get_item_by_id(conn: sqlite3.Connection, user_id: str, item_id: int) -> HeritageItem | None:
     row = conn.execute(
-        f"SELECT {ITEM_COLUMNS} FROM items WHERE id = ?", (item_id,)
+        f"SELECT {ITEM_COLUMNS} FROM items WHERE id = ? AND user_id = ?", (item_id, user_id)
     ).fetchone()
     return row_to_heritage_item(row) if row is not None else None
 
@@ -228,7 +236,8 @@ def full_delete(conn: sqlite3.Connection, item: HeritageItem) -> None:
     try:
         conn.execute("BEGIN IMMEDIATE") # the write operation so that only the current function can write
         row = conn.execute(
-            f"SELECT {ITEM_COLUMNS} FROM items WHERE id = ?", (item.id,)
+            f"SELECT {ITEM_COLUMNS} FROM items WHERE id = ? AND user_id = ?",
+            (item.id, item.user_id),
         ).fetchone()
         if row is None:
             conn.rollback() # if terrible things happen (try to delete something that doesn't exist), undo them
@@ -236,7 +245,10 @@ def full_delete(conn: sqlite3.Connection, item: HeritageItem) -> None:
         stored_item = row_to_heritage_item(row)
         with image_deletion(stored_item):
             with conn:
-                conn.execute("DELETE FROM items WHERE id = ?", (item.id,))
+                conn.execute(
+                    "DELETE FROM items WHERE id = ? AND user_id = ?",
+                    (item.id, item.user_id),
+                )
     except Exception:
         conn.rollback()
         raise
@@ -278,25 +290,28 @@ def get_all_achievements(conn: sqlite3.Connection) -> list[tuple]:
 
 @error_handling
 @db_connection_handling
-def get_unlocked_achievement_map(conn: sqlite3.Connection) -> dict[str, int]:
-    """Map of achievement code -> unlocked_at, for everything unlocked so far."""
-    rows = conn.execute("SELECT code, unlocked_at FROM unlocked_achievements").fetchall()
+def get_unlocked_achievement_map(conn: sqlite3.Connection, user_id: str) -> dict[str, int]:
+    """Map of achievement code -> unlocked_at, for everything this user has unlocked."""
+    rows = conn.execute(
+        "SELECT code, unlocked_at FROM unlocked_achievements WHERE user_id = ?", (user_id,)
+    ).fetchall()
     return {code: unlocked_at for code, unlocked_at in rows}
 
 
 @error_handling
 @db_connection_handling
-def unlock_achievement(conn: sqlite3.Connection, code: str) -> None:
+def unlock_achievement(conn: sqlite3.Connection, user_id: str, code: str) -> None:
     with conn:
         conn.execute(
-            "INSERT OR IGNORE INTO unlocked_achievements (code) VALUES (?)", (code,)
+            "INSERT OR IGNORE INTO unlocked_achievements (user_id, code) VALUES (?, ?)",
+            (user_id, code),
         )
-    logger.info("Unlocked achievement: %s", code)
+    logger.info("Unlocked achievement for %s: %s", user_id, code)
 
 
 @error_handling
 @db_connection_handling
-def run_count_query(conn: sqlite3.Connection, sql: str) -> int:
-    """Run a SELECT COUNT(...)-shaped query with no params and return the scalar result."""
-    row = conn.execute(sql).fetchone()
+def run_count_query(conn: sqlite3.Connection, sql: str, params: tuple = ()) -> int:
+    """Run a SELECT COUNT(...)-shaped query and return the scalar result."""
+    row = conn.execute(sql, params).fetchone()
     return row[0] if row else 0
