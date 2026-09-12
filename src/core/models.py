@@ -11,15 +11,17 @@ CULTURAL_SUBCATEGORIES = [
     "ARCHITECTURE",
     "MONUMENT",
     "ARTIFACT",
-    "ARCHAEOLOGY"
+    "HISTORICAL SITE",
+    "OTHER"
 ]
 
 NATURAL_SUBCATEGORIES = [
     "FOSSIL",
     "GEOLOGY",
-    "PLANT",
-    "ANIMAL",
-    "LANDMARK"
+    "WILDLIFE",
+    "AQUATIC",
+    "LANDFORM",
+    "OTHER"
 ]
 
 # Ordered oldest -> newest so a timeline slider can filter/sort by index.
