@@ -1,10 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+
+const SCAN_DURATION_MS = 2600;
 
 export default function Camera() {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const navigate = useNavigate();
+  const [isScanning, setIsScanning] = useState(false);
 
   useEffect(() => {
     async function startCamera() {
@@ -30,6 +33,8 @@ export default function Camera() {
   }, []);
 
   function capturePhoto() {
+    if (isScanning) return;
+
     const video = videoRef.current;
     const canvas = document.createElement("canvas");
 
@@ -42,18 +47,37 @@ export default function Camera() {
     canvas.toBlob((blob) => {
       if (!blob) return;
 
+      setIsScanning(true);
       const photoUrl = URL.createObjectURL(blob);
-      navigate("/result", { state: { photoUrl, photoBlob: blob } });
+
+      setTimeout(() => {
+        navigate("/result", { state: { photoUrl, photoBlob: blob } });
+      }, SCAN_DURATION_MS);
     }, "image/jpeg");
   }
 
   return (
     <main className="camera-screen">
-      <video ref={videoRef} autoPlay playsInline className="camera-preview" />
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        className={`camera-preview ${isScanning ? "scanning" : ""}`}
+      />
+
+      {isScanning && <div className="scan-line" aria-hidden="true" />}
+
+      {isScanning && (
+        <div className="scan-overlay" aria-hidden="true">
+          <div className="scan-spinner" />
+          <p className="scan-text">Scanning...</p>
+        </div>
+      )}
 
       <button
         className="capture-button"
         onClick={capturePhoto}
+        disabled={isScanning}
         aria-label="Capture photo"
       />
     </main>
