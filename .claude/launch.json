@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "insitu-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "server", "run", "dev", "--", "--port", "5173"],
+      "port": 5173
+    },
+    {
+      "name": "insitu-backend",
+      "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": ["src/app.py"],
+      "port": 5000
+    }
+  ]
+}

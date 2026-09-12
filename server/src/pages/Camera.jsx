@@ -43,7 +43,7 @@ export default function Camera() {
       if (!blob) return;
 
       const photoUrl = URL.createObjectURL(blob);
-      navigate("/result", { state: { photoUrl } });
+      navigate("/result", { state: { photoUrl, photoBlob: blob } });
     }, "image/jpeg");
   }
 
