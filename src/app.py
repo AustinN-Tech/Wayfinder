@@ -28,7 +28,7 @@ initialize_logging()
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024  # 10 MB request cap
-CORS(app, resources={r"/api/*": {"origins": os.environ.get("FRONTEND_ORIGIN", "*")}})
+CORS(app, resources={r"/api/*": {"origins": os.environ.get("FRONTEND_ORIGIN") or "*"}})
 
 SUBCATEGORIES_BY_CATEGORY = {
     "CULTURAL": CULTURAL_SUBCATEGORIES,

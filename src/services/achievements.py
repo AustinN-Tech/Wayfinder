@@ -1,25 +1,23 @@
 """Achievement rule evaluation.
 
 Each achievement is a row in the `achievements` table (code, name, description,
-rule_type, threshold, sort_order) - adding a new one is an INSERT, not a code
-change. `RULE_QUERIES` maps a rule_type to a single COUNT(...) query with no
-params; a rule is satisfied once that count reaches the achievement's
-threshold.
+rule_type, threshold, sort_order, target_value) - adding a new one is an
+INSERT, not a code change. `RULE_QUERIES` maps a rule_type to a query; a rule
+is satisfied once its count reaches the achievement's threshold.
 
-DEFAULT_ACHIEVEMENTS below are placeholders to prove the engine works end to
-end - swap them out for whatever you actually want once you've decided.
+Every query takes at least `user_id` as its first param, so achievements are
+earned per-account. Rule types that end in `_count` for a specific value
+(e.g. "10 fossils logged", not just "10 items logged") also take
+`target_value` as a second param - that's what lets one generic rule type
+back both "Dino Hunter" (target_value="FOSSIL") and "Shiny!"
+(target_value="GEOLOGY") without new code for each.
 """
 
 from services import database as db
 
-# Every query is scoped to one user via a `user_id = ?` param, so achievements
-# are earned per-account rather than shared across everyone using the app.
 RULE_QUERIES = {
     # Total items logged.
     "entry_count": "SELECT COUNT(*) FROM items WHERE user_id = ?",
-    # Items that have a photo attached (every item currently requires one,
-    # but this stays useful if that ever becomes optional).
-    "with_photo": "SELECT COUNT(*) FROM items WHERE user_id = ? AND image_path IS NOT NULL",
     # How many of the two top-level categories (CULTURAL/NATURAL) appear.
     "distinct_categories": "SELECT COUNT(DISTINCT category) FROM items WHERE user_id = ?",
     # How many distinct sub-categories (ART, FOSSIL, etc.) appear.
@@ -28,7 +26,14 @@ RULE_QUERIES = {
     "distinct_time_periods": (
         "SELECT COUNT(DISTINCT time_period) FROM items WHERE user_id = ? AND time_period IS NOT NULL"
     ),
+    # Items logged in one specific category - needs target_value (e.g. "CULTURAL").
+    "category_count": "SELECT COUNT(*) FROM items WHERE user_id = ? AND category = ?",
+    # Items logged in one specific sub-category - needs target_value (e.g. "FOSSIL").
+    "sub_category_count": "SELECT COUNT(*) FROM items WHERE user_id = ? AND sub_category = ?",
 }
+
+# rule_types that need a target_value alongside user_id.
+_TARGETED_RULE_TYPES = {"category_count", "sub_category_count"}
 
 DEFAULT_ACHIEVEMENTS = [
     dict(
@@ -40,12 +45,28 @@ DEFAULT_ACHIEVEMENTS = [
         sort_order=1,
     ),
     dict(
-        code="getting_serious",
-        name="Getting Serious",
-        description="Log 10 items.",
+        code="small_collection",
+        name="Small Collection",
+        description="Log 5 items.",
         rule_type="entry_count",
-        threshold=10,
+        threshold=5,
         sort_order=2,
+    ),
+    dict(
+        code="medium_collection",
+        name="Medium Collection",
+        description="Log 20 items.",
+        rule_type="entry_count",
+        threshold=20,
+        sort_order=3,
+    ),
+    dict(
+        code="large_collection",
+        name="Large Collection",
+        description="Log 50 items.",
+        rule_type="entry_count",
+        threshold=50,
+        sort_order=4,
     ),
     dict(
         code="both_worlds",
@@ -53,7 +74,7 @@ DEFAULT_ACHIEVEMENTS = [
         description="Log at least one CULTURAL item and one NATURAL item.",
         rule_type="distinct_categories",
         threshold=2,
-        sort_order=3,
+        sort_order=5,
     ),
     dict(
         code="time_traveler",
@@ -61,15 +82,39 @@ DEFAULT_ACHIEVEMENTS = [
         description="Log items from 3 different time periods.",
         rule_type="distinct_time_periods",
         threshold=3,
-        sort_order=4,
+        sort_order=6,
+    ),
+    dict(
+        code="dino_hunter",
+        name="Dino Hunter",
+        description="Discover 10 fossils.",
+        rule_type="sub_category_count",
+        threshold=10,
+        sort_order=7,
+        target_value="FOSSIL",
+    ),
+    dict(
+        code="shiny",
+        name="Shiny!",
+        description="Discover 10 geology finds.",
+        rule_type="sub_category_count",
+        threshold=10,
+        sort_order=8,
+        target_value="GEOLOGY",
     ),
 ]
 
 
 def seed_defaults() -> None:
-    """Idempotently insert the placeholder achievement set."""
+    """Idempotently insert the default achievement set."""
     for achievement in DEFAULT_ACHIEVEMENTS:
         db.seed_achievement(**achievement)
+
+
+def _query_params(user_id: str, rule_type: str, target_value: str | None) -> tuple:
+    if rule_type in _TARGETED_RULE_TYPES:
+        return (user_id, target_value)
+    return (user_id,)
 
 
 def evaluate_and_unlock(user_id: str) -> list[dict]:
@@ -83,13 +128,13 @@ def evaluate_and_unlock(user_id: str) -> list[dict]:
     already_unlocked = db.get_unlocked_achievement_map(user_id)
     newly_unlocked = []
 
-    for code, name, description, rule_type, threshold, _sort_order in db.get_all_achievements():
+    for code, name, description, rule_type, threshold, _sort_order, target_value in db.get_all_achievements():
         if code in already_unlocked:
             continue
         query = RULE_QUERIES.get(rule_type)
         if query is None:
             continue
-        progress = db.run_count_query(query, (user_id,))
+        progress = db.run_count_query(query, _query_params(user_id, rule_type, target_value))
         if progress >= threshold:
             db.unlock_achievement(user_id, code)
             newly_unlocked.append({"code": code, "name": name, "description": description})
@@ -102,9 +147,9 @@ def get_all_with_progress(user_id: str) -> list[dict]:
     unlocked = db.get_unlocked_achievement_map(user_id)
     results = []
 
-    for code, name, description, rule_type, threshold, sort_order in db.get_all_achievements():
+    for code, name, description, rule_type, threshold, sort_order, target_value in db.get_all_achievements():
         query = RULE_QUERIES.get(rule_type)
-        progress = db.run_count_query(query, (user_id,)) if query else 0
+        progress = db.run_count_query(query, _query_params(user_id, rule_type, target_value)) if query else 0
         results.append({
             "code": code,
             "name": name,
