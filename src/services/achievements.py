@@ -11,9 +11,14 @@ earned per-account. Rule types that end in `_count` for a specific value
 `target_value` as a second param - that's what lets one generic rule type
 back both "Dino Hunter" (target_value="FOSSIL") and "Shiny!"
 (target_value="GEOLOGY") without new code for each.
+
+`distinct_continents` is the one rule that can't be expressed as a flat SQL
+query - "which continent" isn't a stored column, so it's derived from each
+item's lat/lng in Python (see geo.py) and handled as a special case.
 """
 
 from services import database as db
+from services import geo
 
 RULE_QUERIES = {
     # Total items logged.
@@ -30,6 +35,10 @@ RULE_QUERIES = {
     "category_count": "SELECT COUNT(*) FROM items WHERE user_id = ? AND category = ?",
     # Items logged in one specific sub-category - needs target_value (e.g. "FOSSIL").
     "sub_category_count": "SELECT COUNT(*) FROM items WHERE user_id = ? AND sub_category = ?",
+    # Handled specially in _progress_for - see below. Kept here (mapped to
+    # None) just so it shows up as a recognized rule_type, not a silently
+    # skipped one.
+    "distinct_continents": None,
 }
 
 # rule_types that need a target_value alongside user_id.
@@ -102,6 +111,14 @@ DEFAULT_ACHIEVEMENTS = [
         sort_order=8,
         target_value="GEOLOGY",
     ),
+    dict(
+        code="world_traveler",
+        name="World Traveler",
+        description="Log at least one item on every continent.",
+        rule_type="distinct_continents",
+        threshold=len(geo.CONTINENTS),
+        sort_order=9,
+    ),
 ]
 
 
@@ -111,10 +128,19 @@ def seed_defaults() -> None:
         db.seed_achievement(**achievement)
 
 
-def _query_params(user_id: str, rule_type: str, target_value: str | None) -> tuple:
-    if rule_type in _TARGETED_RULE_TYPES:
-        return (user_id, target_value)
-    return (user_id,)
+def _progress_for(user_id: str, rule_type: str, target_value: str | None) -> int:
+    """Current progress count for one rule, for one user."""
+    if rule_type == "distinct_continents":
+        coordinates = db.get_user_coordinates(user_id)
+        continents = {geo.continent_for(lat, lng) for lat, lng in coordinates}
+        continents.discard(None)
+        return len(continents)
+
+    query = RULE_QUERIES.get(rule_type)
+    if query is None:
+        return 0
+    params = (user_id, target_value) if rule_type in _TARGETED_RULE_TYPES else (user_id,)
+    return db.run_count_query(query, params)
 
 
 def evaluate_and_unlock(user_id: str) -> list[dict]:
@@ -131,10 +157,7 @@ def evaluate_and_unlock(user_id: str) -> list[dict]:
     for code, name, description, rule_type, threshold, _sort_order, target_value in db.get_all_achievements():
         if code in already_unlocked:
             continue
-        query = RULE_QUERIES.get(rule_type)
-        if query is None:
-            continue
-        progress = db.run_count_query(query, _query_params(user_id, rule_type, target_value))
+        progress = _progress_for(user_id, rule_type, target_value)
         if progress >= threshold:
             db.unlock_achievement(user_id, code)
             newly_unlocked.append({"code": code, "name": name, "description": description})
@@ -148,8 +171,7 @@ def get_all_with_progress(user_id: str) -> list[dict]:
     results = []
 
     for code, name, description, rule_type, threshold, sort_order, target_value in db.get_all_achievements():
-        query = RULE_QUERIES.get(rule_type)
-        progress = db.run_count_query(query, _query_params(user_id, rule_type, target_value)) if query else 0
+        progress = _progress_for(user_id, rule_type, target_value)
         results.append({
             "code": code,
             "name": name,

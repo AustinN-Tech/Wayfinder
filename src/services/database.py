@@ -216,6 +216,18 @@ def return_all_items(conn: sqlite3.Connection, user_id: str) -> list[HeritageIte
 
 @error_handling
 @db_connection_handling
+def get_user_coordinates(conn: sqlite3.Connection, user_id: str) -> list[tuple[float, float]]:
+    """Every (latitude, longitude) this user's items have set - for
+    location-derived achievements like World Traveler."""
+    return conn.execute(
+        "SELECT latitude, longitude FROM items "
+        "WHERE user_id = ? AND latitude IS NOT NULL AND longitude IS NOT NULL",
+        (user_id,),
+    ).fetchall()
+
+
+@error_handling
+@db_connection_handling
 def get_item_by_name(conn: sqlite3.Connection, user_id: str, name: str) -> HeritageItem | None:
     """Return the first matching item for this user; names need not be unique."""
     row = conn.execute(
