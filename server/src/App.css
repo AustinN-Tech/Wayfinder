@@ -172,6 +172,94 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: blur(0);
+  transition: filter 0.8s ease;
+}
+
+.camera-preview.scanning {
+  filter: blur(24px) brightness(0.6);
+}
+
+.scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(220, 220, 225, 0.9),
+    transparent
+  );
+  box-shadow: 0 0 16px 4px rgba(220, 220, 225, 0.7);
+  opacity: 0;
+  pointer-events: none;
+  animation:
+    scan-sweep 1.6s ease-in-out infinite,
+    scan-line-fade-in 0.5s ease forwards;
+  animation-delay: 0s, 0.2s;
+}
+
+@keyframes scan-line-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scan-sweep {
+  0% {
+    top: 0%;
+  }
+  50% {
+    top: 100%;
+  }
+  100% {
+    top: 0%;
+  }
+}
+
+.scan-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  pointer-events: none;
+  opacity: 0;
+  animation: scan-overlay-fade-in 0.8s ease forwards;
+  animation-delay: 0.3s;
+}
+
+@keyframes scan-overlay-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+.scan-spinner {
+  width: 56px;
+  height: 56px;
+  border: 4px solid rgba(220, 220, 225, 0.25);
+  border-top-color: rgba(220, 220, 225, 0.95);
+  border-radius: 50%;
+  animation: scan-spin 0.9s linear infinite;
+}
+
+@keyframes scan-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.scan-text {
+  margin: 0;
+  color: rgba(220, 220, 225, 0.95);
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 12px rgba(220, 220, 225, 0.5);
 }
 
 .capture-button {
@@ -184,6 +272,11 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.35);
   transform: translateX(-50%);
+  transition: opacity 0.3s ease;
+}
+
+.capture-button:disabled {
+  opacity: 0.4;
 }
 
 .result-screen {
