@@ -18,6 +18,7 @@ from utilities.util import initialize_logging, logger
 initialize_logging()
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024  # 10 MB request cap
 CORS(app, resources={r"/api/*": {"origins": os.environ.get("FRONTEND_ORIGIN", "*")}})
 
 SUBCATEGORIES_BY_CATEGORY = {
@@ -38,6 +39,7 @@ def _ensure_db():
 
 @app.errorhandler(400)
 @app.errorhandler(404)
+@app.errorhandler(413)
 @app.errorhandler(502)
 @app.errorhandler(503)
 def _json_error(err):
