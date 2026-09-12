@@ -97,3 +97,12 @@ def delete_user(conn: sqlite3.Connection, user: User) -> None:
         conn.execute("DELETE FROM users WHERE user_id = ?", (user.user_id,))
     logger.info("Deleted user: %s", user.user_id)
 
+@error_handling
+def get_or_create_user(auth0_id: str) -> User:
+    user = get_user_by_auth0_id(auth0_id)
+
+    if user is None:
+        user = User(auth0_id=auth0_id)
+        add_user(user)
+
+    return user
