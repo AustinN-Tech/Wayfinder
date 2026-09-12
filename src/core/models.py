@@ -1,0 +1,20 @@
+CATEGORIES = [
+    "CULTURAL",
+    "NATURAL"
+]
+
+CULTURAL_SUBCATEGORIES = [
+    "ART",
+    "ARCHITECTURE",
+    "MONUMENT",
+    "ARTIFACT",
+    "ARCHAEOLOGY"
+]
+
+NATURAL_SUBCATEGORIES = [
+    "FOSSIL",
+    "GEOLOGY",
+    "PLANT",
+    "ANIMAL",
+    "LANDMARK"
+]
