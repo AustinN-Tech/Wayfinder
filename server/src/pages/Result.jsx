@@ -182,7 +182,7 @@ export default function Result() {
           </label>
 
           <div className="result-actions">
-            <Link to="/camera" className="secondary" style={{ textAlign: "center", lineHeight: "2.5rem" }}>
+            <Link to="/camera" className="secondary">
               Retake
             </Link>
             <button

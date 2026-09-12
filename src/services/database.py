@@ -17,19 +17,6 @@ def create_db():
     conn = get_connection()
     c = conn.cursor()
     c.execute("""
-    CREATE TABLE IF NOT EXISTS books (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT UNIQUE NOT NULL,
-        author TEXT NOT NULL DEFAULT 'Unknown',
-        genre TEXT NOT NULL,
-        date_added INTEGER NOT NULL DEFAULT (strftime('%s','now')),
-        file_key TEXT NOT NULL UNIQUE,
-        cover_path TEXT NOT NULL,
-        original_filename TEXT NOT NULL,
-        bookmark_page INT
-    )
-    """)
-    c.execute("""
     CREATE TABLE IF NOT EXISTS items (
         item_id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
