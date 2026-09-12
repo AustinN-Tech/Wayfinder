@@ -8,6 +8,7 @@ export default function Camera() {
   const streamRef = useRef(null);
   const navigate = useNavigate();
   const [isScanning, setIsScanning] = useState(false);
+  const [capturedUrl, setCapturedUrl] = useState(null);
 
   useEffect(() => {
     async function startCamera() {
@@ -47,8 +48,9 @@ export default function Camera() {
     canvas.toBlob((blob) => {
       if (!blob) return;
 
-      setIsScanning(true);
       const photoUrl = URL.createObjectURL(blob);
+      setCapturedUrl(photoUrl);
+      setIsScanning(true);
 
       setTimeout(() => {
         navigate("/result", { state: { photoUrl, photoBlob: blob } });
@@ -64,6 +66,10 @@ export default function Camera() {
         playsInline
         className={`camera-preview ${isScanning ? "scanning" : ""}`}
       />
+
+      {isScanning && (
+        <img src={capturedUrl} className="frozen-frame" alt="" aria-hidden="true" />
+      )}
 
       {isScanning && <div className="scan-line" aria-hidden="true" />}
 
