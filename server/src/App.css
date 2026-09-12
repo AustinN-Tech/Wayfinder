@@ -443,7 +443,7 @@
   inset: -70px;
   z-index: 0;
   overflow: hidden;
-  filter: blur(26px) saturate(0.95) sepia(0.18);
+  filter: blur(24px) saturate(1.1) sepia(0.06);
 }
 
 .backdrop-slide {
@@ -483,9 +483,9 @@
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(circle at 25% 15%, rgba(255, 248, 232, 0.35), transparent 60%),
-    radial-gradient(circle at 80% 85%, rgba(139, 115, 85, 0.3), transparent 65%),
-    rgba(196, 173, 139, 0.5);
+    radial-gradient(circle at 25% 15%, rgba(255, 248, 232, 0.28), transparent 60%),
+    radial-gradient(circle at 80% 85%, rgba(139, 115, 85, 0.22), transparent 65%),
+    rgba(196, 173, 139, 0.3);
 }
 
 @media (prefers-reduced-motion: reduce) {
