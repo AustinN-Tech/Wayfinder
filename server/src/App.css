@@ -301,8 +301,6 @@
 }
 
 .result-screen {
-  padding: 2rem;
-  padding-bottom: 100px;
   text-align: left;
 }
 
@@ -418,169 +416,247 @@
 }
 
 .screen {
-  padding: 2rem;
-  padding-bottom: 100px;
-}
-
-.tab-bar {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 100;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: flex-end;
-  padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom));
-  background:
-    radial-gradient(circle at 18% 25%, rgba(139, 115, 85, 0.08), transparent 55%),
-    radial-gradient(circle at 82% 65%, rgba(139, 115, 85, 0.07), transparent 60%),
-    radial-gradient(circle at 50% 100%, rgba(139, 115, 85, 0.05), transparent 65%),
-    #f4ecd8;
-  border-top: 2px solid #8b7355;
-  box-shadow: 0 -6px 14px rgba(61, 40, 23, 0.22);
-}
-
-.nav-left {
-  display: flex;
-  justify-content: flex-start;
-  gap: 1.5rem;
-}
-
-.nav-right {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1.5rem;
-}
-
-/* a .tab that's a <button> rather than a link */
-.tab-button {
   padding: 0;
-  border: none;
-  background: none;
-  cursor: pointer;
 }
 
-.camera-tab {
-  position: relative;
-  top: -14px; /* pops it above the bar without breaking layout */
+/* ---------- journal shell ---------- */
+
+.desk {
   display: flex;
-  width: 62px;
-  height: 62px;
-  align-items: center;
   justify-content: center;
-  border: 3px double #f4ecd8;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #c9a04f, #a8873c 55%, #7c631f 100%);
+  align-items: flex-start;
+  min-height: 100svh;
+  box-sizing: border-box;
+  /* top padding leaves room for the tabs standing above the page */
+  padding: calc(clamp(0.75rem, 2.5vw, 1.5rem) + 34px) clamp(0.5rem, 2vw, 1.5rem)
+    clamp(0.75rem, 2.5vw, 1.5rem);
+  background:
+    radial-gradient(circle at 25% 15%, rgba(255, 248, 232, 0.5), transparent 60%),
+    radial-gradient(circle at 80% 85%, rgba(139, 115, 85, 0.35), transparent 65%),
+    #c4ad8b;
+}
+
+.journal {
+  position: relative;
+  width: min(1100px, 100%);
+}
+
+/* weathered parchment, not ruled notebook paper */
+.page {
+  position: relative;
+  z-index: 2;
+  min-height: 88svh;
+  box-sizing: border-box;
+  padding: clamp(1.75rem, 4vw, 3.5rem);
+  border-radius: 3px 10px 12px 4px;
   color: #3d2817;
+  font-size: 1.05rem;
+  background:
+    /* fibrous paper grain */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)' opacity='0.32'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(
+      52deg,
+      rgba(140, 106, 66, 0.022) 0 1px,
+      transparent 1px 9px
+    ),
+    repeating-linear-gradient(
+      -41deg,
+      rgba(140, 106, 66, 0.018) 0 1px,
+      transparent 1px 11px
+    ),
+    radial-gradient(ellipse at 18% 12%, rgba(166, 130, 88, 0.16), transparent 45%),
+    radial-gradient(ellipse at 84% 24%, rgba(150, 115, 74, 0.13), transparent 42%),
+    radial-gradient(ellipse at 70% 82%, rgba(158, 122, 80, 0.15), transparent 48%),
+    radial-gradient(ellipse at 30% 68%, rgba(176, 142, 98, 0.1), transparent 40%),
+    linear-gradient(168deg, #f4e9d0, #ecdcbd 55%, #e6d3b0);
   box-shadow:
-    0 4px 12px rgba(61, 40, 23, 0.45),
-    0 0 0 2px #8b7355,
-    inset 0 1px 2px rgba(255, 255, 255, 0.5),
-    inset 0 -2px 4px rgba(61, 40, 23, 0.4);
+    0 18px 42px rgba(74, 52, 32, 0.35),
+    /* aged, darkened edges */ inset 0 0 70px rgba(139, 105, 66, 0.28),
+    inset 14px 0 20px -14px rgba(74, 59, 44, 0.6);
+}
+
+/* the stitched spine edge */
+.page::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 7px;
+  width: 0;
+  border-left: 2px dashed rgba(109, 82, 52, 0.4);
+}
+
+.bookmarks {
+  position: absolute;
+  bottom: 100%;
+  left: clamp(0.75rem, 3vw, 1.75rem);
+  right: clamp(0.75rem, 3vw, 1.75rem);
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  /* how far each tab tucks under the next one at rest */
+  --overlap: -12px;
+  /* extends the hover target above the tabs so they open as you approach */
+  padding-top: 22px;
+}
+
+.bookmark {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  /* tucked behind the page's top edge so the tab reads as inserted */
+  margin-bottom: -14px;
+  margin-left: 0.35rem;
+  padding: 0.6rem 1rem 1.2rem;
+  border: none;
+  border-radius: 3px 3px 0 0;
+  background: var(--tab, #8b7355);
+  color: #f9f2df;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   text-decoration: none;
+  cursor: pointer;
+  box-shadow:
+    -4px -2px 7px rgba(74, 52, 32, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
   transition:
+    margin-left 0.22s ease,
     transform 0.18s ease,
-    box-shadow 0.18s ease,
+    opacity 0.18s ease,
     filter 0.18s ease;
 }
 
-.camera-tab svg {
-  transition: transform 0.18s ease;
+.bookmark:first-child {
+  margin-left: 0;
 }
 
-.tab {
-  display: flex;
-  flex: 0 0 64px;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-  color: #3d2817;
-  font-family: "Kalam", "Crimson Text", serif;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition:
-    color 0.18s ease,
-    transform 0.18s ease;
+/* the icon must hold its size when the tab narrows around it */
+.bookmark svg {
+  flex-shrink: 0;
 }
 
-.tab svg {
-  transition: transform 0.18s ease;
-}
-
-.tab.active {
-  color: #8b6914;
-}
-
-/* pen underline beneath the label — drawn in on hover, always on when active */
-.tab span {
-  position: relative;
-}
-
-.tab span::after {
-  content: "";
-  position: absolute;
-  right: -3px;
-  bottom: -2px;
-  left: -3px;
-  height: 1.5px;
-  border-radius: 1px;
-  background: currentColor;
-  opacity: 0.8;
-  transform: scaleX(0) rotate(-1deg);
-  transform-origin: left center;
-  transition: transform 0.2s ease;
-}
-
-.tab.active span::after {
-  transform: scaleX(1) rotate(-1deg);
+/* the open section's tab stands taller at the front of the pile */
+.bookmark.active {
+  transform: translateY(-6px);
 }
 
 @media (hover: hover) {
-  .tab:hover {
-    color: #7a2e2e;
-    transform: translateY(-2px);
+  /* At rest an unopened tab is only as wide as its icon, and tucks under the
+     next one, so the strip reads as a pile. Tabs keep their listed order. */
+  .bookmark {
+    width: 56px;
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-left: var(--overlap);
+    transition:
+      width 0.22s ease,
+      margin-left 0.22s ease,
+      transform 0.18s ease;
   }
 
-  .tab:hover svg {
-    transform: rotate(-5deg) scale(1.12);
+  .bookmark:first-child {
+    margin-left: 0;
   }
 
-  .tab:hover span::after {
-    transform: scaleX(1) rotate(-1deg);
+  /* the open tab is wide enough to read, and nothing is allowed to cover it */
+  .bookmark.active {
+    width: auto;
   }
 
-  .camera-tab:hover {
-    transform: translateY(-2px) scale(1.06);
-    filter: brightness(1.08);
-    box-shadow:
-      0 9px 20px rgba(61, 40, 23, 0.5),
-      0 0 0 2px #8b7355,
-      inset 0 1px 3px rgba(255, 255, 255, 0.6),
-      inset 0 -2px 5px rgba(61, 40, 23, 0.45);
+  .bookmark.active + .bookmark {
+    margin-left: 0.35rem;
   }
 
-  .camera-tab:hover svg {
-    transform: rotate(-6deg) scale(1.06);
+  /* labels belong to the open tab at rest, and to everything once fanned out */
+  .bookmark span {
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+
+  .bookmark.active span,
+  .bookmarks:hover .bookmark span,
+  .bookmarks:focus-within .bookmark span {
+    opacity: 1;
+  }
+
+  /* approaching the strip opens every tab to full width */
+  .bookmarks:hover .bookmark,
+  .bookmarks:focus-within .bookmark {
+    width: 172px;
+    margin-left: 0.35rem;
+  }
+
+  .bookmarks:hover .bookmark:first-child,
+  .bookmarks:focus-within .bookmark:first-child {
+    margin-left: 0;
+  }
+
+  .bookmark:hover {
+    transform: translateY(-3px);
+  }
+
+  .bookmark.active:hover {
+    transform: translateY(-8px);
+  }
+}
+
+.bookmark:focus-visible {
+  outline: 2px solid #3d2817;
+  outline-offset: 2px;
+}
+
+/* icon-only tabs once the labels stop fitting */
+@media (max-width: 600px) {
+  .bookmark span {
+    display: none;
+  }
+
+  .bookmark {
+    width: auto;
+    padding: 0.6rem 0.75rem 1.2rem;
+  }
+
+  .bookmarks {
+    --overlap: 0.35rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tab,
-  .tab svg,
-  .camera-tab,
-  .camera-tab svg,
-  .tab span::after {
+  .bookmark {
     transition: none;
   }
 
-  .tab:hover,
-  .tab:hover svg,
-  .camera-tab:hover,
-  .camera-tab:hover svg {
+  .bookmarks {
+    --overlap: 0.35rem;
+  }
+
+  .bookmark:hover,
+  .bookmark.active,
+  .bookmark.active:hover {
     transform: none;
   }
+}
+
+/* page typography */
+
+.page h1 {
+  margin: 0 0 1.25rem;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: clamp(2rem, 5.5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  color: #3d2817;
+}
+
+.page h2 {
+  font-family: "Kalam", "Crimson Text", serif;
+  color: #5c4a3a;
 }
 
 .ticks {
