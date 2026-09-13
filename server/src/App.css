@@ -176,6 +176,127 @@
   transition: filter 0.8s ease;
 }
 
+/* Shown when getUserMedia refuses. The viewfinder is a black full-bleed
+   surface, so anything in normal flow after the video is pushed out of sight
+   by overflow: hidden - this has to sit over the top of it. */
+.camera-trouble {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 5vw, 2rem);
+  background: rgba(18, 11, 5, 0.82);
+}
+
+.camera-trouble-card {
+  box-sizing: border-box;
+  width: min(30rem, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: clamp(1.35rem, 4vw, 1.9rem);
+  border-radius: 4px;
+  color: #3d2817;
+  text-align: center;
+  background:
+    linear-gradient(rgba(248, 240, 220, 0.82), rgba(248, 240, 220, 0.82)),
+    url("/images/textures/paper-texture.png"),
+    linear-gradient(168deg, #f4e9d0, #e6d3b0);
+  background-size: auto, 640px, auto;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
+}
+
+.camera-trouble-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 0.7rem;
+  border-radius: 50%;
+  color: #f9f2df;
+  background: #8f6518;
+}
+
+.camera-trouble-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.camera-trouble-card p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.camera-trouble-steps {
+  margin: 0.9rem 0 0;
+  padding-left: 1.3rem;
+  text-align: left;
+  line-height: 1.6;
+}
+
+.camera-trouble-steps li {
+  margin-bottom: 0.2rem;
+}
+
+.camera-trouble-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-top: 1.2rem;
+}
+
+.camera-trouble-btn {
+  padding: 0.55rem 1.15rem;
+  border: 1px solid #8f6518;
+  border-radius: 3px;
+  font: inherit;
+  font-size: 0.95rem;
+  color: #f9f2df;
+  background: #8f6518;
+  cursor: pointer;
+}
+
+.camera-trouble-btn.is-secondary {
+  color: #5a4026;
+  background: transparent;
+  border-color: rgba(90, 64, 38, 0.5);
+}
+
+.camera-trouble-btn:focus-visible {
+  outline: 2px solid #3d2817;
+  outline-offset: 2px;
+}
+
+/* A capture failure, unlike the panel above, leaves the viewfinder usable -
+   so it sits above the frame as a notice rather than covering it. */
+.camera-capture-error {
+  position: absolute;
+  left: 50%;
+  top: clamp(4.5rem, 12vh, 7rem);
+  z-index: 4;
+  max-width: min(26rem, calc(100% - 2rem));
+  margin: 0;
+  padding: 0.6rem 1rem;
+  transform: translateX(-50%);
+  border-radius: 3px;
+  text-align: center;
+  color: #f9f2df;
+  background: rgba(24, 15, 7, 0.88);
+}
+
+@media (hover: hover) {
+  .camera-trouble-btn:hover {
+    background: #7a5614;
+  }
+
+  .camera-trouble-btn.is-secondary:hover {
+    background: rgba(90, 64, 38, 0.1);
+  }
+}
+
 .camera-preview.scanning {
   filter: blur(24px) brightness(0.6);
 }
@@ -1300,7 +1421,7 @@
   color: rgba(139, 115, 85, 0.6);
 }
 
-/* one centred line - "Discovered at [where] on [when]" - reading as a single
+/* one centred line - "Discovered in [where] on [when]" - reading as a single
    fact. The rule runs the full column width regardless of how short it is. */
 .entry-meta {
   display: flex;
@@ -1585,14 +1706,10 @@
   width: var(--spine-width);
   border-radius: 4px 0 0 5px;
   background:
-    /* one thread running the length of the spine, sewn just shy of the crease.
-       Kept faint on purpose - at full strength it reads as a dashed line drawn
-       on the leather rather than stitching caught in the light. */
-    repeating-linear-gradient(180deg, rgba(248, 228, 192, 0.24) 0 8px, transparent 8px 17px),
     /* the rounded profile: light catching the crown, shaded where it rolls
        under on the left and folds into the gutter on the right. Shaded in the
-       leather's own brown rather than black, which is most of what keeps a
-       tan hide from reading as a dark one. */
+       leather's own brown rather than black, which is what keeps it reading as
+       one lit hide rather than a dark stripe. */
     linear-gradient(
       90deg,
       rgba(52, 32, 15, 0.42),
@@ -1602,17 +1719,15 @@
       rgba(52, 32, 15, 0.28) 88%,
       rgba(52, 32, 15, 0.42)
     ),
-    /* This is the tone control, not the gradient below it: the paper texture
-       covers that almost entirely, so how dark the leather reads is really
-       how much of the cream sheet this layer holds back. */
-    linear-gradient(rgba(85, 54, 25, 0.84), rgba(70, 44, 20, 0.88)),
-    url("/images/textures/paper-texture.png"),
-    /* only shows through the texture's lighter grain, and stands in for it
-       entirely if the image ever fails to load */
+    /* Real hide, so the grain is the texture rather than anything drawn on.
+       It already carries its own colour, so unlike the paper sheet it needs no
+       darkening layer over it to read as leather. */
+    url("/images/textures/leather-texture.png"),
+    /* stands in for the texture if the image ever fails to load */
     linear-gradient(168deg, #7d5730, #6a4a28 58%, #593e21);
-  background-size: 1.5px 100%, auto, auto, 440px, auto;
-  background-position: 62% 0, 0 0, 0 0, 0 0, 0 0;
-  background-repeat: no-repeat, repeat, repeat, repeat, repeat;
+  /* The strip only ever shows a narrow vertical slice, so this is really
+     choosing how large the grain reads, not how the sheet is laid out. */
+  background-size: auto, 260px, auto;
   box-shadow:
     /* the gutter darkening where the paper turns into the binding */
     2px 0 8px -2px rgba(60, 40, 22, 0.36),
@@ -2179,13 +2294,16 @@
   margin: auto;
 }
 
-/* the page block the cover closes over, showing along the fore edge */
+/* The page block the cover closes over, showing along the fore edge. Anchored
+   to .signin-cover rather than .signin-book - a short window caps the cover's
+   height, and its aspect-ratio then shrinks its width below the wrapper's,
+   which used to leave this stranded out in the desk. */
 .signin-pages {
   position: absolute;
   top: 9px;
   right: -7px;
   bottom: 9px;
-  width: 9px;
+  width: 7px;
   border-radius: 0 3px 3px 0;
   background: repeating-linear-gradient(to right, #f2e7cc 0 2px, #cfbd97 2px 3px);
   box-shadow: 3px 3px 9px rgba(38, 24, 12, 0.45);
@@ -2297,6 +2415,9 @@
    gradient, no gloss - the depth is the impression, not a shine. */
 .signin-button {
   position: relative;
+  /* the title's own 0.7rem sits above this - together they hold the two
+     stampings apart now that no line runs between them */
+  margin-top: 1.6rem;
   padding: 0.9rem 2.4rem;
   border: 1px solid rgba(214, 176, 106, 0.5);
   border-radius: 2px;
@@ -2820,6 +2941,10 @@ input[type="search"]::-webkit-search-cancel-button {
 
 .profile-avatar {
   display: block;
+  /* the border has to count inside the 64px, or the disc renders 68px and
+     spills past the button it sits in - which left the Edit overlay (inset on
+     that button) covering everything but a crescent down the right and bottom */
+  box-sizing: border-box;
   width: 64px;
   height: 64px;
   border-radius: 50%;
