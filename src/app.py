@@ -1,5 +1,6 @@
-import os
 import math
+import os
+import time
 import re
 from dataclasses import asdict
 from pathlib import Path
@@ -121,9 +122,22 @@ def get_item(item_id):
     return jsonify(_item_to_dict(item))
 
 
+# Enough to stop one person hammering the model; an in-memory stamp per user
+# is fine while this runs as a single process.
+IDENTIFY_INTERVAL_SECONDS = 3
+_last_identify = {}
+
+
 @app.post("/api/items/analyze")
 def analyze_item():
-    _current_user_id()
+    user_id = _current_user_id()
+
+    now = time.monotonic()
+    previous = _last_identify.get(user_id)
+    if previous is not None and now - previous < IDENTIFY_INTERVAL_SECONDS:
+        abort(429, description="too_fast")
+    _last_identify[user_id] = now
+
     if "image" not in request.files or request.files["image"].filename == "":
         abort(400, description="An 'image' file is required")
 
@@ -132,15 +146,14 @@ def analyze_item():
 
     try:
         suggestions = gemini_service.analyze_image(image_file.read(), mime_type)
-    except gemini_service.QuotaExceededError as exc:
-        abort(429, description=str(exc))
-    except RuntimeError as exc:
-        abort(503, description=str(exc))
-    except ValueError as exc:
-        abort(502, description=str(exc))
-    except Exception as exc:
+    except gemini_service.TransientModelError:
+        # already retried with backoff inside the service
+        abort(503, description="model_unavailable")
+    except gemini_service.QuotaExceededError:
+        abort(429, description="quota_exceeded")
+    except Exception:
         logger.exception("Gemini analysis failed")
-        abort(502, description=f"{type(exc).__name__}: {exc}")
+        abort(502, description="identify_failed")
 
     return jsonify(suggestions=suggestions)
 
@@ -415,11 +428,33 @@ def get_public_profile(other_user_id):
         abort(404, description="User not found")
 
     favorite = db.get_favorite_item(other_user_id)
+    items = db.return_all_items(other_user_id)
+
+    # Counts only - which kinds they collect, not what or where each one was.
+    breakdown = {}
+    for item in items:
+        breakdown[item.sub_category] = breakdown.get(item.sub_category, 0) + 1
+
+    # Same disclosure the favourite already makes (a name and a photo), for
+    # their three newest. Deliberately no location, description or coordinates.
+    recent = [
+        {
+            "id": item.id,
+            "name": item.name,
+            "image_path": Path(item.image_path).name,
+            "sub_category": item.sub_category,
+            "time_taken": item.time_taken,
+        }
+        for item in sorted(items, key=lambda i: i.time_taken or 0, reverse=True)[:3]
+    ]
+
     return jsonify(
         user=_user_to_dict(other),
         achievements=achievements.get_all_with_progress(other_user_id),
         activity=db.get_activity_by_day(other_user_id),
         favorite=_item_to_dict(favorite) if favorite else None,
+        categories=breakdown,
+        recent=recent,
     )
 
 

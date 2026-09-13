@@ -14,7 +14,7 @@ export default function FriendsRow({ friends }) {
     <Link to="/friends" className="friends-row">
       <span className="friends-row-heading">
         Friends
-        {friends.length > 0 && <span className="friends-row-count">· {friends.length}</span>}
+        {friends.length > 0 && <span className="friends-row-count">({friends.length})</span>}
       </span>
 
       {friends.length === 0 ? (
