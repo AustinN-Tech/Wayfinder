@@ -38,6 +38,16 @@ export async function createItem(fields, imageBlob) {
   return parseOrThrow(response);
 }
 
+export async function getItems() {
+  const response = await fetch(`${API_BASE_URL}/api/items`);
+  return parseOrThrow(response);
+}
+
+export async function getItem(id) {
+  const response = await fetch(`${API_BASE_URL}/api/items/${id}`);
+  return parseOrThrow(response);
+}
+
 export async function getCategories() {
   const response = await fetch(`${API_BASE_URL}/api/categories`);
   return parseOrThrow(response);
