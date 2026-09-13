@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
-import { getItem } from "../lib/api";
+import { Link, useNavigate, useParams } from "react-router";
+import { Trash2 } from "lucide-react";
+import { deleteItem, getItem } from "../lib/api";
 import AuthImage from "../components/AuthImage";
 import PageDoodles from "../components/PageDoodles";
 
@@ -20,14 +21,30 @@ function formatWhen(timeTaken) {
 
 export default function Entry() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [item, setItem] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     getItem(id)
       .then(setItem)
       .catch((err) => setErrorMessage(err.message));
   }, [id]);
+
+  async function handleDelete() {
+    if (deleting || !item) return;
+    if (!window.confirm(`Delete "${item.name}"? This can't be undone.`)) return;
+
+    setDeleting(true);
+    try {
+      await deleteItem(id);
+      navigate("/feed");
+    } catch (err) {
+      setErrorMessage(err.message);
+      setDeleting(false);
+    }
+  }
 
   if (errorMessage) {
     return (
@@ -78,9 +95,16 @@ export default function Entry() {
 
       {item.description && <p className="entry-description">{item.description}</p>}
 
-      <Link className="entry-back" to="/feed">
-        Back to entries
-      </Link>
+      <div className="entry-actions">
+        <Link className="entry-back" to="/feed">
+          Back to entries
+        </Link>
+
+        <button type="button" className="entry-delete" onClick={handleDelete} disabled={deleting}>
+          <Trash2 size={16} />
+          {deleting ? "Deleting..." : "Delete entry"}
+        </button>
+      </div>
     </main>
   );
 }

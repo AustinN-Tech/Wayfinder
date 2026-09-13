@@ -74,6 +74,14 @@ export async function getItem(id) {
   return parseOrThrow(response);
 }
 
+export async function deleteItem(id) {
+  const response = await fetch(`${API_BASE_URL}/api/items/${id}`, {
+    method: "DELETE",
+    headers: await authHeaders(),
+  });
+  return parseOrThrow(response);
+}
+
 export async function getAchievements() {
   const response = await fetch(`${API_BASE_URL}/api/achievements`, {
     headers: await authHeaders(),
