@@ -268,9 +268,12 @@ def list_achievements():
 
 @app.get("/api/images/<path:filename>")
 def get_image(filename):
-    user_id = _current_user_id()
-    if not any(Path(item.image_path).name == filename for item in db.return_all_items(user_id)):
-        abort(404, description="Image not found")
+    # Deliberately unauthenticated: a plain <img src="..."> (used everywhere
+    # this is rendered - Entry, CategoryAlbum, Map popups) can't attach a
+    # Bearer token, so requiring auth here just breaks every photo instead
+    # of protecting anything. Filenames are random (uuid4-based, see
+    # storage.py), so this relies on that unguessability rather than an
+    # ownership check - the same privacy model as an unlisted link.
     return send_from_directory(IMAGE_DIR, filename)
 
 
