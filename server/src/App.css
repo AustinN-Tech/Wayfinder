@@ -1557,6 +1557,9 @@
   gap: 0;
   /* how far each tab tucks under the next one at rest */
   --overlap: -12px;
+  /* icon-only at rest, wide enough for the longest label when opened */
+  --tab-rest: 56px;
+  --tab-open: 134px;
   /* extends the hover target above the tabs so they open as you approach */
   padding-top: 22px;
 }
@@ -1609,14 +1612,15 @@
   /* At rest an unopened tab is only as wide as its icon, and tucks under the
      next one, so the strip reads as a pile. Tabs keep their listed order. */
   .bookmark {
-    width: 56px;
+    width: var(--tab-rest);
     box-sizing: border-box;
     overflow: hidden;
     white-space: nowrap;
     margin-left: var(--overlap);
+    /* resting order comes from the page, so hover can lift a tab above it */
+    z-index: var(--tab-order, 1);
     transition:
       width 0.22s ease,
-      margin-left 0.22s ease,
       transform 0.18s ease;
   }
 
@@ -1633,28 +1637,27 @@
     margin-left: 0.35rem;
   }
 
-  /* labels belong to the open tab at rest, and to everything once fanned out */
+  /* labels belong to the open tab, and to whichever one you're pointing at */
   .bookmark span {
     opacity: 0;
     transition: opacity 0.18s ease;
   }
 
   .bookmark.active span,
-  .bookmarks:hover .bookmark span,
-  .bookmarks:focus-within .bookmark span {
+  .bookmark:hover span,
+  .bookmark:focus-visible span {
     opacity: 1;
   }
 
-  /* approaching the strip opens every tab to full width */
-  .bookmarks:hover .bookmark,
-  .bookmarks:focus-within .bookmark {
-    width: 172px;
-    margin-left: 0.35rem;
-  }
-
-  .bookmarks:hover .bookmark:first-child,
-  .bookmarks:focus-within .bookmark:first-child {
-    margin-left: 0;
+  /* Only the tab under the cursor opens, and it makes room by pushing the
+     tabs after it along rather than covering them. The ones before it keep
+     their place, so the tab's own left edge never moves - aim at a tab and it
+     stays where you aimed, which is what opening the whole strip broke. */
+  .bookmark:not(.active):hover,
+  .bookmark:not(.active):focus-visible {
+    width: var(--tab-open);
+    /* in front of the pile while it's open, whatever its resting order */
+    z-index: 20;
   }
 
   .bookmark:hover {
