@@ -125,7 +125,6 @@ export default function Profile() {
     <main className="page-body profile-screen">
       <PageHeader
         title="Profile"
-        subtitle="Your record so far, and the stamps it has earned you."
         accent="#8f6518"
       />
 

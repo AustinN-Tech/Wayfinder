@@ -32,7 +32,9 @@ export default function JournalShell({ children }) {
             // closed tab is its left edge, where the icon sits.
             const style = {
               "--tab": color,
-              zIndex: index + 1,
+              // a custom property, not an inline z-index: inline styles outrank
+              // any selector, so :hover could never lift a tab above the pile
+              "--tab-order": index + 1,
             };
             const className = `bookmark ${active ? "active" : ""}`;
             const content = (
