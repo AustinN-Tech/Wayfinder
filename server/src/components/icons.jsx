@@ -77,6 +77,40 @@ export function Medal({ size = 28, ...props }) {
   );
 }
 
+export function PostageStamp({ size = 28, ...props }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      {/* perforated outer edge */}
+      <rect
+        x="3.6"
+        y="3"
+        width="16.8"
+        height="18"
+        rx="1.5"
+        strokeDasharray="1.6 2.1"
+      />
+      {/* the printed frame, inset from the perforation */}
+      <rect x="6.3" y="5.6" width="11.4" height="12.8" rx="0.6" strokeWidth="1.2" opacity="0.85" />
+      {/* a small engraved star standing in for the stamp's picture */}
+      <path
+        d="M12 8.6 13 11.2 15.7 12 13 12.8 12 15.4 11 12.8 8.3 12 11 11.2Z"
+        fill="currentColor"
+        strokeWidth="0.6"
+      />
+    </svg>
+  );
+}
+
 export function FoldedMap({ size = 28, ...props }) {
   return (
     <svg
