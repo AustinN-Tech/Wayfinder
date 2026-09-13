@@ -3,7 +3,8 @@ import { Link, useParams } from "react-router";
 import { Search } from "lucide-react";
 import AuthImage from "../components/AuthImage";
 import PageDoodles from "../components/PageDoodles";
-import { SUB_CATEGORY_LABELS } from "../components/subCategoryMeta";
+import PageHeader from "../components/PageHeader";
+import { SUB_CATEGORY_ICONS, SUB_CATEGORY_LABELS } from "../components/subCategoryMeta";
 import { getItems } from "../lib/api";
 
 function formatWhen(timeTaken) {
@@ -48,19 +49,26 @@ export default function CategoryEntries() {
         &larr; All entries
       </Link>
 
-      <div className="feed-header">
-        <h1>{label}</h1>
-        <label className="feed-search">
-          <Search size={16} aria-hidden="true" />
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search entries..."
-            aria-label="Search entries"
-          />
-        </label>
-      </div>
+      <PageHeader
+        title={label}
+        subtitle={
+          items ? `${items.length} ${items.length === 1 ? "entry" : "entries"} catalogued here.` : undefined
+        }
+        icon={SUB_CATEGORY_ICONS[subCategory]}
+        accent={category === "NATURAL" ? "#3f6b4e" : "#a8452f"}
+        actions={
+          <label className="feed-search">
+            <Search size={16} aria-hidden="true" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search entries..."
+              aria-label="Search entries"
+            />
+          </label>
+        }
+      />
 
       {errorMessage && <p role="alert">{errorMessage}</p>}
       {!items && !errorMessage && <p>Opening your journal...</p>}
