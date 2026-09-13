@@ -1529,19 +1529,59 @@
      natural size, which lands 1:1 on a 2x display) rather than stretching.
      Every other layer keeps its default sizing. */
   background-size: auto, auto, auto, auto, auto, auto, auto, 640px, auto;
+  /* width of the page block along the bound edge */
+  --page-edge: clamp(9px, 1.8vw, 20px);
   box-shadow:
     0 18px 42px rgba(74, 52, 32, 0.35),
     /* aged, darkened edges */ inset 0 0 70px rgba(139, 105, 66, 0.28),
-    inset 14px 0 20px -14px rgba(74, 59, 44, 0.6);
+    inset 14px 0 20px -14px rgba(74, 59, 44, 0.6),
+    /* a few sheets showing behind the top one, each sitting slightly
+       shorter than the last so the block tapers */
+    -3px 0 0 -2px rgba(240, 231, 207, 0.95),
+    -6px 0 0 -4px rgba(226, 214, 184, 0.9),
+    -9px 0 0 -6px rgba(209, 194, 160, 0.85);
+}
+
+/* The page block seen edge-on: each pale stripe is one sheet, each fine dark
+   line the gap between two. A repeating gradient rather than artwork, so it
+   tiles cleanly however tall the page grows. */
+.page::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--page-edge);
+  border-radius: 3px 0 0 4px;
+  background:
+    /* the crease: paper curving down into the binding */
+    linear-gradient(
+      90deg,
+      rgba(64, 44, 26, 0.5),
+      rgba(74, 52, 32, 0.22) 40%,
+      rgba(74, 52, 32, 0.06) 72%,
+      transparent
+    ),
+    repeating-linear-gradient(
+      90deg,
+      #f4e9d0 0 2px,
+      rgba(120, 94, 62, 0.35) 2px 2.5px,
+      #ece0c2 2.5px 4px,
+      rgba(120, 94, 62, 0.22) 4px 4.5px
+    );
+  pointer-events: none;
 }
 
 /* the stitched spine edge */
+/* the thread, now running alongside the page block rather than standing in
+   for it - above it in paint order so the stitches stay visible */
 .page::before {
   content: "";
   position: absolute;
   top: 8px;
   bottom: 8px;
-  left: 7px;
+  left: calc(var(--page-edge) + 6px);
+  z-index: 1;
   width: 0;
   border-left: 2px dashed rgba(109, 82, 52, 0.4);
 }
