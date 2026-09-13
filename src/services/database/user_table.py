@@ -5,15 +5,15 @@ from .connections import db_connection_handling
 from utilities.util import error_handling
 
 logger = logging.getLogger(__name__)
-USER_COLUMNS = "user_id, auth0_id, username, display_name, created_at"
-USER_UPDATABLE_COLUMNS = {"username", "display_name"}
+USER_COLUMNS = "user_id, auth0_id, username, display_name, avatar_url, created_at"
+USER_UPDATABLE_COLUMNS = {"username", "display_name", "avatar_url"}
 
 
 def row_to_user(row) -> User:
     """Convert a row in USER_COLUMNS order to a user."""
     return User(
         user_id=row[0], auth0_id=row[1], username=row[2],
-        display_name=row[3], created_at=row[4],
+        display_name=row[3], avatar_url=row[4], created_at=row[5],
     )
 
 
@@ -57,6 +57,27 @@ def get_user_by_auth0_id(conn: sqlite3.Connection, auth0_id: str) -> User | None
         f"SELECT {USER_COLUMNS} FROM users WHERE auth0_id = ?", (auth0_id,),
     ).fetchone()
     return row_to_user(row) if row is not None else None
+
+
+@error_handling
+@db_connection_handling
+def get_user_by_username(conn: sqlite3.Connection, username: str) -> User | None:
+    row = conn.execute(
+        f"SELECT {USER_COLUMNS} FROM users WHERE username = ?", (username,),
+    ).fetchone()
+    return row_to_user(row) if row is not None else None
+
+
+@error_handling
+@db_connection_handling
+def search_users_by_username(conn: sqlite3.Connection, query: str, *, exclude_user_id: int, limit: int = 10) -> list[User]:
+    """Prefix search over claimed usernames only - unclaimed profiles aren't discoverable."""
+    rows = conn.execute(
+        f"SELECT {USER_COLUMNS} FROM users "
+        "WHERE username LIKE ? AND user_id != ? ORDER BY username LIMIT ?",
+        (f"{query}%", exclude_user_id, limit),
+    ).fetchall()
+    return [row_to_user(row) for row in rows]
 
 
 @error_handling
