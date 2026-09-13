@@ -1,4 +1,4 @@
-// Hand-drawn, sketch-style icons for the journal theme — deliberately
+// Hand-drawn, sketch-style icons for the journal theme - deliberately
 // imperfect/wobbly paths instead of clean geometric line icons.
 
 export function CompassRose({ size = 28, ...props }) {

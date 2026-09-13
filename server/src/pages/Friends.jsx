@@ -149,7 +149,7 @@ export default function Friends() {
 
       <section className="profile-section">
         <h2>Friends {data ? `(${data.friends.length})` : ""}</h2>
-        {data && data.friends.length === 0 && <p>No friends yet — search for a username above.</p>}
+        {data && data.friends.length === 0 && <p>No friends yet. Search for a username above.</p>}
         {data && data.friends.length > 0 && (
           <ul className="friend-list">
             {data.friends.map((user) => (
