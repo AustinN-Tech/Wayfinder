@@ -7,10 +7,10 @@ const TILTS = [-1.4, 1.1, -0.8, 1.6, -1.2, 0.9, -1.5];
 function progressText(achievement) {
   const { name, unlocked, unlockedAt, progress } = achievement;
   if (unlocked) {
-    return unlockedAt ? `${name} — Unlocked (${unlockedAt})` : `${name} — Unlocked`;
+    return unlockedAt ? `${name} · Unlocked (${unlockedAt})` : `${name} · Unlocked`;
   }
   const { current, target, unit } = progress;
-  return `${name} — ${current} / ${target} ${unit}`;
+  return `${name} · ${current} / ${target} ${unit}`;
 }
 
 function StampSlot({ achievement, tilt }) {

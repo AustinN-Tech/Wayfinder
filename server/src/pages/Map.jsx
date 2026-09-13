@@ -41,7 +41,9 @@ function buildEraList(categoryData) {
 export default function Map() {
   const [items, setItems] = useState(null);
   const [categoryData, setCategoryData] = useState(null);
-  const [eraIndex, setEraIndex] = useState(0); // 0 = All eras
+  // null until you move it, which resolves to the far right - eras still
+  // read oldest to newest left to right, with All eras past the newest
+  const [eraIndex, setEraIndex] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -54,7 +56,8 @@ export default function Map() {
   }, []);
 
   const eras = useMemo(() => buildEraList(categoryData), [categoryData]);
-  const selectedEra = eraIndex > 0 ? eras[eraIndex - 1] : null;
+  const sliderIndex = eraIndex ?? eras.length;
+  const selectedEra = sliderIndex < eras.length ? eras[sliderIndex] : null;
 
   const located = useMemo(
     () => (items || []).filter((item) => item.latitude != null && item.longitude != null),
@@ -125,7 +128,7 @@ export default function Map() {
             min={0}
             max={eras.length}
             step={1}
-            value={eraIndex}
+            value={sliderIndex}
             onChange={(e) => setEraIndex(Number(e.target.value))}
             aria-label="Era"
           />

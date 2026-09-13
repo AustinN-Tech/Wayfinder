@@ -380,6 +380,55 @@
   color: #8a2f1f;
 }
 
+/* the way back when the analysis fails - centred under the message, in the
+   same ochre as the journal's other buttons rather than browser default */
+.result-retake {
+  display: block;
+  margin: 0 auto 1.25rem;
+  padding: 0.6rem 1.3rem;
+  border: none;
+  border-radius: 3px;
+  background: #8f6518;
+  color: #f9f2df;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow:
+    0 3px 9px rgba(74, 52, 32, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease;
+}
+
+@media (hover: hover) {
+  .result-retake:hover {
+    background: #a4761f;
+    transform: translateY(-2px);
+  }
+}
+
+.result-retake:active {
+  transform: translateY(0);
+}
+
+.result-retake:focus-visible {
+  outline: 2px solid #3d2817;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-retake {
+    transition: none;
+  }
+
+  .result-retake:hover {
+    transform: none;
+  }
+}
+
 /* three spots of ink, tapped out one after another while it thinks */
 .thinking-dots {
   display: inline-flex;
@@ -2405,6 +2454,27 @@
   color: rgba(61, 40, 23, 0.45);
 }
 
+/* The clear button a search input draws itself, which otherwise arrives in the
+   browser's blue accent. Masking it lets the cross take an ink colour. */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  background-color: rgba(92, 74, 58, 0.75);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 2.5l7 7M9.5 2.5l-7 7' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 2.5l7 7M9.5 2.5l-7 7' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  input[type="search"]::-webkit-search-cancel-button:hover {
+    background-color: #3d2817;
+  }
+}
+
 @media (max-width: 640px) {
   .feed-search {
     flex: 1 1 auto;
@@ -2675,51 +2745,267 @@
 
 /* Both columns start at the same line and share one rhythm, rather than each
    carrying its own margins and drifting out of step. */
+/* Identity and friends run the full width, so the two columns beneath carry
+   comparable weight instead of one being stacked with everything. */
 .profile-columns {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 1.75rem 2.5rem;
+  gap: 1.4rem 2.5rem;
   align-items: start;
+}
+
+.profile-identity-block {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
 }
 
 .profile-column {
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 1.4rem;
   min-width: 0;
 }
 
-.profile-column .stamp-grid {
-  grid-template-columns: repeat(2, 1fr);
+/* an inscription inside the cover, not a section of its own */
+.profile-started {
+  margin: 0.35rem 0 0;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: rgba(92, 74, 58, 0.68);
 }
 
-/* Holds about two rows of stamps; past that it scrolls rather than pushing
-   the column taller than the one beside it. */
-.profile-achievements {
-  max-height: 340px;
-  padding: 0.5rem 0.75rem;
+.category-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* a fixed label column, so the bars all start on the same line */
+.category-bars li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr) 1.75rem;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+/* paging sits under the bars, the way the shelf's arrows sit beside stamps */
+.category-bars-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.7rem;
+}
+
+.category-bars-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(139, 115, 85, 0.45);
+  border-radius: 50%;
+  background: rgba(249, 242, 223, 0.85);
+  color: #8f6518;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+@media (hover: hover) {
+  .category-bars-step:hover:not(:disabled) {
+    background: #f4ecd8;
+    transform: scale(1.08);
+  }
+}
+
+.category-bars-step:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.category-bars-step:focus-visible {
+  outline: 2px solid #8f6518;
+  outline-offset: 3px;
+}
+
+.category-bars-page {
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.8rem;
+  color: rgba(92, 74, 58, 0.75);
+}
+
+.category-bar-label {
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.86rem;
+  color: #5c4a3a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-bar-track {
+  height: 13px;
+  border-radius: 2px;
+  background: rgba(139, 115, 85, 0.16);
+  box-shadow: inset 0 1px 2px rgba(74, 52, 32, 0.2);
+  overflow: hidden;
+}
+
+.category-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.category-bar-count {
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #3d2817;
+  text-align: right;
+}
+
+/* A single paged row. No scroll container, so the album's tooltip can hang
+   below a stamp without being clipped - which is what let the box come back
+   down to the height of the stamps themselves. */
+.stamp-shelf {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.7rem 0.55rem;
   border: 1px solid rgba(139, 115, 85, 0.4);
   border-radius: 3px;
   background: rgba(244, 236, 216, 0.35);
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 
-.profile-achievements .stamp-grid {
-  margin: 0.5rem 0;
+.stamp-shelf-row {
+  flex: 1;
+  min-width: 0;
 }
 
-/* The album's tooltip normally drops below its stamp, which this scroll box
-   clips - so you had to scroll to read it. Inside the box it sits over the
-   stamp instead, which always lands in view. */
-.profile-achievements .stamp-tooltip {
-  top: auto;
-  bottom: 8px;
+.stamp-shelf-row .stamp-grid {
+  grid-auto-flow: column;
+  grid-auto-columns: 172px;
+  grid-template-columns: none;
+  /* centred as a group, so one stamp sits in the middle of the shelf and two
+     sit either side of it rather than hugging the left edge */
+  justify-content: center;
+  gap: 1rem;
+  margin: 0;
 }
 
-.profile-achievements .stamp-tooltip::before {
-  display: none;
+/* The album insets its art to 76% of the slot, which on a stamp like First
+   Find - a circle with wide empty margins in its own canvas - leaves the
+   artwork small. Nearly filling the slot here buys about a quarter more. */
+.stamp-shelf-row .stamp-image {
+  inset: 3%;
+  width: 94%;
+  height: 94%;
 }
+
+/* The slot is always here, holding its width whether or not a button is in
+   it - otherwise showing an arrow would narrow the row, change how many
+   stamps fit, and the arrow could flicker in and out at the boundary. */
+.stamp-shelf-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+}
+
+.stamp-shelf-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(139, 115, 85, 0.5);
+  border-radius: 50%;
+  background: rgba(249, 242, 223, 0.9);
+  color: #8f6518;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+@media (hover: hover) {
+  .stamp-shelf-step:hover {
+    background: #f4ecd8;
+    transform: scale(1.08);
+  }
+}
+
+.stamp-shelf-step:focus-visible {
+  outline: 2px solid #8f6518;
+  outline-offset: 3px;
+}
+
+/* recent finds: compact rows, the favourite's treatment at a smaller size */
+.recent-finds {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recent-find {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--text-h);
+  text-decoration: none;
+}
+
+.recent-find img {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgba(139, 115, 85, 0.35);
+}
+
+.recent-find-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.recent-find-text strong {
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-find-text span {
+  font-size: 0.78rem;
+  color: rgba(92, 74, 58, 0.8);
+}
+
+@media (hover: hover) {
+  .recent-find:hover strong {
+    color: #8f6518;
+  }
+}
+
 
 @media (max-width: 760px) {
   .profile-columns {
@@ -2767,14 +3053,8 @@
   text-transform: capitalize;
 }
 
-/* A year of weeks won't fit a narrow column, so the grid scrolls sideways
-   once the squares hit their minimum rather than shrinking past tappable. */
-.heatmap-scroll {
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  padding-bottom: 0.35rem;
-}
-
+/* Ten weeks fit any column without scrolling, which is what lets a tooltip
+   sit over a cell - an overflow container would have clipped it. */
 .heatmap-grid {
   display: flex;
   gap: 3px;
@@ -2786,13 +3066,14 @@
   flex-direction: column;
   flex: 1;
   gap: 3px;
-  /* small enough that a year fits a desktop column, never below a tappable
-     square, and never so large the squares stop reading as a grid */
-  min-width: 12px;
-  max-width: 22px;
+  /* the cells share the column out between them; the cap only stops them
+     becoming tiles on a very wide screen */
+  min-width: 14px;
+  max-width: 32px;
 }
 
 .heatmap-cell {
+  position: relative;
   width: 100%;
   height: auto;
   aspect-ratio: 1;
@@ -2836,13 +3117,25 @@ button.heatmap-cell {
   outline-offset: 2px;
 }
 
-/* sits above the grid, outside its horizontal scroll box, so nothing clips it */
-.heatmap-readout {
-  min-height: 1.3rem;
-  margin: 0 0 0.5rem;
+/* the day's tally, over the cell you're pointing at - no standing instruction
+   line, the interaction is the explanation */
+.heatmap-tip {
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  z-index: 6;
+  width: max-content;
+  transform: translateX(-50%);
+  padding: 0.3rem 0.55rem;
+  border-radius: 4px;
+  background: #3d2817;
+  color: #f4ecd8;
   font-family: "Kalam", "Crimson Text", serif;
-  font-size: 0.88rem;
-  color: rgba(92, 74, 58, 0.85);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 3px 8px rgba(38, 24, 12, 0.4);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2947,19 +3240,38 @@ button.heatmap-cell {
   color: var(--text-h);
 }
 
-/* the plain back link on the friends pages (not the avatar row below) */
-.profile-friends-link {
-  display: inline-block;
-  margin: 0.1rem 0 1rem;
+/* a proper control rather than a bare text link */
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0.1rem 0 1.1rem;
+  padding: 0.45rem 0.95rem 0.45rem 0.7rem;
+  border: 1px solid rgba(139, 115, 85, 0.45);
+  border-radius: 3px;
+  background: rgba(244, 236, 216, 0.55);
   color: #8f6518;
   font-family: "Kalam", "Crimson Text", serif;
   font-size: 0.9rem;
   font-weight: 700;
   text-decoration: none;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
 }
 
-.profile-friends-link:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .back-button:hover {
+    border-color: rgba(139, 115, 85, 0.8);
+    background: rgba(244, 236, 216, 0.9);
+    transform: translateY(-1px);
+  }
+}
+
+.back-button:focus-visible {
+  outline: 2px solid #8f6518;
+  outline-offset: 3px;
 }
 
 /* a row of faces that opens the friends list - the avatars are the button, so
@@ -3071,16 +3383,11 @@ button.heatmap-cell {
 
 /* ---------- friends ---------- */
 
+/* the same pill the category pages use, just wider here since it's the
+   page's main control rather than a header accessory */
 .friend-search {
-  width: 100%;
-  max-width: 360px;
-  padding: 0.55rem 0.7rem;
-  border-radius: 4px;
-  border: 1px solid rgba(74, 52, 32, 0.35);
-  background: #fbf5e6;
-  color: var(--text-h);
-  font: inherit;
-  margin-bottom: 0.75rem;
+  flex: 0 1 360px;
+  margin-bottom: 0.85rem;
 }
 
 .friend-list {
@@ -3126,23 +3433,52 @@ button.heatmap-cell {
   flex-shrink: 0;
 }
 
+/* the same ochre control as Back to entries, in the journal's own hand */
 .friend-row-actions button {
-  padding: 0.35rem 0.7rem;
-  border-radius: 4px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 3px;
   border: none;
-  background: var(--accent);
-  color: #fff;
-  font-size: 0.85rem;
+  background: #8f6518;
+  color: #f9f2df;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   cursor: pointer;
+  box-shadow:
+    0 2px 6px rgba(74, 52, 32, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: background 0.18s ease;
+}
+
+@media (hover: hover) {
+  .friend-row-actions button:hover:not(:disabled) {
+    background: #a4761f;
+  }
+}
+
+.friend-row-actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .friend-row-decline {
   background: transparent !important;
-  color: var(--text) !important;
-  border: 1px solid rgba(74, 52, 32, 0.35) !important;
+  color: #5c4a3a !important;
+  border: 1px solid rgba(139, 115, 85, 0.5) !important;
+  box-shadow: none !important;
 }
 
 .friend-row-pending {
-  font-size: 0.8rem;
-  color: var(--text);
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: rgba(92, 74, 58, 0.8);
+}
+
+.friend-search-empty {
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: rgba(92, 74, 58, 0.8);
 }

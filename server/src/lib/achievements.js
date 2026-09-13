@@ -13,6 +13,8 @@ const STAMP_DISPLAY = [
   ["small_collection", "/images/stamp-icons/small-collection-stamp.png", "items catalogued"],
   ["medium_collection", "/images/stamp-icons/medium-collection-stamp.png", "items catalogued"],
   ["large_collection", "/images/stamp-icons/large-collection-stamp.png", "items catalogued"],
+  ["dino_hunter", "/images/stamp-icons/dino-hunter-stamp.png", "fossils catalogued"],
+  ["connoisseur", "/images/stamp-icons/connoisseur-stamp.png", "works of art found"],
   ["world_traveler", "/images/stamp-icons/world-traveler-stamp.png", "continents discovered"],
 ];
 
