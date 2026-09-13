@@ -1943,3 +1943,118 @@
   color: var(--text);
   text-transform: capitalize;
 }
+
+/* ---------- profile ---------- */
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--text-h);
+  background: var(--accent-bg);
+}
+
+.profile-name {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.profile-email {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.profile-section {
+  margin: 2rem 0;
+}
+
+.profile-section h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: var(--text-h);
+}
+
+.profile-favorite {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  text-decoration: none;
+  color: var(--text-h);
+  max-width: 340px;
+}
+
+.profile-favorite img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.profile-favorite div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.profile-favorite span {
+  font-size: 0.8rem;
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+.heatmap {
+  overflow-x: auto;
+}
+
+.heatmap-grid {
+  display: flex;
+  gap: 3px;
+  width: max-content;
+}
+
+.heatmap-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.heatmap-cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--accent-bg);
+}
+
+.heatmap-cell.level-empty {
+  visibility: hidden;
+}
+
+.heatmap-cell.level-1 {
+  background: #c9b88a;
+}
+
+.heatmap-cell.level-2 {
+  background: #8f6518;
+}
+
+.heatmap-cell.level-3 {
+  background: #3d2817;
+}
+
+.heatmap-caption {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text);
+}

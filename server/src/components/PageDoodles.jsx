@@ -93,6 +93,7 @@ const VARIANTS = {
   map: ["route", "mountains", "compass", "stars"],
   entry: ["ammonite", "stars", "fern", "glass"],
   result: ["feather", "stars", "curl"],
+  profile: ["curl", "stars", "compass"],
 };
 
 export default function PageDoodles({ variant }) {
