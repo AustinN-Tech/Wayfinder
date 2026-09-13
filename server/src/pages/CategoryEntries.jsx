@@ -7,10 +7,21 @@ import PageTurn from "../components/PageTurn";
 import { SUB_CATEGORY_LABELS } from "../components/subCategoryMeta";
 import { getItems } from "../lib/api";
 
-// A fixed 2x2 spread, so a page holds the same four slots at every width and
-// the page a given entry sits on never changes under you on resize.
-const PAGE_SIZE = 4;
+// A spread is always two rows deep; how many columns it holds depends on the
+// width, so a phone keeps its 2x2 page while a desktop fills the paper instead
+// of stranding cards in the top-left corner. Declared here and handed to CSS
+// as --entry-cols, so the layout and the page size can't disagree.
+const ROWS = 2;
+const BREAKPOINTS = [
+  { from: 980, columns: 4 },
+  { from: 700, columns: 3 },
+  { from: 0, columns: 2 },
+];
 const TURN_MS = 400;
+
+function columnsFor(width) {
+  return BREAKPOINTS.find((stop) => width >= stop.from).columns;
+}
 
 function formatWhen(timeTaken) {
   if (!timeTaken) return null;
@@ -26,6 +37,13 @@ export default function CategoryEntries() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
   const [direction, setDirection] = useState("next");
+  const [columns, setColumns] = useState(() => columnsFor(window.innerWidth));
+
+  useEffect(() => {
+    const onResize = () => setColumns(columnsFor(window.innerWidth));
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   useEffect(() => {
     getItems()
@@ -59,7 +77,8 @@ export default function CategoryEntries() {
     setDirection("prev");
   }
 
-  const pageCount = Math.max(1, Math.ceil((visibleItems?.length || 0) / PAGE_SIZE));
+  const pageSize = columns * ROWS;
+  const pageCount = Math.max(1, Math.ceil((visibleItems?.length || 0) / pageSize));
   const currentPage = Math.min(page, pageCount - 1);
 
   function turnTo(target) {
@@ -69,30 +88,22 @@ export default function CategoryEntries() {
   }
 
   function renderSpread(pageIndex) {
-    const start = pageIndex * PAGE_SIZE;
-    const pageItems = visibleItems ? visibleItems.slice(start, start + PAGE_SIZE) : [];
-    // A short last page keeps its empty slots rather than stretching the rest.
-    const slots = [...pageItems, ...Array(Math.max(0, PAGE_SIZE - pageItems.length)).fill(null)];
+    const start = pageIndex * pageSize;
+    const pageItems = visibleItems ? visibleItems.slice(start, start + pageSize) : [];
 
     return (
       <ul className="entry-page-grid">
-        {slots.map((item, index) =>
-          item ? (
-            <li key={item.id} className="entry-slot">
-              <Link to={`/entry/${item.id}`} className="entry-card">
-                <span className="entry-card-frame">
-                  <AuthImage path={item.image_path} loading="lazy" />
-                </span>
-                <strong>{item.name}</strong>
-                <span className="entry-card-date">{formatWhen(item.time_taken)}</span>
-              </Link>
-            </li>
-          ) : (
-            <li key={`empty-${index}`} className="entry-slot" aria-hidden="true">
-              <span className="entry-mount" />
-            </li>
-          )
-        )}
+        {pageItems.map((item) => (
+          <li key={item.id} className="entry-slot">
+            <Link to={`/entry/${item.id}`} className="entry-card">
+              <span className="entry-card-frame">
+                <AuthImage path={item.image_path} loading="lazy" />
+              </span>
+              <strong>{item.name}</strong>
+              <span className="entry-card-date">{formatWhen(item.time_taken)}</span>
+            </Link>
+          </li>
+        ))}
       </ul>
     );
   }
@@ -106,9 +117,7 @@ export default function CategoryEntries() {
 
       <PageHeader
         title={label}
-        subtitle={
-          items ? `${items.length} ${items.length === 1 ? "entry" : "entries"} catalogued here.` : undefined
-        }
+        note={items ? `${items.length} ${items.length === 1 ? "entry" : "entries"}` : undefined}
         accent={category === "NATURAL" ? "#3f6b4e" : "#a8452f"}
         aside={
           <label className="feed-search">
@@ -126,13 +135,15 @@ export default function CategoryEntries() {
 
       {errorMessage && <p role="alert">{errorMessage}</p>}
       {!items && !errorMessage && <p>Opening your journal...</p>}
-      {items?.length === 0 && <p>Nothing catalogued here yet.</p>}
+      {items?.length === 0 && (
+        <p>Nothing catalogued here yet. Press the seal at the foot of the page to add your first.</p>
+      )}
       {items?.length > 0 && visibleItems.length === 0 && (
         <p>No entries match &ldquo;{query}&rdquo;.</p>
       )}
 
       {visibleItems?.length > 0 && (
-        <div className="entry-pages">
+        <div className="entry-pages" style={{ "--entry-cols": columns }}>
           <PageTurn
             pageKey={currentPage}
             direction={direction}
