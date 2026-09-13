@@ -24,14 +24,14 @@ function InkRule() {
   );
 }
 
-export default function PageHeader({ title, subtitle, accent, note, aside }) {
+export default function PageHeader({ title, subtitle, accent, note, aside, rule = true }) {
   return (
     <header className="page-header" style={accent ? { "--header-accent": accent } : undefined}>
       <div className="page-header-row">
         <div className="page-header-heading">
-          <div className="page-header-titleline">
+          <div className={`page-header-titleline ${rule ? "" : "is-plain"}`}>
             <h1>{title}</h1>
-            <InkRule />
+            {rule && <InkRule />}
           </div>
 
           {subtitle && <p className="page-header-subtitle">{subtitle}</p>}
