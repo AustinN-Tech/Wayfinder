@@ -912,6 +912,67 @@
   }
 }
 
+.entry-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.entry-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.3rem;
+  border: none;
+  border-radius: 3px;
+  background: #8a2f1f;
+  color: #f9f2df;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow:
+    0 3px 9px rgba(74, 52, 32, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease;
+}
+
+@media (hover: hover) {
+  .entry-delete:hover:not(:disabled) {
+    background: #b1402c;
+    transform: translateY(-2px);
+  }
+}
+
+.entry-delete:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.entry-delete:focus-visible {
+  outline: 2px solid #3d2817;
+  outline-offset: 3px;
+}
+
+.entry-delete:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entry-delete {
+    transition: none;
+  }
+
+  .entry-delete:hover {
+    transform: none;
+  }
+}
+
 .suggestion-list {
   display: flex;
   flex-direction: column;
