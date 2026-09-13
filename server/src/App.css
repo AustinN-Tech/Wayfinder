@@ -1113,8 +1113,8 @@
   color: #3d2817;
   font-size: 1.05rem;
   background:
-    /* fibrous paper grain */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)' opacity='0.32'/%3E%3C/svg%3E"),
+    /* laid-paper fibres and aging blotches ride on top of the photographed
+       sheet, so they still read once the wash has softened it */
     repeating-linear-gradient(
       52deg,
       rgba(140, 106, 66, 0.022) 0 1px,
@@ -1129,7 +1129,16 @@
     radial-gradient(ellipse at 84% 24%, rgba(150, 115, 74, 0.13), transparent 42%),
     radial-gradient(ellipse at 70% 82%, rgba(158, 122, 80, 0.15), transparent 48%),
     radial-gradient(ellipse at 30% 68%, rgba(176, 142, 98, 0.1), transparent 40%),
+    /* the sheet is kraft-toned; this wash pulls it back to the journal's
+       cream without flattening the fibre. Raise the alpha to mute it further. */
+    linear-gradient(rgba(248, 240, 220, 0.74), rgba(248, 240, 220, 0.74)),
+    url("/images/textures/paper-texture.png"),
+    /* shows through only while the texture loads, or if it ever 404s */
     linear-gradient(168deg, #f4e9d0, #ecdcbd 55%, #e6d3b0);
+  /* the sheet is seamless, so it tiles at a fixed size (half its 1254px
+     natural size, which lands 1:1 on a 2x display) rather than stretching.
+     Every other layer keeps its default sizing. */
+  background-size: auto, auto, auto, auto, auto, auto, auto, 640px, auto;
   box-shadow:
     0 18px 42px rgba(74, 52, 32, 0.35),
     /* aged, darkened edges */ inset 0 0 70px rgba(139, 105, 66, 0.28),

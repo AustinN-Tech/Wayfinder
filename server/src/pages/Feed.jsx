@@ -33,7 +33,7 @@ export default function Feed() {
       {!items && !errorMessage && <p>Opening your journal...</p>}
 
       {items?.length === 0 && (
-        <p>Nothing catalogued yet — press the seal at the foot of the page to add your first find.</p>
+        <p>Nothing catalogued yet. Press the seal at the foot of the page to add your first find.</p>
       )}
 
       {items && categoryData && (
