@@ -3,6 +3,7 @@ import sqlite3
 from core.models import UserAchievement
 from utilities.util import error_handling
 from .connections import db_connection_handling
+from .items_table import validate_user_id
 
 USER_ACHIEVEMENT_COLUMNS = "user_id, achievement_id, progress, completed, earned_at"
 USER_ACHIEVEMENT_UPDATABLE_COLUMNS = {"progress", "completed", "earned_at"}
@@ -116,3 +117,36 @@ def delete_user_achievement(conn: sqlite3.Connection, user_achievement: UserAchi
             "DELETE FROM user_achievements WHERE user_id = ? AND achievement_id = ?",
             (user_achievement.user_id, user_achievement.achievement_id),
         )
+
+
+@error_handling
+@db_connection_handling
+def record_user_achievement_progress(
+    conn: sqlite3.Connection, user_id: int, achievement_id: int,
+    progress: int, completed: int,
+) -> bool:
+    """Record evaluated progress atomically; return whether this newly unlocked.
+
+    Previously earned achievements retain their completion and original time.
+    """
+    validate_user_id(user_id)
+    _validate_value("progress", progress)
+    _validate_value("completed", completed)
+    with conn:
+        conn.execute("BEGIN IMMEDIATE")
+        previous = conn.execute( # check if achievement is already done
+            "SELECT completed FROM user_achievements WHERE user_id = ? AND achievement_id = ?",
+            (user_id, achievement_id),
+        ).fetchone()
+        conn.execute("""
+            INSERT INTO user_achievements (user_id, achievement_id, progress, completed, earned_at)
+            VALUES (?, ?, ?, ?, CASE WHEN ? = 1 THEN CAST(strftime('%s','now') AS INTEGER) END)
+            ON CONFLICT(user_id, achievement_id) DO UPDATE SET
+                progress = CASE WHEN user_achievements.completed = 1 THEN 100 ELSE excluded.progress END,
+                completed = CASE WHEN user_achievements.completed = 1 THEN 1 ELSE excluded.completed END,
+                earned_at = CASE WHEN user_achievements.completed = 1
+                                THEN user_achievements.earned_at ELSE excluded.earned_at END
+        """, (user_id, achievement_id, progress, completed, completed))
+        # `CASE WHEN ? = 1 THEN CAST(strftime('%s','now') AS INTEGER' explained: Check if completed = 1 (true), if so immediately set `earned_at`` to the current Unix timestamp.
+        # `ON CONFLICT(user_id, achievement_id) DO UPDATE SET` explained: If entry already exists, update entry instead of creation
+    return completed == 1 and not (previous and previous[0] == 1)

@@ -23,6 +23,7 @@ from .items_table import (
     delete_all_db,
     update_item,
     return_all_items,
+    get_item_rule_counts,
     get_item_by_name,
     get_item_by_id,
     full_delete,
@@ -58,4 +59,5 @@ from .user_achievements_table import (
     return_all_user_achievements,
     update_user_achievement,
     delete_user_achievement,
+    record_user_achievement_progress,
 )

@@ -1,32 +1,9 @@
-"""Achievement rule evaluation.
+"""Evaluate achievement rules against each user's independent discoveries."""
 
-Each achievement is a row in the `achievements` table (code, name, description,
-rule_type, threshold, sort_order) - adding a new one is an INSERT, not a code
-change. `RULE_QUERIES` maps a rule_type to a single COUNT(...) query with no
-params; a rule is satisfied once that count reaches the achievement's
-threshold.
+import sqlite3
 
-DEFAULT_ACHIEVEMENTS below are placeholders to prove the engine works end to
-end - swap them out for whatever you actually want once you've decided.
-"""
-
+from core.models import Achievement
 from services import database as db
-
-RULE_QUERIES = {
-    # Total items logged.
-    "entry_count": "SELECT COUNT(*) FROM items",
-    # Items that have a photo attached (every item currently requires one,
-    # but this stays useful if that ever becomes optional).
-    "with_photo": "SELECT COUNT(*) FROM items WHERE image_path IS NOT NULL",
-    # How many of the two top-level categories (CULTURAL/NATURAL) appear.
-    "distinct_categories": "SELECT COUNT(DISTINCT category) FROM items",
-    # How many distinct sub-categories (ART, FOSSIL, etc.) appear.
-    "distinct_sub_categories": "SELECT COUNT(DISTINCT sub_category) FROM items",
-    # How many distinct time periods (bronze age, jurassic, etc.) appear.
-    "distinct_time_periods": (
-        "SELECT COUNT(DISTINCT time_period) FROM items WHERE time_period IS NOT NULL"
-    ),
-}
 
 DEFAULT_ACHIEVEMENTS = [
     dict(
@@ -61,57 +38,63 @@ DEFAULT_ACHIEVEMENTS = [
         threshold=3,
         sort_order=4,
     ),
-]
+] # placeholders for now until Luis sends entire achievement list
 
 
 def seed_defaults() -> None:
-    """Idempotently insert the placeholder achievement set."""
-    for achievement in DEFAULT_ACHIEVEMENTS:
-        db.seed_achievement(**achievement)
+    """Idempotently insert the placeholder definitions into the current schema."""
+    for definition in DEFAULT_ACHIEVEMENTS:
+        if db.get_achievement_by_code(definition["code"]) is not None:
+            continue
+        achievement = Achievement(
+            achievement_id=definition["sort_order"], code=definition["code"],
+            name=definition["name"], description=definition["description"],
+            rule_type=definition["rule_type"], threshold=definition["threshold"],
+        )
+        try:
+            db.add_achievement(achievement)
+        except sqlite3.IntegrityError:
+            # Another request may have seeded this same definition.
+            if db.get_achievement_by_code(achievement.code) is None:
+                raise
 
 
-def evaluate_and_unlock() -> list[dict]:
-    """Check every not-yet-unlocked achievement and unlock any newly earned ones.
-
-    Call this right after inserting an item. Returns the list of achievements
-    unlocked by this call (empty if none) - feed that straight into the API
-    response so the frontend can show a toast.
-    """
-    already_unlocked = db.get_unlocked_achievement_map()
+def evaluate_and_unlock(user_id: int) -> list[dict]:
+    """Evaluate only this user's discoveries and persist their unlocks."""
+    counts = db.get_item_rule_counts(user_id)
     newly_unlocked = []
-
-    for code, name, description, rule_type, threshold, _sort_order in db.get_all_achievements():
-        if code in already_unlocked:
+    for achievement in db.return_all_achievements():
+        if achievement.rule_type not in counts:
             continue
-        query = RULE_QUERIES.get(rule_type)
-        if query is None:
-            continue
-        progress = db.run_count_query(query)
-        if progress >= threshold:
-            db.unlock_achievement(code)
-            newly_unlocked.append({"code": code, "name": name, "description": description})
-
+        count = counts[achievement.rule_type]
+        completed = int(count >= achievement.threshold)
+        progress = 100 if completed else int(100 * count / achievement.threshold)
+        if db.record_user_achievement_progress(
+            user_id, achievement.achievement_id, progress, completed,
+        ):
+            newly_unlocked.append({
+                "code": achievement.code, "name": achievement.name,
+                "description": achievement.description,
+            })
     return newly_unlocked
 
 
-def get_all_with_progress() -> list[dict]:
-    """All achievement definitions, annotated with current progress/unlocked state."""
-    unlocked = db.get_unlocked_achievement_map()
+def get_all_with_progress(user_id: int) -> list[dict]:
+    """Definitions annotated with only this user's progress and earned state."""
+    counts = db.get_item_rule_counts(user_id)
+    links = {
+        link.achievement_id: link
+        for link in db.get_user_achievements_by_user_id(user_id)
+    }
     results = []
-
-    for code, name, description, rule_type, threshold, sort_order in db.get_all_achievements():
-        query = RULE_QUERIES.get(rule_type)
-        progress = db.run_count_query(query) if query else 0
+    for achievement in db.return_all_achievements():
+        link = links.get(achievement.achievement_id)
         results.append({
-            "code": code,
-            "name": name,
-            "description": description,
-            "rule_type": rule_type,
-            "threshold": threshold,
-            "sort_order": sort_order,
-            "progress": min(progress, threshold),
-            "unlocked": code in unlocked,
-            "unlocked_at": unlocked.get(code),
+            "code": achievement.code, "name": achievement.name,
+            "description": achievement.description, "rule_type": achievement.rule_type,
+            "threshold": achievement.threshold, "sort_order": achievement.achievement_id,
+            "progress": min(counts.get(achievement.rule_type, 0), achievement.threshold),
+            "unlocked": bool(link and link.completed),
+            "unlocked_at": link.earned_at if link and link.completed else None,
         })
-
     return results

@@ -5,10 +5,14 @@ from utilities.util import error_handling
 @error_handling
 @db_connection_handling
 def create_items_db(conn: sqlite3.Connection) -> None:
+    """Create the user-owned discoveries table and its owner index."""
+    create_users_db()
     with conn:
+        conn.execute("BEGIN IMMEDIATE")
         conn.execute("""
-            CREATE TABLE IF NOT EXISTS items (
+            CREATE TABLE IF NOT EXISTS heritage_items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
                 name TEXT NOT NULL,
                 category TEXT NOT NULL,
                 sub_category TEXT NOT NULL,
@@ -18,9 +22,11 @@ def create_items_db(conn: sqlite3.Connection) -> None:
                 time_taken INTEGER NOT NULL DEFAULT (strftime('%s','now')),
                 time_period TEXT NOT NULL,
                 description TEXT,
-                confidence_score TEXT NOT NULL
+                confidence_score TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
             )
         """)
+        conn.execute("CREATE INDEX IF NOT EXISTS heritage_items_user_id ON heritage_items(user_id)") # basically makes it more efficient to reduce lookup time
 
 
 @error_handling

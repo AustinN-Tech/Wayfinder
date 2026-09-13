@@ -62,6 +62,7 @@ CULTURAL_TIME_PERIODS = [
 
 @dataclass
 class HeritageItem:
+    user_id: int
     name: str
     category: str
     sub_category: str
@@ -73,6 +74,10 @@ class HeritageItem:
     confidence: str
     id: int | None = None
     time_taken: int | None = None
+
+    def __post_init__(self):
+        if type(self.user_id) is not int or self.user_id <= 0:
+            raise ValueError("user_id must be a positive local user ID")
 
 
 @dataclass

@@ -11,7 +11,7 @@ def db_connection_handling(func):
     def wrapper(*args, **kwargs):
         conn = sqlite3.connect(DB_PATH)
         try:
-            conn.execute("PRAGMA foreign_keys = ON")
+            conn.execute("PRAGMA foreign_keys = ON") # enable foreign keys
             return func(conn, *args, **kwargs)
         finally:
             conn.close()

@@ -43,3 +43,5 @@ test_item_persistence.py
 test_user_persistence.py
 test_user_achievement_persistence.py
 test_user_service.py
+test_item_ownership_api.py
+test_item_ownership.py
