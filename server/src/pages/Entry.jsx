@@ -112,7 +112,7 @@ export default function Entry() {
       </p>
 
       <dl className="entry-meta">
-        <dt>Discovered at</dt>
+        <dt>Discovered in</dt>
         <dd
           className={place || coords ? undefined : "is-unrecorded"}
           title={place && coords ? coords : undefined}
