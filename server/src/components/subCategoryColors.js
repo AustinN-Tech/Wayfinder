@@ -25,14 +25,14 @@ export const SUB_CATEGORY_WASH = {
 // motif for that sub-category. Falls back to SUB_CATEGORY_WASH + the icon
 // motif for everything not listed here yet.
 export const SUB_CATEGORY_BACKGROUND_IMAGES = {
-  FOSSIL: "/images/fossils-category-bg.png",
-  ARTIFACT: "/images/artifacts-category-bg.png",
-  ANIMAL: "/images/animals-category-bg.png",
-  GEOLOGY: "/images/geology-category-bg.png",
-  LANDMARK: "/images/landmarks-category-bg.png",
-  PLANT: "/images/plants-category-bg.png",
-  ART: "/images/art-category-bg.png",
-  ARCHITECTURE: "/images/architecture-category-bg.png",
-  MONUMENT: "/images/monuments-category-bg.png",
-  ARCHAEOLOGY: "/images/archaeology-category-bg.png",
+  FOSSIL: "/images/category-bgs/fossils-category-bg.png",
+  ARTIFACT: "/images/category-bgs/artifacts-category-bg.png",
+  ANIMAL: "/images/category-bgs/animals-category-bg.png",
+  GEOLOGY: "/images/category-bgs/geology-category-bg.png",
+  LANDMARK: "/images/category-bgs/landmarks-category-bg.png",
+  PLANT: "/images/category-bgs/plants-category-bg.png",
+  ART: "/images/category-bgs/art-category-bg.png",
+  ARCHITECTURE: "/images/category-bgs/architecture-category-bg.png",
+  MONUMENT: "/images/category-bgs/monuments-category-bg.png",
+  ARCHAEOLOGY: "/images/category-bgs/archaeology-category-bg.png",
 };

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from "react-router";
 import Feed from "./pages/Feed";
 import Map from "./pages/Map";
+import Stamps from "./pages/Stamps";
 import JournalShell from "./components/JournalShell";
 import Camera from "./pages/Camera";
 import Result from "./pages/Result";
@@ -16,6 +17,7 @@ function App() {
       <Route path="/" element={<Navigate to="/feed" replace />} />
       <Route path="/feed" element={<Feed />} />
       <Route path="/map" element={<Map />} />
+      <Route path="/stamps" element={<Stamps />} />
       <Route path="/camera" element={<Camera />} />
       <Route path="/result" element={<Result />} />
       <Route path="/entry/:id" element={<Entry />} />
