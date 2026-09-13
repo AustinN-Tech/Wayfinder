@@ -428,11 +428,33 @@ def get_public_profile(other_user_id):
         abort(404, description="User not found")
 
     favorite = db.get_favorite_item(other_user_id)
+    items = db.return_all_items(other_user_id)
+
+    # Counts only - which kinds they collect, not what or where each one was.
+    breakdown = {}
+    for item in items:
+        breakdown[item.sub_category] = breakdown.get(item.sub_category, 0) + 1
+
+    # Same disclosure the favourite already makes (a name and a photo), for
+    # their three newest. Deliberately no location, description or coordinates.
+    recent = [
+        {
+            "id": item.id,
+            "name": item.name,
+            "image_path": Path(item.image_path).name,
+            "sub_category": item.sub_category,
+            "time_taken": item.time_taken,
+        }
+        for item in sorted(items, key=lambda i: i.time_taken or 0, reverse=True)[:3]
+    ]
+
     return jsonify(
         user=_user_to_dict(other),
         achievements=achievements.get_all_with_progress(other_user_id),
         activity=db.get_activity_by_day(other_user_id),
         favorite=_item_to_dict(favorite) if favorite else None,
+        categories=breakdown,
+        recent=recent,
     )
 
 
