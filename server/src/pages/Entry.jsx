@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
-import { getItem } from "../lib/api";
+import { getItem, setFavorite } from "../lib/api";
 import AuthImage from "../components/AuthImage";
 import PageDoodles from "../components/PageDoodles";
 
@@ -22,12 +22,22 @@ export default function Entry() {
   const { id } = useParams();
   const [item, setItem] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
 
   useEffect(() => {
     getItem(id)
       .then(setItem)
       .catch((err) => setErrorMessage(err.message));
   }, [id]);
+
+  function toggleFavorite() {
+    if (favoriteBusy) return;
+    setFavoriteBusy(true);
+    setFavorite(item.id, !item.is_favorite)
+      .then(setItem)
+      .catch((err) => setErrorMessage(err.message))
+      .finally(() => setFavoriteBusy(false));
+  }
 
   if (errorMessage) {
     return (
@@ -57,6 +67,16 @@ export default function Entry() {
 
       <figure className="entry-figure">
         <AuthImage className="entry-photo" path={item.image_path} alt={item.name} />
+        <button
+          type="button"
+          className={`entry-favorite-toggle ${item.is_favorite ? "active" : ""}`}
+          onClick={toggleFavorite}
+          disabled={favoriteBusy}
+          aria-pressed={!!item.is_favorite}
+          aria-label={item.is_favorite ? "Remove as favorite" : "Mark as favorite"}
+        >
+          ★
+        </button>
       </figure>
 
       <p className="entry-tags">

@@ -16,7 +16,7 @@ def validate_user_id(user_id: int) -> None:
 
 ITEM_COLUMNS = (
     "id, name, category, sub_category, image_path, latitude, longitude, "
-    "time_taken, time_period, description, confidence_score, user_id"
+    "time_taken, time_period, description, confidence_score, user_id, is_favorite"
 )
 
 UPDATABLE_COLUMNS = {
@@ -31,6 +31,7 @@ UPDATABLE_COLUMNS = {
     "description": "description",
     "confidence": "confidence_score",
     "confidence_score": "confidence_score",
+    "is_favorite": "is_favorite",
 }
 
 def row_to_heritage_item(row) -> HeritageItem:
@@ -48,6 +49,7 @@ def row_to_heritage_item(row) -> HeritageItem:
         description=row[9],
         confidence=row[10],
         user_id=row[11],
+        is_favorite=row[12],
     )
 
 
@@ -204,6 +206,31 @@ def get_item_by_name(conn: sqlite3.Connection, name: str, *, user_id: int) -> He
         (name, user_id),
     ).fetchone()
     return row_to_heritage_item(row) if row is not None else None
+
+
+@error_handling
+@db_connection_handling
+def get_favorite_item(conn: sqlite3.Connection, user_id: int) -> HeritageItem | None:
+    validate_user_id(user_id)
+    row = conn.execute(
+        f"SELECT {ITEM_COLUMNS} FROM heritage_items WHERE user_id = ? AND is_favorite = 1 "
+        "ORDER BY id DESC LIMIT 1",
+        (user_id,),
+    ).fetchone()
+    return row_to_heritage_item(row) if row is not None else None
+
+
+@error_handling
+@db_connection_handling
+def get_activity_by_day(conn: sqlite3.Connection, user_id: int) -> dict[str, int]:
+    """Count of items logged per UTC day, for an activity heatmap."""
+    validate_user_id(user_id)
+    rows = conn.execute(
+        "SELECT date(time_taken, 'unixepoch') AS day, COUNT(*) FROM heritage_items "
+        "WHERE user_id = ? GROUP BY day",
+        (user_id,),
+    ).fetchall()
+    return dict(rows)
 
 
 @error_handling

@@ -74,6 +74,7 @@ class HeritageItem:
     confidence: str
     id: int | None = None
     time_taken: int | None = None
+    is_favorite: int = 0
 
     def __post_init__(self):
         if type(self.user_id) is not int or self.user_id <= 0:
@@ -96,7 +97,16 @@ class User:
     auth0_id: str
     username: str | None = None
     display_name: str | None = None
+    avatar_url: str | None = None
     user_id: int | None = None
+    created_at: int | None = None
+
+
+@dataclass
+class Friendship:
+    user_id: int
+    friend_id: int
+    status: str  # "pending" | "accepted"
     created_at: int | None = None
 
 
