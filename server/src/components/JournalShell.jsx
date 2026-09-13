@@ -1,43 +1,16 @@
 import { NavLink, useLocation } from "react-router";
 import { Camera } from "lucide-react";
-import { CompassRose, OpenBook, FoldedMap, Medal } from "./icons";
+import { OpenBook, FoldedMap, PostageStamp } from "./icons";
 
 const ITEMS = [
-  { to: "/", label: "Home", Icon: CompassRose, color: "#a8452f", end: true },
   { to: "/feed", label: "Entries", Icon: OpenBook, color: "#8f6518" },
   { to: "/map", label: "Map", Icon: FoldedMap, color: "#3f6b4e" },
-  { label: "Awards", Icon: Medal, color: "#6b4a7d" },
-  { to: "/camera", label: "New Entry", Icon: Camera, color: "#2f6b7a" },
+  { to: "/stamps", label: "Stamps", Icon: PostageStamp, color: "#6b4a7d" },
 ];
 
 function matches(item, pathname) {
   if (!item.to) return false;
   return item.end ? pathname === item.to : pathname.startsWith(item.to);
-}
-
-const BACKDROP_COUNT = 6;
-const BACKDROP_STEP = 12; // seconds each image holds before the next fades up
-
-// Slow drifting collage of public-domain landscapes, botanical plates and
-// antiquities, blurred far past legibility so it reads as colour and movement.
-function Backdrop() {
-  return (
-    <>
-      <div className="backdrop" aria-hidden="true">
-        {Array.from({ length: BACKDROP_COUNT }, (_, i) => (
-          <div
-            key={i}
-            className="backdrop-slide"
-            style={{
-              backgroundImage: `url(/backdrop/backdrop-${i + 1}.jpg)`,
-              animationDelay: `${i * BACKDROP_STEP}s`,
-            }}
-          />
-        ))}
-      </div>
-      <div className="backdrop-wash" aria-hidden="true" />
-    </>
-  );
 }
 
 export default function JournalShell({ children }) {
@@ -46,7 +19,6 @@ export default function JournalShell({ children }) {
 
   return (
     <div className="desk">
-      <Backdrop />
       <div className="journal">
         <nav className="bookmarks" aria-label="Journal sections">
           {ITEMS.map((item, index) => {
@@ -92,7 +64,15 @@ export default function JournalShell({ children }) {
           })}
         </nav>
 
-        <div className="page">{children}</div>
+        <div className="page">
+          {children}
+
+          <div className="page-seal-row">
+            <NavLink to="/camera" className="page-seal" aria-label="New entry">
+              <Camera size={26} />
+            </NavLink>
+          </div>
+        </div>
       </div>
     </div>
   );

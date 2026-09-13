@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { analyzeItem, createItem } from "../lib/api";
+import PageDoodles from "../components/PageDoodles";
 
 export default function Result() {
   const { state } = useLocation();
@@ -9,8 +10,25 @@ export default function Result() {
   const photoBlob = state?.photoBlob;
 
   const [suggestions, setSuggestions] = useState(null);
+  const [coords, setCoords] = useState(null);
   const [status, setStatus] = useState(photoBlob ? "analyzing" : "idle"); // idle | analyzing | ready | saving | error
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Asked for up front so a location is ready by the time a choice is made.
+  // Saving without one is fine, so a refusal or timeout is not an error.
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) =>
+        setCoords({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        }),
+      () => {},
+      { timeout: 8000, maximumAge: 60000 }
+    );
+  }, []);
 
   useEffect(() => {
     if (!photoBlob) return;
@@ -29,17 +47,18 @@ export default function Result() {
   async function selectSuggestion(suggestion) {
     setStatus("saving");
     try {
-      await createItem(
+      const saved = await createItem(
         {
           name: suggestion.name || "",
           category: suggestion.category || "",
           sub_category: suggestion.sub_category || "",
           time_period: suggestion.time_period || "",
           description: suggestion.description || "",
+          ...(coords || {}),
         },
         photoBlob
       );
-      navigate("/feed");
+      navigate(`/entry/${saved.item.id}`);
     } catch (err) {
       setErrorMessage(err.message);
       setStatus("ready");
@@ -61,7 +80,8 @@ export default function Result() {
   }
 
   return (
-    <main className="result-screen">
+    <main className="page-body result-screen">
+      <PageDoodles variant="result" />
       <h1>What did you find?</h1>
       <img className="captured-photo" src={photoUrl} alt="Captured" />
 
