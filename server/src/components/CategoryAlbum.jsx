@@ -1,13 +1,8 @@
 import { useState } from "react";
+import { MAIN_CATEGORIES } from "./categories";
 import { Link } from "react-router";
 import { SUB_CATEGORY_ICONS, SUB_CATEGORY_LABELS } from "./subCategoryMeta";
 import { SUB_CATEGORY_WASH, SUB_CATEGORY_BACKGROUND_IMAGES } from "./subCategoryColors";
-
-// Natural first/leftmost, so it's the default open tab.
-const MAIN_CATEGORIES = [
-  { key: "NATURAL", label: "Natural", accent: "#3f6b4e" },
-  { key: "CULTURAL", label: "Cultural", accent: "#a8452f" },
-];
 
 // A fixed small tilt per row index, so the discovered posters read as
 // hand-placed rather than machine-stamped identical rectangles.

@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const WEEKS = 53; // a full year back from today
+// Columns, so this sets how wide the grid is and how much history it
+// shows - height is always seven rows. Enough to fill a desktop column
+// at a readable cell size without making the page taller.
+const WEEKS = 17;
 
 // Local calendar date, not UTC: toISOString() would shift "today" onto the
 // wrong grid cell for anyone east of UTC (a find logged this morning would
@@ -47,13 +50,6 @@ function levelFor(count) {
   return 3;
 }
 
-// A mouse reads this by hovering, a phone by tapping - so the prompt shouldn't
-// tell a desktop user to tap. Hover capability doesn't change at runtime.
-const CAN_HOVER = typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches;
-const PROMPT = CAN_HOVER
-  ? "Hover over a day to see what you logged"
-  : "Tap a day to see what you logged";
-
 function describe(day) {
   const when = day.date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   return `${when} · ${day.count} ${day.count === 1 ? "find" : "finds"}`;
@@ -62,14 +58,6 @@ function describe(day) {
 // items: HeritageItem[] with a time_taken unix-seconds field.
 export default function ActivityHeatmap({ items }) {
   const [active, setActive] = useState(null);
-  const scroller = useRef(null);
-
-  // A year doesn't fit a phone, so the grid scrolls - and it should open on
-  // this week rather than on last autumn.
-  useEffect(() => {
-    const element = scroller.current;
-    if (element) element.scrollLeft = element.scrollWidth;
-  }, []);
 
   const countsByDay = {};
   for (const item of items) {
@@ -82,15 +70,7 @@ export default function ActivityHeatmap({ items }) {
 
   return (
     <div className="heatmap">
-      {/* A readout rather than a floating tooltip: the grid scrolls sideways
-          on a phone, and anything positioned over a cell gets clipped by that
-          scroll container. This also gives touch somewhere to show up. */}
-      <p className="heatmap-readout" role="status">
-        {active ? describe(active) : PROMPT}
-      </p>
-
-      <div className="heatmap-scroll" ref={scroller}>
-        <div className="heatmap-grid">
+      <div className="heatmap-grid">
         {weeks.map((week, weekIndex) => (
           <div className="heatmap-col" key={weekIndex}>
             {/* the rolling window ends today, so every cell is a real day
@@ -99,14 +79,27 @@ export default function ActivityHeatmap({ items }) {
               <button
                 type="button"
                 key={day.key}
-                className={`heatmap-cell level-${levelFor(day.count)} ${active?.key === day.key ? "is-active" : ""}`}
-                title={`${day.count} find${day.count === 1 ? "" : "s"} on ${day.key}`}
+                className={`heatmap-cell level-${levelFor(day.count)} ${
+                  active?.key === day.key ? "is-active" : ""
+                }`}
+                aria-label={describe(day)}
+                onPointerEnter={() => setActive(day)}
+                onPointerLeave={() =>
+                  setActive((current) => (current?.key === day.key ? null : current))
+                }
+                onFocus={() => setActive(day)}
+                onBlur={() => setActive(null)}
                 onClick={() => setActive(day)}
-              />
+              >
+                {active?.key === day.key && (
+                  <span className="heatmap-tip" role="status">
+                    {describe(day)}
+                  </span>
+                )}
+              </button>
             ))}
           </div>
-          ))}
-        </div>
+        ))}
       </div>
     </div>
   );

@@ -3,9 +3,10 @@ import { Link } from "react-router";
 import { useAuth0 } from "@auth0/auth0-react";
 import ActivityHeatmap from "../components/ActivityHeatmap";
 import AuthImage from "../components/AuthImage";
+import CategoryBars from "../components/CategoryBars";
 import FriendsRow from "../components/FriendsRow";
 import PageHeader from "../components/PageHeader";
-import StampAlbum from "../components/StampAlbum";
+import StampShelf from "../components/StampShelf";
 import {
   getItems,
   getAchievements,
@@ -16,6 +17,11 @@ import {
   avatarSrc,
 } from "../lib/api";
 import { toStampAchievements } from "../lib/achievements";
+
+function formatWhen(timeTaken) {
+  if (!timeTaken) return null;
+  return new Date(timeTaken * 1000).toLocaleDateString(undefined, { dateStyle: "medium" });
+}
 
 function UsernameEditor({ me, onSaved }) {
   // Editing by default only while there's nothing to show yet - claiming a
@@ -105,6 +111,13 @@ export default function Profile() {
       .finally(() => setAvatarBusy(false));
   }
 
+  // newest first, and only a few - this sits beside the favourite, not
+  // instead of the Entries page
+  const recent = useMemo(() => {
+    if (!items) return [];
+    return [...items].sort((a, b) => (b.time_taken || 0) - (a.time_taken || 0)).slice(0, 3);
+  }, [items]);
+
   // Only a find you actually starred. Standing in the most recent one made the
   // profile claim a favourite that was never chosen.
   const favorite = useMemo(() => {
@@ -118,6 +131,12 @@ export default function Profile() {
     if (!achievements) return null;
     return toStampAchievements(achievements).filter((stamp) => stamp.unlocked);
   }, [achievements]);
+
+  const startedAt = useMemo(() => {
+    if (me?.created_at) return me.created_at;
+    const stamps = (items || []).map((item) => item.time_taken).filter(Boolean);
+    return stamps.length > 0 ? Math.min(...stamps) : null;
+  }, [me, items]);
 
   const avatarUrl = me?.avatar_url ? avatarSrc(me.avatar_url) : user?.picture;
 
@@ -133,7 +152,7 @@ export default function Profile() {
       {/* Stacking order on a phone falls out of this source order: identity,
           friends, activity, favourite, achievements. */}
       <div className="profile-columns">
-        <div className="profile-column">
+        <div className="profile-identity-block">
           <div className="profile-card">
             <button
               type="button"
@@ -155,14 +174,30 @@ export default function Profile() {
             <div className="profile-identity">
               <p className="profile-name">{user?.name || user?.nickname || "Explorer"}</p>
               {me && <UsernameEditor me={me} onSaved={setMe} />}
+              {startedAt && (
+                <p className="profile-started">
+                  Journal started{" "}
+                  {new Date(startedAt * 1000).toLocaleDateString(undefined, {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+              )}
             </div>
           </div>
 
           <FriendsRow friends={friends} />
+        </div>
 
+        <div className="profile-column">
           <section className="profile-section">
             <h2>Activity</h2>
             {items ? <ActivityHeatmap items={items} /> : <p>Gathering your history...</p>}
+          </section>
+
+          <section className="profile-section">
+            <h2>Collection</h2>
+            {items ? <CategoryBars items={items} /> : <p>Counting your finds...</p>}
           </section>
         </div>
 
@@ -183,13 +218,32 @@ export default function Profile() {
           </section>
 
           <section className="profile-section">
-            <h2>Achievements ({unlockedCount})</h2>
-            {unlockedStamps && unlockedStamps.length > 0 ? (
-              <div className="profile-achievements">
-                <StampAlbum achievements={unlockedStamps} />
-              </div>
+            <h2>Recent finds</h2>
+            {recent.length > 0 ? (
+              <ul className="recent-finds">
+                {recent.map((item) => (
+                  <li key={item.id}>
+                    <Link to={`/entry/${item.id}`} className="recent-find">
+                      <AuthImage path={item.image_path} alt="" />
+                      <span className="recent-find-text">
+                        <strong>{item.name}</strong>
+                        <span>{formatWhen(item.time_taken)}</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             ) : (
-              <p>Log finds and earn your first stamp — see them all on the Stamps page.</p>
+              <p>Nothing logged yet.</p>
+            )}
+          </section>
+
+          <section className="profile-section">
+            <h2>Stamps ({unlockedCount})</h2>
+            {unlockedStamps && unlockedStamps.length > 0 ? (
+              <StampShelf achievements={unlockedStamps} />
+            ) : (
+              <p>Log finds and earn your first stamp. See them all on the Stamps page.</p>
             )}
           </section>
         </div>
