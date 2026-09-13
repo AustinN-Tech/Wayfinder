@@ -16,10 +16,13 @@ export default function SignIn({ status, message, onSignIn }) {
   return (
     <div className="desk signin-desk">
       <div className="signin-book">
-        {/* the block of pages the cover closes over */}
-        <span className="signin-pages" aria-hidden="true" />
-
         <div className="signin-cover">
+          {/* The block of pages the cover closes over. Inside the cover, not
+              beside it: the cover is narrower than .signin-book whenever a
+              short window caps its height, and anchored to the wrapper this
+              drifted out into the desk on its own. */}
+          <span className="signin-pages" aria-hidden="true" />
+
           <h1>{title}</h1>
           <p>{status === "error" ? message : body}</p>
 

@@ -2294,13 +2294,16 @@
   margin: auto;
 }
 
-/* the page block the cover closes over, showing along the fore edge */
+/* The page block the cover closes over, showing along the fore edge. Anchored
+   to .signin-cover rather than .signin-book - a short window caps the cover's
+   height, and its aspect-ratio then shrinks its width below the wrapper's,
+   which used to leave this stranded out in the desk. */
 .signin-pages {
   position: absolute;
   top: 9px;
   right: -7px;
   bottom: 9px;
-  width: 9px;
+  width: 7px;
   border-radius: 0 3px 3px 0;
   background: repeating-linear-gradient(to right, #f2e7cc 0 2px, #cfbd97 2px 3px);
   box-shadow: 3px 3px 9px rgba(38, 24, 12, 0.45);
