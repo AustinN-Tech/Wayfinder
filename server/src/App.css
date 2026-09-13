@@ -1027,15 +1027,13 @@
   /* top padding leaves room for the tabs standing above the page */
   padding: calc(clamp(0.75rem, 2.5vw, 1.5rem) + 34px) clamp(0.5rem, 2vw, 1.5rem)
     clamp(0.75rem, 2.5vw, 1.5rem);
-  background:
-    radial-gradient(circle at 25% 15%, rgba(255, 248, 232, 0.5), transparent 60%),
-    radial-gradient(circle at 80% 85%, rgba(139, 115, 85, 0.35), transparent 65%),
-    #c4ad8b;
+  background: #ded2ba;
 }
 
 .journal {
   position: relative;
-  width: min(1100px, 100%);
+  width: min(1300px, 100%);
+  font-size: 1.08em;
 }
 
 /* weathered parchment, not ruled notebook paper */
@@ -1803,7 +1801,7 @@
 .page h1 {
   margin: 0 0 1.25rem;
   font-family: "Kalam", "Crimson Text", serif;
-  font-size: clamp(2rem, 5.5vw, 3rem);
+  font-size: clamp(2.25rem, 6vw, 3.4rem);
   font-weight: 700;
   letter-spacing: 0;
   color: #3d2817;
