@@ -82,12 +82,14 @@ export default function FriendProfile() {
       </div>
 
       <div className="profile-columns">
-        <section className="profile-section">
-          <h2>Activity</h2>
-          <ActivityHeatmap items={itemsFromActivity(activity)} />
-        </section>
+        <div className="profile-column">
+          <section className="profile-section">
+            <h2>Activity</h2>
+            <ActivityHeatmap items={itemsFromActivity(activity)} />
+          </section>
+        </div>
 
-        <div className="profile-column-side">
+        <div className="profile-column">
           <section className="profile-section">
             <h2>Favorite find</h2>
             {favorite ? (

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
+import PageHeader from "../components/PageHeader";
 import { analyzeItem, createItem } from "../lib/api";
 
 export default function Result() {
