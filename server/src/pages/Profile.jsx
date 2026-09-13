@@ -116,7 +116,6 @@ export default function Profile() {
         title="Profile"
         subtitle="Your record so far, and the stamps it has earned you."
         accent="#8f6518"
-        note={items ? `${items.length} ${items.length === 1 ? "find" : "finds"} logged` : undefined}
       />
 
       <div className="profile-card">
