@@ -78,8 +78,14 @@ def save_upload_to_tempfile(file_storage) -> Path:
 
     fd, tmp_name = tempfile.mkstemp(suffix=".jpg")
     tmp_path = Path(tmp_name)
-    with os.fdopen(fd, "wb") as f:
-        image.save(f, format="JPEG", quality=JPEG_QUALITY, optimize=True)
+    try:
+        with os.fdopen(fd, "wb") as f:
+            image.save(f, format="JPEG", quality=JPEG_QUALITY, optimize=True)
+    except Exception:
+        _cleanup_image(tmp_path)
+        raise
+    finally:
+        image.close()
     return tmp_path
 
 

@@ -31,6 +31,7 @@ def send_friend_request(conn: sqlite3.Connection, user_id: int, target_id: int) 
     if user_id == target_id:
         raise ValueError("Cannot friend yourself")
     with conn:
+        conn.execute("BEGIN IMMEDIATE")
         existing = conn.execute(
             "SELECT status FROM friendships WHERE (user_id = ? AND friend_id = ?) "
             "OR (user_id = ? AND friend_id = ?)",
