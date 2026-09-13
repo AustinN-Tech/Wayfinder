@@ -17,7 +17,7 @@ import urllib.request
 logger = logging.getLogger(__name__)
 
 ENDPOINT = "https://nominatim.openstreetmap.org/reverse"
-USER_AGENT = "ArtifactJournal/1.0 (heritage journalling app)"
+USER_AGENT = "Wayfinder/1.0 (heritage journalling app)"
 TIMEOUT_SECONDS = 5
 
 # Town rather than street level - "Lubbock, Texas, United States", not a
