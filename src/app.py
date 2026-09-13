@@ -43,7 +43,7 @@ TIME_PERIODS_BY_CATEGORY = {
 
 @app.before_request
 def _ensure_db():
-    db.create_db()
+    db.create_items_db()
     achievements.seed_defaults()
 
 
@@ -257,6 +257,6 @@ def get_image(filename):
 
 
 if __name__ == "__main__":
-    db.create_db()
+    db.create_items_db()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
