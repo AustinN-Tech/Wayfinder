@@ -70,9 +70,14 @@ def create_items_db(conn: sqlite3.Connection) -> None:
                 description TEXT,
                 rule_type TEXT NOT NULL,
                 threshold INTEGER NOT NULL,
-                sort_order INTEGER NOT NULL DEFAULT 0
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                target_value TEXT
             )
         """)
+        # Migration guard: older local dbs created before target_value existed.
+        achievement_cols = [row[1] for row in conn.execute("PRAGMA table_info(achievements)")]
+        if "target_value" not in achievement_cols:
+            conn.execute("ALTER TABLE achievements ADD COLUMN target_value TEXT")
         conn.execute("""
             CREATE TABLE IF NOT EXISTS unlocked_achievements (
                 user_id TEXT NOT NULL,
@@ -211,6 +216,18 @@ def return_all_items(conn: sqlite3.Connection, user_id: str) -> list[HeritageIte
 
 @error_handling
 @db_connection_handling
+def get_user_coordinates(conn: sqlite3.Connection, user_id: str) -> list[tuple[float, float]]:
+    """Every (latitude, longitude) this user's items have set - for
+    location-derived achievements like World Traveler."""
+    return conn.execute(
+        "SELECT latitude, longitude FROM items "
+        "WHERE user_id = ? AND latitude IS NOT NULL AND longitude IS NOT NULL",
+        (user_id,),
+    ).fetchall()
+
+
+@error_handling
+@db_connection_handling
 def get_item_by_name(conn: sqlite3.Connection, user_id: str, name: str) -> HeritageItem | None:
     """Return the first matching item for this user; names need not be unique."""
     row = conn.execute(
@@ -257,21 +274,28 @@ def full_delete(conn: sqlite3.Connection, item: HeritageItem) -> None:
 
 # --- Achievements ---------------------------------------------------------
 
+ACHIEVEMENT_COLUMNS = "code, name, description, rule_type, threshold, sort_order, target_value"
+
+
 @error_handling
 @db_connection_handling
-def create_achievements_db(conn: sqlite3.Connection):
+def seed_achievement(
+    conn: sqlite3.Connection,
+    code: str,
+    name: str,
+    description: str,
+    rule_type: str,
+    threshold: int,
+    sort_order: int = 0,
+    target_value: str | None = None,
+) -> None:
+    """Insert an achievement definition if it doesn't already exist (by code)."""
     with conn:
         conn.execute("""
-            CREATE TABLE IF NOT EXISTS achievements (
-                achievement_id INT NOT NULL UNIQUE,
-                code TEXT NOT NULL UNIQUE,
-                name TEXT NOT NULL,
-                description TEXT,
-                category TEXT,
-                rule_type TEXT NOT NULL,
-                threshold INTEGER NOT NULL
-            )
-        """)
+            INSERT OR IGNORE INTO achievements
+                (code, name, description, rule_type, threshold, sort_order, target_value)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (code, name, description, rule_type, threshold, sort_order, target_value))
 
 
 # --- Users ---------------------------------------------------------
@@ -296,7 +320,6 @@ def unlock_achievement(conn: sqlite3.Connection, user_id: str, code: str) -> Non
         )
     logger.info("Unlocked achievement for %s: %s", user_id, code)
 
-                PRIMARY KEY (user_id, achievement_id),
 
 @error_handling
 @db_connection_handling

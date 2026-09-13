@@ -1,5 +1,18 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
+// Auth0's token getter lives behind a hook, so App registers it here on
+// render and these plain functions stay callable from anywhere.
+let getAccessToken = null;
+
+export function setTokenGetter(fn) {
+  getAccessToken = fn;
+}
+
+async function authHeaders() {
+  if (!getAccessToken) return {};
+  return { Authorization: `Bearer ${await getAccessToken()}` };
+}
+
 async function parseOrThrow(response) {
   const data = await response.json().catch(() => null);
   if (!response.ok) {
@@ -14,6 +27,7 @@ export async function analyzeItem(imageBlob) {
 
   const response = await fetch(`${API_BASE_URL}/api/items/analyze`, {
     method: "POST",
+    headers: await authHeaders(),
     body: formData,
   });
   const data = await parseOrThrow(response);
@@ -33,31 +47,40 @@ export async function createItem(fields, imageBlob) {
 
   const response = await fetch(`${API_BASE_URL}/api/items`, {
     method: "POST",
+    headers: await authHeaders(),
     body: formData,
   });
   return parseOrThrow(response);
 }
 
 export async function getItems() {
-  const response = await fetch(`${API_BASE_URL}/api/items`);
+  const response = await fetch(`${API_BASE_URL}/api/items`, {
+    headers: await authHeaders(),
+  });
   return parseOrThrow(response);
 }
 
 export async function getItem(id) {
-  const response = await fetch(`${API_BASE_URL}/api/items/${id}`);
+  const response = await fetch(`${API_BASE_URL}/api/items/${id}`, {
+    headers: await authHeaders(),
+  });
   return parseOrThrow(response);
 }
 
+export async function getAchievements() {
+  const response = await fetch(`${API_BASE_URL}/api/achievements`, {
+    headers: await authHeaders(),
+  });
+  return parseOrThrow(response);
+}
+
+// Unauthenticated on the server - it's static reference data.
 export async function getCategories() {
   const response = await fetch(`${API_BASE_URL}/api/categories`);
   return parseOrThrow(response);
 }
 
-export async function getAchievements() {
-  const response = await fetch(`${API_BASE_URL}/api/achievements`);
-  return parseOrThrow(response);
-}
-
+// Also unauthenticated, which is what lets a plain <img src> work.
 export function imageUrl(imagePath) {
   return `${API_BASE_URL}/api/images/${imagePath}`;
 }
