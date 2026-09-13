@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import AuthImage from "../components/AuthImage";
+import { SUB_CATEGORY_LABELS } from "../components/subCategoryMeta";
 import PageHeader from "../components/PageHeader";
 import { getItems, getCategories } from "../lib/api";
 import { ERA_YEAR_RANGES } from "../lib/eraYears";
@@ -88,7 +89,7 @@ export default function Map() {
 
       {items && located.length === 0 && !errorMessage && (
         <p>
-          Nothing placed on the map yet. Allow location access next time you catalogue a
+          Nothing placed on the map yet. Allow location access next time you discover a
           find, and it'll show up here.
         </p>
       )}
@@ -111,7 +112,7 @@ export default function Map() {
                   <Link to={`/entry/${item.id}`} className="map-popup">
                     <AuthImage path={item.image_path} alt={item.name} />
                     <strong>{item.name}</strong>
-                    <span>{item.sub_category}</span>
+                    <span>{SUB_CATEGORY_LABELS[item.sub_category] || item.sub_category}</span>
                   </Link>
                 </Popup>
               </Marker>

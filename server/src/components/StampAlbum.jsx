@@ -13,6 +13,13 @@ function progressText(achievement) {
   return `${name} · ${current} / ${target} ${unit}`;
 }
 
+// Anything started shows a sliver, so 1 of 50 still reads as begun rather
+// than as an empty trough.
+function fillPercent({ current, target }) {
+  if (!target || current <= 0) return 0;
+  return Math.min(100, Math.max(6, Math.round((current / target) * 100)));
+}
+
 function StampSlot({ achievement, tilt }) {
   const [open, setOpen] = useState(false);
   const slotRef = useRef(null);
@@ -51,7 +58,29 @@ function StampSlot({ achievement, tilt }) {
       </button>
 
       <span className="stamp-tooltip" role="tooltip">
-        {progressText(achievement)}
+        <span className="stamp-tooltip-name">{achievement.name}</span>
+
+        {unlocked ? (
+          <span className="stamp-tooltip-note">
+            {achievement.unlockedAt ? `Unlocked ${achievement.unlockedAt}` : "Unlocked"}
+          </span>
+        ) : (
+          <>
+            <span className="stamp-progress">
+              <span
+                className="stamp-progress-fill"
+                style={{
+                  width: `${fillPercent(achievement.progress)}%`,
+                  background: achievement.ink,
+                }}
+              />
+            </span>
+            <span className="stamp-tooltip-note">
+              {achievement.progress.current} of {achievement.progress.target}{" "}
+              {achievement.progress.unit}
+            </span>
+          </>
+        )}
       </span>
     </li>
   );

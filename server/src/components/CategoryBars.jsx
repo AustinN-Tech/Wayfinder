@@ -5,15 +5,21 @@ import { SUB_CATEGORY_WASH } from "./subCategoryColors";
 
 const PER_PAGE = 5;
 
-// How the collection splits across sub-categories, counted from the finds
-// themselves so there's no separate endpoint to keep in step. Each bar takes
-// its sub-category's own colour, the same one its card uses on Entries.
-export default function CategoryBars({ items }) {
+// How a collection splits across sub-categories. Each bar takes its
+// sub-category's own colour, the same one its card uses on Entries.
+//
+// Takes either the finds themselves (your own profile) or a ready-made tally
+// (a friend's, where the API sends counts rather than their catalogue).
+export default function CategoryBars({ items, counts: tally }) {
   const [page, setPage] = useState(0);
 
   const counts = {};
-  for (const item of items) {
-    counts[item.sub_category] = (counts[item.sub_category] || 0) + 1;
+  if (tally) {
+    Object.assign(counts, tally);
+  } else {
+    for (const item of items || []) {
+      counts[item.sub_category] = (counts[item.sub_category] || 0) + 1;
+    }
   }
 
   const rows = Object.entries(counts)

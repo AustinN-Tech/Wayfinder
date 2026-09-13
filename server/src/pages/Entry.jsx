@@ -105,7 +105,7 @@ export default function Entry() {
       </figure>
 
       <p className="entry-tags">
-        <span className="entry-tags-label">Filed under</span>
+        <span className="entry-tags-label">Classified as</span>
         <span className="entry-tag">{item.category}</span>
         <span className="entry-tag">{item.sub_category}</span>
         {item.time_period && <span className="entry-tag">{item.time_period}</span>}
