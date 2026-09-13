@@ -1,8 +1,14 @@
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const WEEKS = 18; // ~4 months, enough to read on a phone without scrolling sideways
 
+// Local calendar date, not UTC: toISOString() would shift "today" onto the
+// wrong grid cell for anyone east of UTC (a find logged this morning would
+// key to yesterday's UTC date and never match the "today" cell).
 function dateKey(date) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 // Builds WEEKS*7 day cells ending today, grouped into weeks (Sunday-first
@@ -11,9 +17,12 @@ function buildWeeks(countsByDay) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const totalDays = WEEKS * 7;
-  const start = new Date(today.getTime() - (totalDays - 1) * MS_PER_DAY);
-  start.setDate(start.getDate() - start.getDay()); // back up to the preceding Sunday
+  // Anchor on *this* week's Sunday first, then step back full weeks - doing
+  // it the other way (back up a fixed day-count, then round to Sunday)
+  // shrinks the range without extending it, silently dropping today off
+  // the end of the grid whenever today isn't itself a Sunday.
+  const start = new Date(today);
+  start.setDate(start.getDate() - start.getDay() - (WEEKS - 1) * 7);
 
   const days = [];
   for (let i = 0; i < WEEKS * 7; i++) {
