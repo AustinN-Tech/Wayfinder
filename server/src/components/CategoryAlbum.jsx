@@ -24,7 +24,11 @@ export default function CategoryAlbum({ items, subcategoriesByCategory }) {
     counts[key] = (counts[key] || 0) + 1;
   }
 
-  const rows = subcategoriesByCategory[active] || [];
+  // Sorted by the label you actually read, not the backend's key - "Aquatic"
+  // and "AQUATIC" don't order the same once a key and its label diverge.
+  const rows = [...(subcategoriesByCategory[active] || [])].sort((a, b) =>
+    (SUB_CATEGORY_LABELS[a] || a).localeCompare(SUB_CATEGORY_LABELS[b] || b)
+  );
 
   return (
     <section className="category-album">

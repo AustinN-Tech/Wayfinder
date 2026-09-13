@@ -105,12 +105,12 @@ export default function Profile() {
       .finally(() => setAvatarBusy(false));
   }
 
+  // Only a find you actually starred. Standing in the most recent one made the
+  // profile claim a favourite that was never chosen.
   const favorite = useMemo(() => {
     if (!items || items.length === 0) return null;
     const marked = items.filter((item) => item.is_favorite);
-    if (marked.length > 0) return marked[marked.length - 1];
-    // No favorite chosen yet - the most recent find is a reasonable stand-in.
-    return [...items].sort((a, b) => b.time_taken - a.time_taken)[0];
+    return marked.length > 0 ? marked[marked.length - 1] : null;
   }, [items]);
 
   const unlockedCount = achievements?.filter((a) => a.unlocked).length ?? 0;
@@ -179,7 +179,7 @@ export default function Profile() {
                 </div>
               </Link>
             ) : (
-              <p>Nothing logged yet — your first find will show up here.</p>
+              <p>No favorite yet. Open a find and tap its star to pick one.</p>
             )}
           </section>
 

@@ -47,6 +47,13 @@ function levelFor(count) {
   return 3;
 }
 
+// A mouse reads this by hovering, a phone by tapping - so the prompt shouldn't
+// tell a desktop user to tap. Hover capability doesn't change at runtime.
+const CAN_HOVER = typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches;
+const PROMPT = CAN_HOVER
+  ? "Hover over a day to see what you logged"
+  : "Tap a day to see what you logged";
+
 function describe(day) {
   const when = day.date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   return `${when} · ${day.count} ${day.count === 1 ? "find" : "finds"}`;
@@ -79,13 +86,15 @@ export default function ActivityHeatmap({ items }) {
           on a phone, and anything positioned over a cell gets clipped by that
           scroll container. This also gives touch somewhere to show up. */}
       <p className="heatmap-readout" role="status">
-        {active ? describe(active) : "Tap a day to see what you logged"}
+        {active ? describe(active) : PROMPT}
       </p>
 
       <div className="heatmap-scroll" ref={scroller}>
         <div className="heatmap-grid">
         {weeks.map((week, weekIndex) => (
           <div className="heatmap-col" key={weekIndex}>
+            {/* the rolling window ends today, so every cell is a real day
+                that has already happened - none are placeholders */}
             {week.map((day) => (
               <button
                 type="button"
