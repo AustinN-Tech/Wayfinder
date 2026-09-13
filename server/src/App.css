@@ -1986,12 +1986,15 @@
      the journal. Ships regular and italic only - no bold - and index.css sets
      font-synthesis: none, so weights here are deliberately 400. */
   --cover-font: "IM Fell English", Georgia, "Crimson Text", serif;
-  /* upright: a landscape book letterboxed on a tall phone always reads small */
+  /* Upright, at the proportions of an actual hardback. Driven by ratio rather
+     than viewport height, which on a tall phone stretched it into something
+     longer and narrower than any real book. */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: min(74svh, 660px);
+  aspect-ratio: 2 / 3;
+  max-height: min(82svh, 700px);
   padding: clamp(2.5rem, 7vw, 3.5rem) clamp(1.6rem, 5vw, 2.5rem);
   /* the extra left inset clears the spine */
   padding-left: calc(clamp(1.6rem, 5vw, 2.5rem) + 22px);
