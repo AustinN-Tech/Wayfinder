@@ -2415,6 +2415,9 @@
    gradient, no gloss - the depth is the impression, not a shine. */
 .signin-button {
   position: relative;
+  /* the title's own 0.7rem sits above this - together they hold the two
+     stampings apart now that no line runs between them */
+  margin-top: 1.6rem;
   padding: 0.9rem 2.4rem;
   border: 1px solid rgba(214, 176, 106, 0.5);
   border-radius: 2px;
