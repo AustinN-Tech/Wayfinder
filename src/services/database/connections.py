@@ -1,9 +1,14 @@
 import functools
 import sqlite3
 
-from services.storage import SRC_DIR
+from services.storage import IMAGE_DIR
 
-DB_PATH = SRC_DIR / "items.db"
+# On Railway, IMAGE_DIR resolves to the mounted Volume (see storage.py), so
+# putting the database there too means it survives redeploys - the container
+# filesystem itself is wiped every deploy, only the Volume persists. Locally
+# (no volume), IMAGE_DIR falls back to a project folder, so this still works
+# without a volume.
+DB_PATH = IMAGE_DIR / "items.db"
 
 def db_connection_handling(func):
     """Open a connection for a database operation and always close it."""
