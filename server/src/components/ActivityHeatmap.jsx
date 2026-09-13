@@ -1,5 +1,5 @@
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const WEEKS = 18; // ~4 months, enough to read on a phone without scrolling sideways
+const WEEKS = 17; // ~4 months, enough to read on a phone without scrolling sideways
 
 // Local calendar date, not UTC: toISOString() would shift "today" onto the
 // wrong grid cell for anyone east of UTC (a find logged this morning would
