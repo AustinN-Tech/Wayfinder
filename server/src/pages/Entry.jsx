@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
-import { getItem, imageUrl } from "../lib/api";
+import { getItem } from "../lib/api";
+import AuthImage from "../components/AuthImage";
 import PageDoodles from "../components/PageDoodles";
 
 function formatCoords(latitude, longitude) {
@@ -55,7 +56,7 @@ export default function Entry() {
       <h1>{item.name}</h1>
 
       <figure className="entry-figure">
-        <img className="entry-photo" src={imageUrl(item.image_path)} alt={item.name} />
+        <AuthImage className="entry-photo" path={item.image_path} alt={item.name} />
       </figure>
 
       <p className="entry-tags">

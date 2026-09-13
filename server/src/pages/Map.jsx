@@ -3,8 +3,9 @@ import { Link } from "react-router";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import AuthImage from "../components/AuthImage";
 import PageDoodles from "../components/PageDoodles";
-import { getItems, getCategories, imageUrl } from "../lib/api";
+import { getItems, getCategories } from "../lib/api";
 
 // A simple ink-drop pin, on-brand instead of Leaflet's default blue marker
 // (which also needs asset-path workarounds under Vite - this sidesteps that).
@@ -129,7 +130,7 @@ export default function Map() {
               <Marker key={item.id} position={[item.latitude, item.longitude]} icon={pinIcon}>
                 <Popup>
                   <Link to={`/entry/${item.id}`} className="map-popup">
-                    <img src={imageUrl(item.image_path)} alt={item.name} />
+                    <AuthImage path={item.image_path} alt={item.name} />
                     <strong>{item.name}</strong>
                     <span>{item.sub_category}</span>
                   </Link>
