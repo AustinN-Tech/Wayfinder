@@ -87,7 +87,15 @@ export async function getCategories() {
   return parseOrThrow(response);
 }
 
-// Also unauthenticated, which is what lets a plain <img src> work.
-export function imageUrl(imagePath) {
-  return `${API_BASE_URL}/api/images/${imagePath}`;
+// The images route checks ownership, so it needs the bearer token like any
+// other API call - a plain <img src> can't attach that header, which is why
+// callers fetch the bytes here and hand the component an object URL instead.
+export async function fetchImageBlob(imagePath) {
+  const response = await fetch(`${API_BASE_URL}/api/images/${imagePath}`, {
+    headers: await authHeaders(),
+  });
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+  return response.blob();
 }

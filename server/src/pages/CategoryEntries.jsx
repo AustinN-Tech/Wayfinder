@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
+import AuthImage from "../components/AuthImage";
 import PageDoodles from "../components/PageDoodles";
 import { SUB_CATEGORY_LABELS } from "../components/subCategoryMeta";
-import { getItems, imageUrl } from "../lib/api";
+import { getItems } from "../lib/api";
 
 function formatWhen(timeTaken) {
   if (!timeTaken) return null;
@@ -49,7 +50,7 @@ export default function CategoryEntries() {
             <li key={item.id}>
               <Link to={`/entry/${item.id}`} className="entry-card">
                 <span className="entry-card-frame">
-                  <img src={imageUrl(item.image_path)} alt="" loading="lazy" />
+                  <AuthImage path={item.image_path} loading="lazy" />
                 </span>
                 <strong>{item.name}</strong>
                 <span className="entry-card-date">{formatWhen(item.time_taken)}</span>
