@@ -11,24 +11,24 @@ function dateKey(date) {
   return `${year}-${month}-${day}`;
 }
 
-// Builds WEEKS*7 day cells ending today, grouped into weeks (Sunday-first
-// columns) so it reads left-to-right like a GitHub-style contribution graph.
+// Builds WEEKS*7 day cells as a rolling window ending today (not aligned to
+// calendar Sun-Sat weeks) - a calendar-aligned grid leaves the newest column
+// mostly empty whenever today isn't a Saturday, which looks like a single
+// square floating alone with nothing below it. A rolling window means the
+// last column is always 7 real, already-happened days, so it's never
+// disconnected from the rest of the grid.
 function buildWeeks(countsByDay) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Anchor on *this* week's Sunday first, then step back full weeks - doing
-  // it the other way (back up a fixed day-count, then round to Sunday)
-  // shrinks the range without extending it, silently dropping today off
-  // the end of the grid whenever today isn't itself a Sunday.
-  const start = new Date(today);
-  start.setDate(start.getDate() - start.getDay() - (WEEKS - 1) * 7);
+  const totalDays = WEEKS * 7;
+  const start = new Date(today.getTime() - (totalDays - 1) * MS_PER_DAY);
 
   const days = [];
-  for (let i = 0; i < WEEKS * 7; i++) {
+  for (let i = 0; i < totalDays; i++) {
     const date = new Date(start.getTime() + i * MS_PER_DAY);
     const key = dateKey(date);
-    days.push({ key, date, count: countsByDay[key] || 0, inRange: date <= today });
+    days.push({ key, count: countsByDay[key] || 0 });
   }
 
   const weeks = [];
@@ -65,8 +65,8 @@ export default function ActivityHeatmap({ items }) {
             {week.map((day) => (
               <div
                 key={day.key}
-                className={`heatmap-cell level-${day.inRange ? levelFor(day.count) : "empty"}`}
-                title={day.inRange ? `${day.count} find${day.count === 1 ? "" : "s"} on ${day.key}` : ""}
+                className={`heatmap-cell level-${levelFor(day.count)}`}
+                title={`${day.count} find${day.count === 1 ? "" : "s"} on ${day.key}`}
               />
             ))}
           </div>
