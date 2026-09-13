@@ -10,7 +10,14 @@ export function setTokenGetter(fn) {
 
 async function authHeaders() {
   if (!getAccessToken) return {};
-  return { Authorization: `Bearer ${await getAccessToken()}` };
+  try {
+    return { Authorization: `Bearer ${await getAccessToken()}` };
+  } catch {
+    // No usable session (not signed in, expired, etc.) - send the request
+    // without a token rather than failing the whole call here. The backend
+    // is what actually decides whether that's acceptable (401 if it isn't).
+    return {};
+  }
 }
 
 async function parseOrThrow(response) {
