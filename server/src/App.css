@@ -2525,7 +2525,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin: 1rem 0 0.75rem;
+  margin: 0;
 }
 
 .profile-avatar-button {
@@ -2587,34 +2587,51 @@
   color: var(--text);
 }
 
+/* Both columns start at the same line and share one rhythm, rather than each
+   carrying its own margins and drifting out of step. */
 .profile-columns {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 0 2.5rem;
+  gap: 1.75rem 2.5rem;
   align-items: start;
 }
 
-.profile-column-side {
+.profile-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
   min-width: 0;
 }
 
-.profile-column-side .stamp-grid {
+.profile-column .stamp-grid {
   grid-template-columns: repeat(2, 1fr);
 }
 
-@media (max-width: 700px) {
+/* Holds about two rows of stamps; past that it scrolls rather than pushing
+   the column taller than the one beside it. */
+.profile-achievements {
+  max-height: 340px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(139, 115, 85, 0.4);
+  border-radius: 3px;
+  background: rgba(244, 236, 216, 0.35);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.profile-achievements .stamp-grid {
+  margin: 0.5rem 0;
+}
+
+@media (max-width: 760px) {
   .profile-columns {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
+/* the column owns the spacing now */
 .profile-section {
-  margin: 1.5rem 0;
-}
-
-.profile-columns > .profile-section,
-.profile-column-side > .profile-section:first-child {
-  margin-top: 0;
+  margin: 0;
 }
 
 .profile-section h2 {
@@ -2652,34 +2669,46 @@
   text-transform: capitalize;
 }
 
-.heatmap {
+/* A year of weeks won't fit a narrow column, so the grid scrolls sideways
+   once the squares hit their minimum rather than shrinking past tappable. */
+.heatmap-scroll {
   overflow-x: auto;
-}
-
-@media (max-width: 700px) {
-  .heatmap-grid {
-    margin: 0 auto;
-  }
+  overscroll-behavior-x: contain;
+  padding-bottom: 0.35rem;
 }
 
 .heatmap-grid {
   display: flex;
   gap: 3px;
-  width: max-content;
+  width: 100%;
 }
 
 .heatmap-col {
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 3px;
+  /* small enough that a year fits a desktop column, never below a tappable
+     square, and never so large the squares stop reading as a grid */
+  min-width: 12px;
+  max-width: 22px;
 }
 
 .heatmap-cell {
-  width: 12px;
-  height: 12px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  padding: 0;
   border-radius: 2px;
   background: rgba(139, 105, 20, 0.14);
   border: 1px solid rgba(74, 52, 32, 0.28);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+button.heatmap-cell {
+  cursor: pointer;
 }
 
 .heatmap-cell.level-empty {
@@ -2698,10 +2727,34 @@
   background: #3d2817;
 }
 
-.heatmap-caption {
-  margin: 0.6rem 0 0;
-  font-size: 0.8rem;
-  color: var(--text);
+.heatmap-cell.is-active {
+  transform: scale(1.35);
+  border-color: #3d2817;
+  box-shadow: 0 1px 4px rgba(61, 40, 23, 0.45);
+}
+
+.heatmap-cell:focus-visible {
+  outline: 2px solid #8f6518;
+  outline-offset: 2px;
+}
+
+/* sits above the grid, outside its horizontal scroll box, so nothing clips it */
+.heatmap-readout {
+  min-height: 1.3rem;
+  margin: 0 0 0.5rem;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.88rem;
+  color: rgba(92, 74, 58, 0.85);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heatmap-cell {
+    transition: none;
+  }
+
+  .heatmap-cell.is-active {
+    transform: none;
+  }
 }
 
 .profile-username-form {
@@ -2719,24 +2772,61 @@
   color: var(--text);
 }
 
+/* input and button as one joined control - matched heights, shared border,
+   no gap between them */
+.profile-username-form .profile-username-row {
+  gap: 0;
+  border: 1px solid rgba(139, 115, 85, 0.5);
+  border-radius: 3px;
+  background: rgba(251, 245, 230, 0.75);
+  overflow: hidden;
+}
+
+.profile-username-form .profile-username-at {
+  padding: 0 0.1rem 0 0.55rem;
+  color: rgba(92, 74, 58, 0.7);
+  font-size: 0.9rem;
+  line-height: 32px;
+}
+
 .profile-username-row input {
   flex: 1;
-  padding: 0.3rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid rgba(74, 52, 32, 0.35);
-  background: #fbf5e6;
+  min-width: 0;
+  height: 32px;
+  padding: 0 0.4rem;
+  border: none;
+  background: none;
+  outline: none;
   color: var(--text-h);
-  font-size: 0.85rem;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.9rem;
 }
 
 .profile-username-row button {
-  padding: 0.3rem 0.7rem;
-  border-radius: 4px;
+  height: 32px;
+  padding: 0 0.9rem;
   border: none;
-  background: var(--accent);
-  color: #fff;
-  font-size: 0.8rem;
+  border-left: 1px solid rgba(139, 115, 85, 0.4);
+  background: #8f6518;
+  color: #f9f2df;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.profile-username-row button:hover:not(:disabled) {
+  background: #a4761f;
+}
+
+.profile-username-row button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.profile-username-form .profile-username-row:focus-within {
+  border-color: rgba(139, 115, 85, 0.9);
 }
 
 .profile-username-display {
@@ -2759,16 +2849,126 @@
   color: var(--text-h);
 }
 
+/* the plain back link on the friends pages (not the avatar row below) */
 .profile-friends-link {
   display: inline-block;
   margin: 0.1rem 0 1rem;
-  color: var(--text-h);
-  font-weight: 600;
+  color: #8f6518;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.9rem;
+  font-weight: 700;
   text-decoration: none;
 }
 
 .profile-friends-link:hover {
   text-decoration: underline;
+}
+
+/* a row of faces that opens the friends list - the avatars are the button, so
+   it has to look pressable rather than decorative */
+.friends-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid rgba(139, 115, 85, 0.4);
+  border-radius: 3px;
+  background: rgba(244, 236, 216, 0.45);
+  color: #3d2817;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+@media (hover: hover) {
+  .friends-row:hover {
+    border-color: rgba(139, 115, 85, 0.75);
+    background: rgba(244, 236, 216, 0.85);
+    transform: translateY(-1px);
+  }
+
+  .friends-row:hover .friend-avatar {
+    border-color: rgba(61, 40, 23, 0.5);
+  }
+}
+
+.friends-row:focus-visible {
+  outline: 2px solid #8f6518;
+  outline-offset: 3px;
+}
+
+.friends-row-heading {
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.friends-row-count {
+  margin-left: 0.35rem;
+  color: rgba(92, 74, 58, 0.75);
+  font-weight: 400;
+}
+
+.friends-row-empty {
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: rgba(92, 74, 58, 0.7);
+}
+
+/* overlapped, the way a stack of faces reads as a group */
+.friends-row-avatars {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding-left: 0.4rem;
+}
+
+.friend-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-left: -8px;
+  border: 2px solid #f4ecd8;
+  border-radius: 50%;
+  background: var(--friend-ink, #8f6518);
+  color: #f9f2df;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(61, 40, 23, 0.35);
+  transition: border-color 0.18s ease;
+}
+
+.friend-avatar:first-child {
+  margin-left: 0;
+}
+
+.friend-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.friend-avatar.is-overflow {
+  background: rgba(92, 74, 58, 0.18);
+  color: #5c4a3a;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 420px) {
+  .friends-row-avatars {
+    margin-left: 0;
+    padding-left: 0;
+  }
 }
 
 /* ---------- friends ---------- */
