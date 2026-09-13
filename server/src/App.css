@@ -2276,7 +2276,9 @@
 }
 
 .page-header-subtitle {
-  max-width: 54ch;
+  /* wide enough that the captions sit on one line on a desktop - they're all
+     kept under this, and still wrap on a phone where one line can't fit */
+  max-width: 70ch;
   margin: 0.45rem 0 0;
   font-family: "Kalam", "Crimson Text", serif;
   font-size: 0.92rem;
@@ -2662,6 +2664,18 @@
 
 .profile-achievements .stamp-grid {
   margin: 0.5rem 0;
+}
+
+/* The album's tooltip normally drops below its stamp, which this scroll box
+   clips - so you had to scroll to read it. Inside the box it sits over the
+   stamp instead, which always lands in view. */
+.profile-achievements .stamp-tooltip {
+  top: auto;
+  bottom: 8px;
+}
+
+.profile-achievements .stamp-tooltip::before {
+  display: none;
 }
 
 @media (max-width: 760px) {

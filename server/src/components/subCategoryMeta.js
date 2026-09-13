@@ -43,6 +43,6 @@ export const SUB_CATEGORY_LABELS = {
   FOSSIL: "Fossils",
   GEOLOGY: "Geology",
   WILDLIFE: "Wildlife",
-  AQUATIC: "Aquatic Life",
+  AQUATIC: "Aquatic",
   LANDFORM: "Landforms",
 };
