@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import { Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import AuthImage from "../components/AuthImage";
 import PageDoodles from "../components/PageDoodles";
 import PageHeader from "../components/PageHeader";
+import PageTurn from "../components/PageTurn";
 import { SUB_CATEGORY_ICONS, SUB_CATEGORY_LABELS } from "../components/subCategoryMeta";
 import { getItems } from "../lib/api";
+
+// A fixed 2x2 spread, so a page holds the same four slots at every width and
+// the page a given entry sits on never changes under you on resize.
+const PAGE_SIZE = 4;
+const TURN_MS = 400;
 
 function formatWhen(timeTaken) {
   if (!timeTaken) return null;
@@ -19,6 +25,8 @@ export default function CategoryEntries() {
   const [items, setItems] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const [direction, setDirection] = useState("next");
 
   useEffect(() => {
     getItems()
@@ -40,6 +48,55 @@ export default function CategoryEntries() {
     if (!trimmed) return items;
     return items.filter((item) => item.name.toLowerCase().includes(trimmed));
   }, [items, query]);
+
+  // A narrowed search, or a different sub-category, almost always leaves fewer
+  // pages than you were on - so go back to the first one. Adjusted during
+  // render rather than in an effect, which costs no extra pass.
+  const spreadKey = `${category}/${subCategory}/${query.trim().toLowerCase()}`;
+  const [prevSpreadKey, setPrevSpreadKey] = useState(spreadKey);
+  if (prevSpreadKey !== spreadKey) {
+    setPrevSpreadKey(spreadKey);
+    setPage(0);
+    setDirection("prev");
+  }
+
+  const pageCount = Math.max(1, Math.ceil((visibleItems?.length || 0) / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount - 1);
+
+  function turnTo(target) {
+    if (target < 0 || target >= pageCount || target === currentPage) return;
+    setDirection(target > currentPage ? "next" : "prev");
+    setPage(target);
+  }
+
+  function renderSpread(pageIndex) {
+    const start = pageIndex * PAGE_SIZE;
+    const pageItems = visibleItems ? visibleItems.slice(start, start + PAGE_SIZE) : [];
+    // A short last page keeps its empty slots rather than stretching the rest.
+    const slots = [...pageItems, ...Array(Math.max(0, PAGE_SIZE - pageItems.length)).fill(null)];
+
+    return (
+      <ul className="entry-page-grid">
+        {slots.map((item, index) =>
+          item ? (
+            <li key={item.id} className="entry-slot">
+              <Link to={`/entry/${item.id}`} className="entry-card">
+                <span className="entry-card-frame">
+                  <AuthImage path={item.image_path} loading="lazy" />
+                </span>
+                <strong>{item.name}</strong>
+                <span className="entry-card-date">{formatWhen(item.time_taken)}</span>
+              </Link>
+            </li>
+          ) : (
+            <li key={`empty-${index}`} className="entry-slot" aria-hidden="true">
+              <span className="entry-mount" />
+            </li>
+          )
+        )}
+      </ul>
+    );
+  }
 
   return (
     <main className="page-body screen">
@@ -78,19 +135,42 @@ export default function CategoryEntries() {
       )}
 
       {visibleItems?.length > 0 && (
-        <ul className="entry-grid">
-          {visibleItems.map((item) => (
-            <li key={item.id}>
-              <Link to={`/entry/${item.id}`} className="entry-card">
-                <span className="entry-card-frame">
-                  <AuthImage path={item.image_path} loading="lazy" />
-                </span>
-                <strong>{item.name}</strong>
-                <span className="entry-card-date">{formatWhen(item.time_taken)}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="entry-pages">
+          <PageTurn
+            pageKey={currentPage}
+            direction={direction}
+            durationMs={TURN_MS}
+            renderPage={renderSpread}
+          />
+
+          {pageCount > 1 && (
+            <nav className="page-turn-nav" aria-label="Entry pages">
+              <button
+                type="button"
+                className="page-turn-btn"
+                onClick={() => turnTo(currentPage - 1)}
+                disabled={currentPage === 0}
+                aria-label="Previous page"
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              <span className="page-turn-indicator" aria-live="polite">
+                Page {currentPage + 1} of {pageCount}
+              </span>
+
+              <button
+                type="button"
+                className="page-turn-btn"
+                onClick={() => turnTo(currentPage + 1)}
+                disabled={currentPage === pageCount - 1}
+                aria-label="Next page"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </nav>
+          )}
+        </div>
       )}
     </main>
   );
