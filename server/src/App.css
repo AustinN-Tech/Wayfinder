@@ -2424,6 +2424,10 @@
 
 /* a count pencilled at the right edge of the band, not a UI chip */
 .page-header-note {
+  /* holds its width and stays on one line - sharing the slot with the search
+     box otherwise squeezed it until it broke across two ("2" / "entries") */
+  flex: 0 0 auto;
+  white-space: nowrap;
   margin: 0;
   font-family: "Kalam", "Crimson Text", serif;
   font-size: 1.02rem;

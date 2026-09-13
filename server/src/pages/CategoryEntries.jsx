@@ -136,7 +136,7 @@ export default function CategoryEntries() {
       {errorMessage && <p role="alert">{errorMessage}</p>}
       {!items && !errorMessage && <p>Opening your journal...</p>}
       {items?.length === 0 && (
-        <p>Nothing catalogued here yet. Press the seal at the foot of the page to add your first.</p>
+        <p>Nothing discovered here yet. Press the seal at the foot of the page to add your first.</p>
       )}
       {items?.length > 0 && visibleItems.length === 0 && (
         <p>No entries match &ldquo;{query}&rdquo;.</p>
