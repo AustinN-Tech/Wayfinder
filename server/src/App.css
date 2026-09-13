@@ -1870,19 +1870,97 @@
   color: #3d2817;
 }
 
-.feed-header {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.5rem;
-  margin-bottom: 1.25rem;
+/* ---------- shared page header ---------- */
+
+.page-header {
+  margin-bottom: 1.75rem;
 }
 
-.feed-header h1 {
+.page-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.5rem;
+}
+
+.page-header-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+/* the ink rule is absolutely placed, so this box stays exactly as wide as
+   the badge and title it underlines */
+.page-header-titleline {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: fit-content;
+  max-width: 100%;
+  padding-bottom: 0.7rem;
+}
+
+.page-header-titleline h1 {
   margin: 0;
+  line-height: 1.1;
+}
+
+.page-header-rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 10px;
+  color: var(--header-accent, #8f6518);
+  opacity: 0.75;
+}
+
+/* a wax-stamped badge, set down a degree or two off square */
+.page-header-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: clamp(38px, 8vw, 48px);
+  height: clamp(38px, 8vw, 48px);
+  border: 1px solid rgba(139, 115, 85, 0.5);
+  border-radius: 50%;
+  background: rgba(244, 236, 216, 0.6);
+  color: var(--header-accent, #8f6518);
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.6);
+  transform: rotate(-3deg);
+}
+
+.page-header-badge svg {
+  width: 58%;
+  height: 58%;
+}
+
+.page-header-subtitle {
+  max-width: 54ch;
+  margin: 0.65rem 0 0;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.92rem;
+  font-style: italic;
+  line-height: 1.45;
+  color: rgba(92, 74, 58, 0.85);
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding-bottom: 0.2rem;
+}
+
+@media (max-width: 640px) {
+  .page-header-actions {
+    width: 100%;
+    margin-left: 0;
+  }
 }
 
 .feed-search {
@@ -1923,6 +2001,12 @@
 
 .feed-search input::placeholder {
   color: rgba(61, 40, 23, 0.45);
+}
+
+@media (max-width: 640px) {
+  .feed-search {
+    flex: 1 1 auto;
+  }
 }
 
 .page h2 {
