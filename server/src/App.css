@@ -380,6 +380,55 @@
   color: #8a2f1f;
 }
 
+/* the way back when the analysis fails - centred under the message, in the
+   same ochre as the journal's other buttons rather than browser default */
+.result-retake {
+  display: block;
+  margin: 0 auto 1.25rem;
+  padding: 0.6rem 1.3rem;
+  border: none;
+  border-radius: 3px;
+  background: #8f6518;
+  color: #f9f2df;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow:
+    0 3px 9px rgba(74, 52, 32, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease;
+}
+
+@media (hover: hover) {
+  .result-retake:hover {
+    background: #a4761f;
+    transform: translateY(-2px);
+  }
+}
+
+.result-retake:active {
+  transform: translateY(0);
+}
+
+.result-retake:focus-visible {
+  outline: 2px solid #3d2817;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-retake {
+    transition: none;
+  }
+
+  .result-retake:hover {
+    transform: none;
+  }
+}
+
 /* three spots of ink, tapped out one after another while it thinks */
 .thinking-dots {
   display: inline-flex;

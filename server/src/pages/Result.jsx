@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
+import PageHeader from "../components/PageHeader";
 import { analyzeItem, createItem } from "../lib/api";
 
 export default function Result() {
@@ -93,13 +94,44 @@ export default function Result() {
 
   return (
     <main className="page-body result-screen">
-      <h1>What did you find?</h1>
-      <img ref={previewRef} className="captured-photo" alt="Captured" />
+      <PageHeader title="What did you find?" rule={false} accent="#8f6518" />
 
-      {status === "analyzing" && <p>Identifying what you found...</p>}
-      {status === "saving" && <p>Saving...</p>}
-      {errorMessage && <p role="alert">{errorMessage}</p>}
-      {status === "error" && <button onClick={retakePhoto}>Take another photo</button>}
+      <figure className="captured-figure">
+        <img ref={previewRef} className="captured-photo" alt="Captured" />
+      </figure>
+
+      {status === "analyzing" && (
+        <p className="result-status" role="status">
+          Identifying what you found
+          <span className="thinking-dots" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+        </p>
+      )}
+
+      {status === "saving" && (
+        <p className="result-status" role="status">
+          Filing it away
+          <span className="thinking-dots" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+        </p>
+      )}
+
+      {errorMessage && (
+        <p className="result-status is-error" role="alert">
+          {errorMessage}
+        </p>
+      )}
+      {status === "error" && (
+        <button type="button" className="result-retake" onClick={retakePhoto}>
+          Take another photo
+        </button>
+      )}
 
       {suggestions && (
         <div className="suggestion-list">
