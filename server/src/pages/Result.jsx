@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import PageHeader from "../components/PageHeader";
 import { analyzeItem, createItem } from "../lib/api";
@@ -6,8 +6,16 @@ import { analyzeItem, createItem } from "../lib/api";
 export default function Result() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const photoUrl = state?.photoUrl;
   const photoBlob = state?.photoBlob;
+  const previewRef = useRef(null);
+  const savingRef = useRef(false);
+
+  useEffect(() => {
+    if (!photoBlob || !previewRef.current) return;
+    const url = URL.createObjectURL(photoBlob);
+    previewRef.current.src = url;
+    return () => URL.revokeObjectURL(url);
+  }, [photoBlob]);
 
   const [suggestions, setSuggestions] = useState(null);
   const [coords, setCoords] = useState(null);
@@ -45,6 +53,9 @@ export default function Result() {
   }, [photoBlob]);
 
   async function selectSuggestion(suggestion) {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setErrorMessage("");
     setStatus("saving");
     try {
       const saved = await createItem(
@@ -54,12 +65,14 @@ export default function Result() {
           sub_category: suggestion.sub_category || "",
           time_period: suggestion.time_period || "",
           description: suggestion.description || "",
+          confidence: suggestion.confidence ?? "",
           ...(coords || {}),
         },
         photoBlob
       );
       navigate(`/entry/${saved.item.id}`);
     } catch (err) {
+      savingRef.current = false;
       setErrorMessage(err.message);
       setStatus("ready");
     }
@@ -69,7 +82,7 @@ export default function Result() {
     navigate("/camera");
   }
 
-  if (!photoUrl || !photoBlob) {
+  if (!photoBlob) {
     return (
       <main className="result-screen">
         <h1>What did you find?</h1>
@@ -81,39 +94,13 @@ export default function Result() {
 
   return (
     <main className="page-body result-screen">
-      <PageHeader title="What did you find?" rule={false} accent="#8f6518" />
+      <h1>What did you find?</h1>
+      <img ref={previewRef} className="captured-photo" alt="Captured" />
 
-      <figure className="captured-figure">
-        <img className="captured-photo" src={photoUrl} alt="Captured" />
-      </figure>
-
-      {status === "analyzing" && (
-        <p className="result-status" role="status">
-          Identifying what you found
-          <span className="thinking-dots" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
-        </p>
-      )}
-
-      {status === "saving" && (
-        <p className="result-status" role="status">
-          Filing it away
-          <span className="thinking-dots" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
-        </p>
-      )}
-
-      {status === "error" && (
-        <p className="result-status is-error" role="alert">
-          {errorMessage}
-        </p>
-      )}
+      {status === "analyzing" && <p>Identifying what you found...</p>}
+      {status === "saving" && <p>Saving...</p>}
+      {errorMessage && <p role="alert">{errorMessage}</p>}
+      {status === "error" && <button onClick={retakePhoto}>Take another photo</button>}
 
       {suggestions && (
         <div className="suggestion-list">

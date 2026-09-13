@@ -9,17 +9,18 @@ import {
   avatarSrc,
 } from "../lib/api";
 
-function UserRow({ user, children }) {
+function UserRow({ user, children, canViewProfile = false }) {
+  const Identity = canViewProfile ? Link : "div";
   return (
     <li className="friend-row">
-      <Link to={`/friends/${user.user_id}`} className="friend-row-identity">
+      <Identity {...(canViewProfile ? { to: `/friends/${user.user_id}` } : {})} className="friend-row-identity">
         <img
           className="friend-row-avatar"
           src={avatarSrc(user.avatar_url) || "/images/stamp-icons/first-find-stamp.png"}
           alt=""
         />
         <span>{user.display_name || `@${user.username}`}</span>
-      </Link>
+      </Identity>
       <div className="friend-row-actions">{children}</div>
     </li>
   );
@@ -152,7 +153,7 @@ export default function Friends() {
         {data && data.friends.length > 0 && (
           <ul className="friend-list">
             {data.friends.map((user) => (
-              <UserRow key={user.user_id} user={user}>
+              <UserRow key={user.user_id} user={user} canViewProfile>
                 <button
                   type="button"
                   className="friend-row-decline"
