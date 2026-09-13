@@ -1,16 +1,66 @@
-# React + Vite
+# ![Logo](server/public/readme_icon.png) Wayfinder
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)   ![Python](https://img.shields.io/badge/Python-3.13-blue) [![Flask](https://img.shields.io/badge/Flask-3.1-purple)](https://flask.palletsprojects.com/) [![SQLite](https://img.shields.io/badge/SQLite-Database-purple)](https://sqlite.org/) [![Railway](https://img.shields.io/badge/Deployed-Railway-red)](https://railway.app/)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> An explorer's journal at your fingertips.
 
-Currently, two official plugins are available:
+Wayfinder is an image-recognition-powered web app that lets users take photos of objects with heritage significance around them, including cultural items such as art, artifacts, and historical sites, as well as natural items such as fossils, geology, and landforms.
+### Core Features
+1. Take pictures, identify items, and add them to your collection.
+2. 16 subcategories of items to discover
+3. Collect all 9 stamps by completing challenging achievements
+4. Add friends, compare stamps, and track their discovery process
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## React Compiler
+## Screenshots
+<!-- add screenshots here, do like 2 or 3 -->
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Built with
+* **Backend**: `Sqlite3`, `Flask`, `Python`
 
-## Expanding the ESLint configuration
+* **Frontend**: `React`
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+* **Authentication**: `Auth0`
+
+* **Image Recognition**: `Gemini API`
+
+* **Deployment**: `Railway`
+
+<!-- swap for this project's stack, current placeholder -->
+The project is built with Flask and Sqlite, with HTML Jinja templates and JS handling the Frontend, and deployed using Gunicorn on Railway.  
+1. Flask routes for generating questions, returning quiz settings, and more.
+2. Multiple tables for Pokémon, types, and abilities.
+3. Pokémon data is cached into the database via [PokeAPI](https://github.com/PokeAPI/pokeapi).
+
+
+## Setup
+<!-- swap for this project's setup, current placeholder -->
+
+Running Pokemon Quiz locally is very simple.  
+
+### 1. Clone the repository into working directory
+```bash
+git clone https://github.com/AustinN-Tech/Wayfinder.git
+```
+### 2. Create virtual environment
+```bash
+python -m venv venv
+```
+### 3. Install requirements
+```bash
+pip install -r requirements.txt
+```
+### 4. Run the python file `run.py`
+```bash
+python -m run
+```
+
+### 5. Navigate to localhost or other specified host in your browser
+
+### Done!
+
+
+## Roadmap
+- [ ] More achievements
+- [ ] View friend's collection
+- [ ] Weekly challenge
+- [ ] Friendly challenge
