@@ -1998,6 +1998,13 @@
   background: #a8452f;
 }
 
+.era-years {
+  font-family: var(--sans);
+  text-transform: none;
+  font-size: 0.85em;
+  opacity: 0.65;
+}
+
 .map-container {
   height: min(70vh, 560px);
   margin-top: 1rem;
