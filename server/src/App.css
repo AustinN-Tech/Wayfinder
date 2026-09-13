@@ -1566,6 +1566,53 @@
   position: relative;
   width: min(1300px, 100%);
   font-size: 1.08em;
+  /* the bound edge: leather cover on the left, pages hinged off it. Narrow by
+     design - on a phone this is competing with the content for width. */
+  --spine-width: clamp(12px, 2.4vw, 30px);
+}
+
+/* The leather binding the pages are sewn into. Same material as the sign-in
+   cover - the paper texture darkened until it grains like hide - so the
+   journal is one object whether it's open or shut. */
+.journal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  /* above the page, so the crease it casts falls across the paper */
+  z-index: 3;
+  width: var(--spine-width);
+  border-radius: 4px 0 0 5px;
+  background:
+    /* one thread running the length of the spine, sewn just shy of the crease */
+    repeating-linear-gradient(180deg, rgba(236, 203, 152, 0.34) 0 8px, transparent 8px 17px),
+    /* the rounded profile: light catching the crown, dark where it rolls under
+       on the left and folds into the gutter on the right */
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.5),
+      rgba(0, 0, 0, 0.16) 15%,
+      rgba(242, 208, 152, 0.14) 34%,
+      rgba(0, 0, 0, 0.1) 58%,
+      rgba(0, 0, 0, 0.36) 88%,
+      rgba(0, 0, 0, 0.52)
+    ),
+    linear-gradient(rgba(60, 34, 17, 0.84), rgba(43, 24, 12, 0.9)),
+    url("/images/textures/paper-texture.png"),
+    linear-gradient(168deg, #5c3619, #3d2310 58%, #2d1a0b);
+  background-size: 1.5px 100%, auto, auto, 440px, auto;
+  background-position: 62% 0, 0 0, 0 0, 0 0, 0 0;
+  background-repeat: no-repeat, repeat, repeat, repeat, repeat;
+  box-shadow:
+    /* the gutter darkening where the paper turns into the binding */
+    3px 0 9px -2px rgba(40, 24, 12, 0.45),
+    /* light catching the outer edge of the cover, and the head and tail of
+       the spine - what gives the strip its thickness */
+    inset 1px 0 0 rgba(226, 188, 132, 0.2),
+    inset 0 1px 0 rgba(232, 197, 145, 0.28),
+    inset 0 -2px 7px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
 }
 
 /* weathered parchment, not ruled notebook paper */
@@ -1574,6 +1621,8 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
+  /* sewn into the binding, which occupies the strip to its left */
+  margin-left: var(--spine-width);
   min-height: 88svh;
   box-sizing: border-box;
   padding: clamp(1.75rem, 4vw, 3.5rem);
@@ -1608,38 +1657,41 @@
      natural size, which lands 1:1 on a 2x display) rather than stretching.
      Every other layer keeps its default sizing. */
   background-size: auto, auto, auto, auto, auto, auto, auto, 640px, auto;
-  /* width of the page block along the bound edge */
+  /* width of the page block along the fore-edge, opposite the binding */
   --page-edge: clamp(9px, 1.8vw, 20px);
   box-shadow:
     0 18px 42px rgba(74, 52, 32, 0.35),
     /* aged, darkened edges */ inset 0 0 70px rgba(139, 105, 66, 0.28),
+    /* the gutter, where the sheet turns down into the binding */
     inset 14px 0 20px -14px rgba(74, 59, 44, 0.6),
     /* a few sheets showing behind the top one, each sitting slightly
        shorter than the last so the block tapers */
-    -3px 0 0 -2px rgba(240, 231, 207, 0.95),
-    -6px 0 0 -4px rgba(226, 214, 184, 0.9),
-    -9px 0 0 -6px rgba(209, 194, 160, 0.85);
+    3px 0 0 -2px rgba(240, 231, 207, 0.95),
+    6px 0 0 -4px rgba(226, 214, 184, 0.9),
+    9px 0 0 -6px rgba(209, 194, 160, 0.85);
 }
 
-/* The page block seen edge-on: each pale stripe is one sheet, each fine dark
-   line the gap between two. A repeating gradient rather than artwork, so it
-   tiles cleanly however tall the page grows. */
+/* The page block seen edge-on at the fore-edge, opposite the binding - the
+   side you'd put a thumb in to open it. Each pale stripe is one sheet, each
+   fine dark line the gap between two. A repeating gradient rather than
+   artwork, so it tiles cleanly however tall the page grows. */
 .page::after {
   content: "";
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 0;
+  right: 0;
   width: var(--page-edge);
-  border-radius: 3px 0 0 4px;
+  border-radius: 0 10px 12px 0;
   background:
-    /* the crease: paper curving down into the binding */
+    /* no crease out here - just the block falling away from the top sheet,
+       shading as it goes */
     linear-gradient(
       90deg,
-      rgba(64, 44, 26, 0.5),
-      rgba(74, 52, 32, 0.22) 40%,
-      rgba(74, 52, 32, 0.06) 72%,
-      transparent
+      transparent,
+      rgba(74, 52, 32, 0.07) 30%,
+      rgba(74, 52, 32, 0.2) 64%,
+      rgba(64, 44, 26, 0.42)
     ),
     repeating-linear-gradient(
       90deg,
@@ -1651,24 +1703,10 @@
   pointer-events: none;
 }
 
-/* the stitched spine edge */
-/* the thread, now running alongside the page block rather than standing in
-   for it - above it in paint order so the stitches stay visible */
-.page::before {
-  content: "";
-  position: absolute;
-  top: 8px;
-  bottom: 8px;
-  left: calc(var(--page-edge) + 6px);
-  z-index: 1;
-  width: 0;
-  border-left: 2px dashed rgba(109, 82, 52, 0.4);
-}
-
 .bookmarks {
   position: absolute;
   bottom: 100%;
-  left: clamp(0.75rem, 3vw, 1.75rem);
+  left: calc(var(--spine-width) + clamp(0.75rem, 3vw, 1.75rem));
   right: clamp(0.75rem, 3vw, 1.75rem);
   z-index: 1;
   display: flex;
@@ -1795,6 +1833,13 @@
 
 /* icon-only tabs once the labels stop fitting */
 @media (max-width: 600px) {
+  /* The binding already reads as the left margin here, so the paper gives
+     most of its own left padding back - otherwise the spine, the page edge
+     and the padding all bill the phone separately for the same inch. */
+  .page {
+    padding-left: clamp(1.15rem, 3.5vw, 1.75rem);
+  }
+
   .bookmark span {
     display: none;
   }
