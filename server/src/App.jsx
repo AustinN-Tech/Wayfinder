@@ -3,6 +3,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import Feed from "./pages/Feed";
 import Map from "./pages/Map";
 import Stamps from "./pages/Stamps";
+import Profile from "./pages/Profile";
 import JournalShell from "./components/JournalShell";
 import SignIn from "./components/SignIn";
 import Camera from "./pages/Camera";
@@ -40,6 +41,7 @@ function App() {
       <Route path="/feed" element={<Feed />} />
       <Route path="/map" element={<Map />} />
       <Route path="/stamps" element={<Stamps />} />
+      <Route path="/profile" element={<Profile />} />
       <Route path="/camera" element={<Camera />} />
       <Route path="/result" element={<Result />} />
       <Route path="/entry/:id" element={<Entry />} />

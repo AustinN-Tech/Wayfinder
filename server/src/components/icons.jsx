@@ -111,6 +111,28 @@ export function PostageStamp({ size = 28, ...props }) {
   );
 }
 
+export function Portrait({ size = 28, ...props }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      {/* a small framed portrait, on-brand with the stamp's own frame-in-frame */}
+      <rect x="3.6" y="3" width="16.8" height="18" rx="1.3" />
+      <rect x="6" y="5.4" width="12" height="13.2" rx="0.6" strokeWidth="1.1" opacity="0.85" />
+      <circle cx="12" cy="10.4" r="2.4" strokeWidth="1.3" />
+      <path d="M7.4 17c.9-2.6 3-3.9 4.6-3.9s3.7 1.3 4.6 3.9" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
 export function FoldedMap({ size = 28, ...props }) {
   return (
     <svg

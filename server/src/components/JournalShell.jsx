@@ -1,12 +1,13 @@
 import { NavLink, useLocation } from "react-router";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Camera } from "lucide-react";
-import { OpenBook, FoldedMap, PostageStamp } from "./icons";
+import { OpenBook, FoldedMap, PostageStamp, Portrait } from "./icons";
 
 const ITEMS = [
   { to: "/feed", label: "Entries", Icon: OpenBook, color: "#8f6518" },
   { to: "/map", label: "Map", Icon: FoldedMap, color: "#3f6b4e" },
   { to: "/stamps", label: "Stamps", Icon: PostageStamp, color: "#6b4a7d" },
+  { to: "/profile", label: "Profile", Icon: Portrait, color: "#af5a3f" },
 ];
 
 function matches(item, pathname) {
