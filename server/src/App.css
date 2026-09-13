@@ -1475,9 +1475,11 @@
   align-items: flex-start;
   min-height: 100svh;
   box-sizing: border-box;
-  /* top padding leaves room for the tabs standing above the page */
-  padding: calc(clamp(0.75rem, 2.5vw, 1.5rem) + 34px) clamp(0.5rem, 2vw, 1.5rem)
-    clamp(0.75rem, 2.5vw, 1.5rem);
+  /* top padding leaves room for the tabs standing above the page, plus
+     whatever the notch/Dynamic Island/front camera eats into on an iPhone
+     running this as a home-screen app (env() is 0 everywhere else) */
+  padding: calc(clamp(0.75rem, 2.5vw, 1.5rem) + 34px + env(safe-area-inset-top, 0px))
+    clamp(0.5rem, 2vw, 1.5rem) clamp(0.75rem, 2.5vw, 1.5rem);
   background: #ded2ba;
 }
 
