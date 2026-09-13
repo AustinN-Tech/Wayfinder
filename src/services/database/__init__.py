@@ -23,6 +23,7 @@ from .items_table import (
     delete_item,
     delete_all_db,
     update_item,
+    update_item_fields,
     return_all_items,
     get_item_rule_counts,
     get_user_item_coordinates,

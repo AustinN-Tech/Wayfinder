@@ -119,11 +119,16 @@ def delete_user(conn: sqlite3.Connection, user: User) -> None:
     logger.info("Deleted user: %s", user.user_id)
 
 @error_handling
-def get_or_create_user(auth0_id: str) -> User:
-    user = get_user_by_auth0_id(auth0_id)
-
-    if user is None:
-        user = User(auth0_id=auth0_id)
-        add_user(user)
-
-    return user
+@db_connection_handling
+def get_or_create_user(conn: sqlite3.Connection, auth0_id: str) -> User:
+    if not isinstance(auth0_id, str) or not auth0_id.strip():
+        raise ValueError("auth0_id must be a non-empty string")
+    with conn:
+        conn.execute(
+            "INSERT INTO users (auth0_id) VALUES (?) ON CONFLICT(auth0_id) DO NOTHING",
+            (auth0_id,),
+        )
+        row = conn.execute(
+            f"SELECT {USER_COLUMNS} FROM users WHERE auth0_id = ?", (auth0_id,),
+        ).fetchone()
+    return row_to_user(row)

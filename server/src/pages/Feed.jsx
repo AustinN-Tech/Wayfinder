@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import PageDoodles from "../components/PageDoodles";
 import PageHeader from "../components/PageHeader";
 import CategoryAlbum from "../components/CategoryAlbum";
-import { OpenBook } from "../components/icons";
 import { getItems, getCategories } from "../lib/api";
 
 export default function Feed() {
@@ -21,12 +19,11 @@ export default function Feed() {
 
   return (
     <main className="page-body screen">
-      <PageDoodles variant="feed" />
       <PageHeader
         title="Entries"
         subtitle="Everything you've catalogued so far, gathered by what it is."
-        icon={OpenBook}
         accent="#8f6518"
+        note={items ? `${items.length} ${items.length === 1 ? "find" : "finds"} catalogued` : undefined}
       />
 
       {errorMessage && <p role="alert">{errorMessage}</p>}

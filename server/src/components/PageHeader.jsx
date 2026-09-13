@@ -1,6 +1,11 @@
-// The heading every journal page opens with: a stamped icon, the title, a
-// hand-inked rule under both, and a caption. `actions` takes anything that
-// belongs on the same line as the title (the category search, for instance).
+// The heading every journal page opens with: the title, a hand-inked rule
+// under it, a caption, and a journal rule closing the band off from the page
+// content below.
+//
+// The right-hand slot is what keeps the band from reading as a mostly-empty
+// strip of paper. Pass `note` for the usual case - a handwritten counter,
+// styled here so no page has to reproduce it - or `aside` for anything richer,
+// like the category search.
 
 function InkRule() {
   return (
@@ -19,25 +24,25 @@ function InkRule() {
   );
 }
 
-export default function PageHeader({ title, subtitle, icon: Icon, accent, actions }) {
+export default function PageHeader({ title, subtitle, accent, note, aside, rule = true }) {
   return (
     <header className="page-header" style={accent ? { "--header-accent": accent } : undefined}>
       <div className="page-header-row">
         <div className="page-header-heading">
-          <div className="page-header-titleline">
-            {Icon && (
-              <span className="page-header-badge" aria-hidden="true">
-                <Icon />
-              </span>
-            )}
+          <div className={`page-header-titleline ${rule ? "" : "is-plain"}`}>
             <h1>{title}</h1>
-            <InkRule />
+            {rule && <InkRule />}
           </div>
 
           {subtitle && <p className="page-header-subtitle">{subtitle}</p>}
         </div>
 
-        {actions && <div className="page-header-actions">{actions}</div>}
+        {(note || aside) && (
+          <div className="page-header-aside">
+            {note && <p className="page-header-note">{note}</p>}
+            {aside}
+          </div>
+        )}
       </div>
     </header>
   );

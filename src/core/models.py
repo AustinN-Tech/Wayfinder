@@ -75,6 +75,7 @@ class HeritageItem:
     id: int | None = None
     time_taken: int | None = None
     is_favorite: int = 0
+    place_name: str | None = None
 
     def __post_init__(self):
         if type(self.user_id) is not int or self.user_id <= 0:
