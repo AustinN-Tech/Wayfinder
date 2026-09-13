@@ -1706,14 +1706,10 @@
   width: var(--spine-width);
   border-radius: 4px 0 0 5px;
   background:
-    /* one thread running the length of the spine, sewn just shy of the crease.
-       Kept faint on purpose - at full strength it reads as a dashed line drawn
-       on the leather rather than stitching caught in the light. */
-    repeating-linear-gradient(180deg, rgba(248, 228, 192, 0.24) 0 8px, transparent 8px 17px),
     /* the rounded profile: light catching the crown, shaded where it rolls
        under on the left and folds into the gutter on the right. Shaded in the
-       leather's own brown rather than black, which is most of what keeps a
-       tan hide from reading as a dark one. */
+       leather's own brown rather than black, which is what keeps it reading as
+       one lit hide rather than a dark stripe. */
     linear-gradient(
       90deg,
       rgba(52, 32, 15, 0.42),
@@ -1723,17 +1719,15 @@
       rgba(52, 32, 15, 0.28) 88%,
       rgba(52, 32, 15, 0.42)
     ),
-    /* This is the tone control, not the gradient below it: the paper texture
-       covers that almost entirely, so how dark the leather reads is really
-       how much of the cream sheet this layer holds back. */
-    linear-gradient(rgba(85, 54, 25, 0.84), rgba(70, 44, 20, 0.88)),
-    url("/images/textures/paper-texture.png"),
-    /* only shows through the texture's lighter grain, and stands in for it
-       entirely if the image ever fails to load */
+    /* Real hide, so the grain is the texture rather than anything drawn on.
+       It already carries its own colour, so unlike the paper sheet it needs no
+       darkening layer over it to read as leather. */
+    url("/images/textures/leather-texture.png"),
+    /* stands in for the texture if the image ever fails to load */
     linear-gradient(168deg, #7d5730, #6a4a28 58%, #593e21);
-  background-size: 1.5px 100%, auto, auto, 440px, auto;
-  background-position: 62% 0, 0 0, 0 0, 0 0, 0 0;
-  background-repeat: no-repeat, repeat, repeat, repeat, repeat;
+  /* The strip only ever shows a narrow vertical slice, so this is really
+     choosing how large the grain reads, not how the sheet is laid out. */
+  background-size: auto, 260px, auto;
   box-shadow:
     /* the gutter darkening where the paper turns into the binding */
     2px 0 8px -2px rgba(60, 40, 22, 0.36),
