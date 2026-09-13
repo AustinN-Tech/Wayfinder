@@ -1,187 +1,105 @@
-"""Achievement rule evaluation.
+"""Evaluate the hackathon achievement catalog using local user-owned discoveries."""
 
-Each achievement is a row in the `achievements` table (code, name, description,
-rule_type, threshold, sort_order, target_value) - adding a new one is an
-INSERT, not a code change. `RULE_QUERIES` maps a rule_type to a query; a rule
-is satisfied once its count reaches the achievement's threshold.
+import logging
 
-Every query takes at least `user_id` as its first param, so achievements are
-earned per-account. Rule types that end in `_count` for a specific value
-(e.g. "10 fossils logged", not just "10 items logged") also take
-`target_value` as a second param - that's what lets one generic rule type
-back both "Dino Hunter" (target_value="FOSSIL") and "Shiny!"
-(target_value="GEOLOGY") without new code for each.
-
-`distinct_continents` is the one rule that can't be expressed as a flat SQL
-query - "which continent" isn't a stored column, so it's derived from each
-item's lat/lng in Python (see geo.py) and handled as a special case.
-"""
-
+from core.models import Achievement
 from services import database as db
-from services import geo
+from services import geography
 
-RULE_QUERIES = {
-    # Total items logged.
-    "entry_count": "SELECT COUNT(*) FROM items WHERE user_id = ?",
-    # How many of the two top-level categories (CULTURAL/NATURAL) appear.
-    "distinct_categories": "SELECT COUNT(DISTINCT category) FROM items WHERE user_id = ?",
-    # How many distinct sub-categories (ART, FOSSIL, etc.) appear.
-    "distinct_sub_categories": "SELECT COUNT(DISTINCT sub_category) FROM items WHERE user_id = ?",
-    # How many distinct time periods (bronze age, jurassic, etc.) appear.
-    "distinct_time_periods": (
-        "SELECT COUNT(DISTINCT time_period) FROM items WHERE user_id = ? AND time_period IS NOT NULL"
-    ),
-    # Items logged in one specific category - needs target_value (e.g. "CULTURAL").
-    "category_count": "SELECT COUNT(*) FROM items WHERE user_id = ? AND category = ?",
-    # Items logged in one specific sub-category - needs target_value (e.g. "FOSSIL").
-    "sub_category_count": "SELECT COUNT(*) FROM items WHERE user_id = ? AND sub_category = ?",
-    # Handled specially in _progress_for - see below. Kept here (mapped to
-    # None) just so it shows up as a recognized rule_type, not a silently
-    # skipped one.
-    "distinct_continents": None,
-}
+logger = logging.getLogger(__name__)
 
-# rule_types that need a target_value alongside user_id.
-_TARGETED_RULE_TYPES = {"category_count", "sub_category_count"}
-
+# IDs establish order for a fresh database. Seeding matches by code and preserves
+# existing IDs so user_achievements never gets attached to a different definition.
 DEFAULT_ACHIEVEMENTS = [
-    dict(
-        code="first_find",
-        name="First Find",
-        description="Log your very first item.",
-        rule_type="entry_count",
-        threshold=1,
-        sort_order=1,
-    ),
-    dict(
-        code="small_collection",
-        name="Small Collection",
-        description="Log 5 items.",
-        rule_type="entry_count",
-        threshold=5,
-        sort_order=2,
-    ),
-    dict(
-        code="medium_collection",
-        name="Medium Collection",
-        description="Log 20 items.",
-        rule_type="entry_count",
-        threshold=20,
-        sort_order=3,
-    ),
-    dict(
-        code="large_collection",
-        name="Large Collection",
-        description="Log 50 items.",
-        rule_type="entry_count",
-        threshold=50,
-        sort_order=4,
-    ),
-    dict(
-        code="both_worlds",
-        name="Both Worlds",
-        description="Log at least one CULTURAL item and one NATURAL item.",
-        rule_type="distinct_categories",
-        threshold=2,
-        sort_order=5,
-    ),
-    dict(
-        code="time_traveler",
-        name="Time Traveler",
-        description="Log items from 3 different time periods.",
-        rule_type="distinct_time_periods",
-        threshold=3,
-        sort_order=6,
-    ),
-    dict(
-        code="dino_hunter",
-        name="Dino Hunter",
-        description="Discover 10 fossils.",
-        rule_type="sub_category_count",
-        threshold=10,
-        sort_order=7,
-        target_value="FOSSIL",
-    ),
-    dict(
-        code="shiny",
-        name="Shiny!",
-        description="Discover 10 geology finds.",
-        rule_type="sub_category_count",
-        threshold=10,
-        sort_order=8,
-        target_value="GEOLOGY",
-    ),
-    dict(
-        code="world_traveler",
-        name="World Traveler",
-        description="Log at least one item on every continent.",
-        rule_type="distinct_continents",
-        threshold=len(geo.CONTINENTS),
-        sort_order=9,
-    ),
+    Achievement(1, "first_find", "First Find", "entry_count", 1,
+                "Log your very first item."),
+    Achievement(2, "small_collection", "Small Collection", "entry_count", 5,
+                "Log 5 items."),
+    Achievement(3, "medium_collection", "Medium Collection", "entry_count", 20,
+                "Log 20 items."),
+    Achievement(4, "large_collection", "Large Collection", "entry_count", 50,
+                "Log 50 items."),
+    Achievement(5, "both_worlds", "Both Worlds", "distinct_categories", 2,
+                "Log at least one CULTURAL item and one NATURAL item."),
+    Achievement(6, "time_traveler", "Time Traveler", "distinct_time_periods", 3,
+                "Log items from 3 different time periods."),
+    Achievement(7, "dino_hunter", "Dino Hunter", "fossil_count", 10,
+                "Discover 10 fossils.", category="NATURAL"),
+    Achievement(8, "shiny", "Shiny!", "geology_count", 10,
+                "Discover 10 geology finds.", category="NATURAL"),
+    Achievement(9, "world_traveler", "World Traveler", "distinct_continents", len(geography.CONTINENTS),
+                "Log at least one item on every continent."),
 ]
+_DISPLAY_ORDER = {definition.code: index for index, definition in enumerate(DEFAULT_ACHIEVEMENTS, 1)}
 
 
 def seed_defaults() -> None:
-    """Idempotently insert the default achievement set."""
-    for achievement in DEFAULT_ACHIEVEMENTS:
-        db.seed_achievement(**achievement)
+    """Install the teammate's catalog and retire the old Getting Serious placeholder."""
+    db.sync_achievement_definitions(DEFAULT_ACHIEVEMENTS, retired_codes=("getting_serious",))
 
 
-def _progress_for(user_id: str, rule_type: str, target_value: str | None) -> int:
-    """Current progress count for one rule, for one user."""
-    if rule_type == "distinct_continents":
-        coordinates = db.get_user_coordinates(user_id)
-        continents = {geo.continent_for(lat, lng) for lat, lng in coordinates}
-        continents.discard(None)
-        return len(continents)
-
-    query = RULE_QUERIES.get(rule_type)
-    if query is None:
-        return 0
-    params = (user_id, target_value) if rule_type in _TARGETED_RULE_TYPES else (user_id,)
-    return db.run_count_query(query, params)
+def _counts_for_user(user_id: int, definitions: list[Achievement]) -> dict[str, int]:
+    counts = db.get_item_rule_counts(user_id)
+    if any(definition.rule_type == "distinct_continents" for definition in definitions):
+        # Continents are derived geographic information, not a schema column.
+        visited = set()
+        for latitude, longitude in db.get_user_item_coordinates(user_id):
+            continent = geography.continent_for_coordinates(latitude, longitude)
+            if continent is not None:
+                visited.add(continent)
+        counts["distinct_continents"] = len(visited)
+    return counts
 
 
-def evaluate_and_unlock(user_id: str) -> list[dict]:
-    """Check every not-yet-unlocked achievement for this user and unlock any
-    newly earned ones.
+def _definitions() -> list[Achievement]:
+    return sorted(db.return_all_achievements(), key=lambda definition: (
+        _DISPLAY_ORDER.get(definition.code, len(_DISPLAY_ORDER) + 1), definition.achievement_id,
+    ))
 
-    Call this right after inserting an item. Returns the list of achievements
-    unlocked by this call (empty if none) - feed that straight into the API
-    response so the frontend can show a toast.
-    """
-    already_unlocked = db.get_unlocked_achievement_map(user_id)
+
+def evaluate_and_unlock(user_id: int) -> list[dict]:
+    """Persist this user's percentage progress and newly earned achievements."""
+    definitions = _definitions()
+    counts = _counts_for_user(user_id, definitions)
     newly_unlocked = []
-
-    for code, name, description, rule_type, threshold, _sort_order, target_value in db.get_all_achievements():
-        if code in already_unlocked:
+    for achievement in definitions:
+        if achievement.rule_type not in counts or achievement.threshold <= 0:
+            logger.warning("Unsupported rule or threshold for achievement %s", achievement.code)
             continue
-        progress = _progress_for(user_id, rule_type, target_value)
-        if progress >= threshold:
-            db.unlock_achievement(user_id, code)
-            newly_unlocked.append({"code": code, "name": name, "description": description})
-
+        count = counts[achievement.rule_type]
+        completed = int(count >= achievement.threshold)
+        progress = min(100, 100 * count // achievement.threshold)
+        if db.record_user_achievement_progress(
+            user_id, achievement.achievement_id, progress, completed,
+        ):
+            newly_unlocked.append({
+                "code": achievement.code, "name": achievement.name,
+                "description": achievement.description,
+            })
     return newly_unlocked
 
 
-def get_all_with_progress(user_id: str) -> list[dict]:
-    """All achievement definitions, annotated with this user's progress/unlocked state."""
-    unlocked = db.get_unlocked_achievement_map(user_id)
+def get_all_with_progress(user_id: int) -> list[dict]:
+    """Return raw counts for the UI, alongside persisted completion/timestamps.
+
+    Database progress remains a percentage (0-100). UI progress is a count
+    toward threshold, preserving the existing API contract.
+    """
+    definitions = _definitions()
+    counts = _counts_for_user(user_id, definitions)
+    links = {link.achievement_id: link for link in db.get_user_achievements_by_user_id(user_id)}
     results = []
-
-    for code, name, description, rule_type, threshold, sort_order, target_value in db.get_all_achievements():
-        progress = _progress_for(user_id, rule_type, target_value)
+    for achievement in definitions:
+        link = links.get(achievement.achievement_id)
+        unlocked = bool(link and link.completed)
+        threshold = max(0, achievement.threshold)
         results.append({
-            "code": code,
-            "name": name,
-            "description": description,
-            "rule_type": rule_type,
-            "threshold": threshold,
-            "sort_order": sort_order,
-            "progress": min(progress, threshold),
-            "unlocked": code in unlocked,
-            "unlocked_at": unlocked.get(code),
+            "code": achievement.code, "name": achievement.name,
+            "description": achievement.description, "rule_type": achievement.rule_type,
+            "threshold": achievement.threshold,
+            "sort_order": _DISPLAY_ORDER.get(achievement.code, len(_DISPLAY_ORDER) + achievement.achievement_id),
+            "progress": threshold if unlocked else min(counts.get(achievement.rule_type, 0), threshold),
+            "unlocked": unlocked,
+            "unlocked_at": link.earned_at if unlocked else None,
         })
-
     return results
