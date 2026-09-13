@@ -21,6 +21,7 @@ from core.models import (
 from services import achievements
 from services import database as db
 from services import gemini_service
+from services import geocoding
 from services import storage
 from services.auth import load_current_user
 from services.storage import IMAGE_DIR
@@ -210,6 +211,12 @@ def create_item():
         db.add_item(item)
     finally:
         tmp_image_path.unlink(missing_ok=True)  # add_item copies from this, never deletes it itself
+
+    # Looked up once, here, rather than every time the entry is opened. Soft
+    # failure: without it the entry just shows its coordinates.
+    place = geocoding.place_for_coordinates(item.latitude, item.longitude)
+    if place:
+        db.update_item(item, "place_name", place, user_id=user_id)
 
     unlocked = achievements.evaluate_and_unlock(user_id)
     return jsonify(item=_item_to_dict(item), unlocked=unlocked), 201

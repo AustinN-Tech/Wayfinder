@@ -3,9 +3,18 @@ import { Link } from "react-router";
 import { useAuth0 } from "@auth0/auth0-react";
 import ActivityHeatmap from "../components/ActivityHeatmap";
 import AuthImage from "../components/AuthImage";
+import FriendsRow from "../components/FriendsRow";
 import PageHeader from "../components/PageHeader";
 import StampAlbum from "../components/StampAlbum";
-import { getItems, getAchievements, getMe, setMyUsername, uploadAvatar, avatarSrc } from "../lib/api";
+import {
+  getItems,
+  getAchievements,
+  getFriends,
+  getMe,
+  setMyUsername,
+  uploadAvatar,
+  avatarSrc,
+} from "../lib/api";
 import { toStampAchievements } from "../lib/achievements";
 
 function UsernameEditor({ me, onSaved }) {
@@ -73,6 +82,7 @@ export default function Profile() {
   const [items, setItems] = useState(null);
   const [achievements, setAchievements] = useState(null);
   const [me, setMe] = useState(null);
+  const [friends, setFriends] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [avatarBusy, setAvatarBusy] = useState(false);
   const fileInputRef = useRef(null);
@@ -81,6 +91,7 @@ export default function Profile() {
     getItems().then(setItems).catch((err) => setErrorMessage(err.message));
     getAchievements().then(setAchievements).catch(() => {});
     getMe().then(setMe).catch(() => {});
+    getFriends().then((data) => setFriends(data.friends)).catch(() => {});
   }, []);
 
   function handleAvatarPick(e) {
@@ -116,74 +127,74 @@ export default function Profile() {
         title="Profile"
         subtitle="Your record so far, and the stamps it has earned you."
         accent="#8f6518"
-        note={items ? `${items.length} ${items.length === 1 ? "find" : "finds"} logged` : undefined}
       />
 
-      <div className="profile-card">
-        <button
-          type="button"
-          className="profile-avatar-button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={avatarBusy}
-          aria-label="Change profile picture"
-        >
-          <img className="profile-avatar" src={avatarUrl} alt="" referrerPolicy="no-referrer" />
-          <span className="profile-avatar-edit">{avatarBusy ? "..." : "Edit"}</span>
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={handleAvatarPick}
-        />
-        <div className="profile-identity">
-          <p className="profile-name">{user?.name || user?.nickname || "Explorer"}</p>
-          {me && <UsernameEditor me={me} onSaved={setMe} />}
-        </div>
-      </div>
-
-      <Link to="/friends" className="profile-friends-link">
-        Friends {"->"}
-      </Link>
-
       {errorMessage && <p role="alert">{errorMessage}</p>}
-      {!items && !errorMessage && <p>Gathering your history...</p>}
 
-      {items && (
-        <div className="profile-columns">
+      {/* Stacking order on a phone falls out of this source order: identity,
+          friends, activity, favourite, achievements. */}
+      <div className="profile-columns">
+        <div className="profile-column">
+          <div className="profile-card">
+            <button
+              type="button"
+              className="profile-avatar-button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={avatarBusy}
+              aria-label="Change profile picture"
+            >
+              <img className="profile-avatar" src={avatarUrl} alt="" referrerPolicy="no-referrer" />
+              <span className="profile-avatar-edit">{avatarBusy ? "..." : "Edit"}</span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handleAvatarPick}
+            />
+            <div className="profile-identity">
+              <p className="profile-name">{user?.name || user?.nickname || "Explorer"}</p>
+              {me && <UsernameEditor me={me} onSaved={setMe} />}
+            </div>
+          </div>
+
+          <FriendsRow friends={friends} />
+
           <section className="profile-section">
             <h2>Activity</h2>
-            <ActivityHeatmap items={items} />
+            {items ? <ActivityHeatmap items={items} /> : <p>Gathering your history...</p>}
+          </section>
+        </div>
+
+        <div className="profile-column">
+          <section className="profile-section">
+            <h2>Favorite find</h2>
+            {favorite ? (
+              <Link to={`/entry/${favorite.id}`} className="profile-favorite">
+                <AuthImage path={favorite.image_path} alt={favorite.name} />
+                <div>
+                  <strong>{favorite.name}</strong>
+                  <span>{favorite.sub_category}</span>
+                </div>
+              </Link>
+            ) : (
+              <p>Nothing logged yet — your first find will show up here.</p>
+            )}
           </section>
 
-          <div className="profile-column-side">
-            <section className="profile-section">
-              <h2>Favorite find</h2>
-              {favorite ? (
-                <Link to={`/entry/${favorite.id}`} className="profile-favorite">
-                  <AuthImage path={favorite.image_path} alt={favorite.name} />
-                  <div>
-                    <strong>{favorite.name}</strong>
-                    <span>{favorite.sub_category}</span>
-                  </div>
-                </Link>
-              ) : (
-                <p>Nothing logged yet — your first find will show up here.</p>
-              )}
-            </section>
-
-            <section className="profile-section">
-              <h2>Achievements ({unlockedCount})</h2>
-              {unlockedStamps && unlockedStamps.length > 0 ? (
+          <section className="profile-section">
+            <h2>Achievements ({unlockedCount})</h2>
+            {unlockedStamps && unlockedStamps.length > 0 ? (
+              <div className="profile-achievements">
                 <StampAlbum achievements={unlockedStamps} />
-              ) : (
-                <p>Log finds and earn your first stamp — see them all on the Stamps page.</p>
-              )}
-            </section>
-          </div>
+              </div>
+            ) : (
+              <p>Log finds and earn your first stamp — see them all on the Stamps page.</p>
+            )}
+          </section>
         </div>
-      )}
+      </div>
     </main>
   );
 }

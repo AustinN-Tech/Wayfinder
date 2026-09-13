@@ -54,7 +54,7 @@ def validate_user_id(user_id: int) -> None:
 
 ITEM_COLUMNS = (
     "id, name, category, sub_category, image_path, latitude, longitude, "
-    "time_taken, time_period, description, confidence_score, user_id, is_favorite"
+    "time_taken, time_period, description, confidence_score, user_id, is_favorite, place_name"
 )
 
 UPDATABLE_COLUMNS = {
@@ -70,6 +70,7 @@ UPDATABLE_COLUMNS = {
     "confidence": "confidence_score",
     "confidence_score": "confidence_score",
     "is_favorite": "is_favorite",
+    "place_name": "place_name",
 }
 
 def row_to_heritage_item(row) -> HeritageItem:
@@ -88,6 +89,7 @@ def row_to_heritage_item(row) -> HeritageItem:
         confidence=row[10],
         user_id=row[11],
         is_favorite=row[12],
+        place_name=row[13],
     )
 
 

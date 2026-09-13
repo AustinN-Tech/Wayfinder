@@ -332,15 +332,107 @@
   text-align: left;
 }
 
-/* heading and the transient status lines; the suggestion cards stay left-aligned */
-.result-screen h1,
-.result-screen > p {
-  text-align: center;
+/* the question sits centred over the photo, unlike the left-aligned headers
+   on the pages you browse */
+.result-screen .page-header-row {
+  justify-content: center;
+}
+
+.result-screen .page-header-heading {
+  align-items: center;
+}
+
+/* the shot you just took, mounted like a print rather than filling the page */
+.captured-figure {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 1.25rem;
+  padding: 10px 10px 12px;
+  border-radius: 2px;
+  background: linear-gradient(168deg, #fdf8ea, #f2e7cf);
+  box-shadow:
+    0 10px 24px rgba(74, 52, 32, 0.32),
+    0 0 0 1px rgba(139, 115, 85, 0.3);
 }
 
 .captured-photo {
-  width: 100%;
-  border-radius: 16px;
+  display: block;
+  width: auto;
+  max-width: min(100%, 400px);
+  max-height: 42svh;
+  border-radius: 1px;
+  box-shadow: inset 0 0 0 1px rgba(74, 52, 32, 0.18);
+}
+
+.result-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  margin: 0 0 0.5rem;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 1rem;
+  color: rgba(92, 74, 58, 0.85);
+  text-align: center;
+}
+
+.result-status.is-error {
+  color: #8a2f1f;
+}
+
+/* three spots of ink, tapped out one after another while it thinks */
+.thinking-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 7px;
+}
+
+.thinking-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+  animation: ink-tap 1.15s ease-in-out infinite;
+}
+
+.thinking-dots i:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.thinking-dots i:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes ink-tap {
+  0%,
+  65%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  32% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+@keyframes ink-fade {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* still reads as working, without the bouncing */
+@media (prefers-reduced-motion: reduce) {
+  .thinking-dots i {
+    animation: ink-fade 1.4s ease-in-out infinite;
+  }
 }
 
 /* ---------- category album (sticker-book progress) ---------- */
@@ -775,10 +867,14 @@
   margin-top: 1.25rem;
 }
 
+/* Column count comes from the page (--entry-cols), which also decides how many
+   entries a spread holds - so the grid and the pagination can't disagree.
+   Rows are auto, not a fixed two, so a short last page doesn't reserve an
+   empty second row. */
 .entry-page-grid {
   display: grid;
-  grid-template-columns: repeat(2, var(--entry-slot-w));
-  grid-template-rows: repeat(2, var(--entry-slot-h));
+  grid-template-columns: repeat(var(--entry-cols, 2), var(--entry-slot-w));
+  grid-auto-rows: var(--entry-slot-h);
   gap: 0.9rem 0.85rem;
   margin: 0;
   padding: 0;
@@ -790,13 +886,11 @@
 }
 
 /* the same alternating tilt the scrolling grid had */
-.entry-page-grid .entry-slot:nth-child(odd) .entry-card,
-.entry-page-grid .entry-slot:nth-child(odd) .entry-mount {
+.entry-page-grid .entry-slot:nth-child(odd) .entry-card {
   transform: rotate(-0.8deg);
 }
 
-.entry-page-grid .entry-slot:nth-child(even) .entry-card,
-.entry-page-grid .entry-slot:nth-child(even) .entry-mount {
+.entry-page-grid .entry-slot:nth-child(even) .entry-card {
   transform: rotate(0.7deg);
 }
 
@@ -830,16 +924,6 @@
 
 .entry-page-grid .entry-card-date {
   font-size: 0.7rem;
-}
-
-/* a slot waiting to be filled on a short last page */
-.entry-mount {
-  display: block;
-  height: 100%;
-  box-sizing: border-box;
-  border: 1px dashed rgba(139, 115, 85, 0.3);
-  border-radius: 2px;
-  background: rgba(253, 248, 234, 0.28);
 }
 
 /* ---------- turning the page ---------- */
@@ -1020,8 +1104,10 @@
   text-align: left;
 }
 
-.entry-screen h1 {
-  text-align: center;
+/* the rhythm down the page: header, photo, tags, record, rule, description */
+.entry-screen .entry-figure {
+  margin-top: 1.75rem;
+  margin-bottom: 1.5rem;
 }
 
 /* the photo sits on a paper mount, set down slightly askew */
@@ -1056,25 +1142,40 @@
   }
 }
 
+/* sits in the header's right-hand slot, so it can't collide with the title
+   or the photo corner the way an absolutely placed badge did */
 .entry-favorite-toggle {
-  position: absolute;
-  top: -14px;
-  right: -14px;
-  width: 44px;
-  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(139, 115, 85, 0.5);
   border-radius: 50%;
-  border: 2px solid var(--text-h);
-  background: #f4ecd8;
-  color: var(--text-h);
-  font-size: 1.3rem;
+  background: rgba(244, 236, 216, 0.6);
+  color: rgba(92, 74, 58, 0.55);
+  font-size: 1.15rem;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 3px 8px rgba(74, 52, 32, 0.35);
-  transition: transform 0.15s ease;
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.6);
+  transition:
+    transform 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
 }
 
-.entry-favorite-toggle:hover:not(:disabled) {
-  transform: scale(1.08);
+@media (hover: hover) {
+  .entry-favorite-toggle:hover:not(:disabled) {
+    transform: scale(1.08);
+    color: #c9962c;
+    background: rgba(244, 236, 216, 0.95);
+  }
+}
+
+.entry-favorite-toggle:focus-visible {
+  outline: 2px solid #8f6518;
+  outline-offset: 3px;
 }
 
 .entry-favorite-toggle:disabled {
@@ -1082,54 +1183,73 @@
   opacity: 0.7;
 }
 
+/* marked: the star is inked in rather than the whole disc changing colour */
 .entry-favorite-toggle.active {
-  background: #d99a2b;
-  color: #fff;
+  border-color: rgba(201, 150, 44, 0.75);
+  background: rgba(247, 235, 205, 0.85);
+  color: #c9962c;
+  text-shadow: 0 1px 2px rgba(120, 84, 18, 0.35);
 }
 
+/* a catalogue line rather than a row of chips, centred under the photo */
 .entry-tags {
   display: flex;
+  align-items: baseline;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.4rem;
-  margin: 1rem 0 1.25rem;
+  gap: 0.15rem 0.55rem;
+  margin: 0 0 0.85rem;
 }
 
-.entry-tags span {
-  padding: 0.18rem 0.7rem;
-  border: 1px solid rgba(139, 115, 85, 0.55);
-  border-radius: 999px;
-  font-size: 0.8rem;
-  letter-spacing: 0.04em;
+.entry-tags-label {
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: rgba(92, 74, 58, 0.68);
+}
+
+.entry-tag {
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.95rem;
+  color: #5c4a3a;
   text-transform: lowercase;
 }
 
+.entry-tag + .entry-tag::before {
+  content: "·";
+  margin-right: 0.55rem;
+  color: rgba(139, 115, 85, 0.6);
+}
+
+/* one centred line - "Discovered at [where] on [when]" - reading as a single
+   fact. The rule runs the full column width regardless of how short it is. */
 .entry-meta {
   display: flex;
+  align-items: baseline;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.4rem 2.5rem;
+  gap: 0.2rem 0.45rem;
   margin: 0 0 1.5rem;
   padding-bottom: 1.25rem;
   border-bottom: 1px dashed rgba(139, 115, 85, 0.5);
   font-size: 0.95rem;
-}
-
-.entry-meta > div {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
+  text-align: center;
 }
 
 .entry-meta dt {
-  font-family: "Kalam", "Crimson Text", serif;
-  font-weight: 700;
-  color: #5c4a3a;
+  color: rgba(92, 74, 58, 0.7);
 }
 
 .entry-meta dd {
   margin: 0;
+  color: #3d2817;
 }
+
+.entry-meta .is-unrecorded {
+  color: rgba(92, 74, 58, 0.5);
+  font-style: italic;
+}
+
 
 .entry-description {
   margin-bottom: 1.75rem;
@@ -2094,6 +2214,11 @@
   padding-bottom: 0.7rem;
 }
 
+/* no ink rule, so no room reserved for one */
+.page-header-titleline.is-plain {
+  padding-bottom: 0;
+}
+
 .page-header-titleline h1 {
   margin: 0;
   line-height: 1.1;
@@ -2229,12 +2354,18 @@
 
 /* ---------- map ---------- */
 
+/* the same sheet as the page underneath it, washed a shade lighter so the
+   strip still reads as its own piece of paper */
 .timeline-controls {
   margin-top: 1rem;
   padding: 0.85rem 1rem 1rem;
-  background: var(--code-bg);
   border: 1px solid var(--border);
   border-radius: 10px;
+  background:
+    linear-gradient(rgba(250, 243, 226, 0.8), rgba(250, 243, 226, 0.8)),
+    url("/images/textures/paper-texture.png"),
+    linear-gradient(168deg, #f4e9d0, #ecdcbd 55%, #e6d3b0);
+  background-size: auto, 640px, auto;
 }
 
 .era-slider {
@@ -2394,7 +2525,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin: 1rem 0 0.75rem;
+  margin: 0;
 }
 
 .profile-avatar-button {
@@ -2456,34 +2587,51 @@
   color: var(--text);
 }
 
+/* Both columns start at the same line and share one rhythm, rather than each
+   carrying its own margins and drifting out of step. */
 .profile-columns {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 0 2.5rem;
+  gap: 1.75rem 2.5rem;
   align-items: start;
 }
 
-.profile-column-side {
+.profile-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
   min-width: 0;
 }
 
-.profile-column-side .stamp-grid {
+.profile-column .stamp-grid {
   grid-template-columns: repeat(2, 1fr);
 }
 
-@media (max-width: 700px) {
+/* Holds about two rows of stamps; past that it scrolls rather than pushing
+   the column taller than the one beside it. */
+.profile-achievements {
+  max-height: 340px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(139, 115, 85, 0.4);
+  border-radius: 3px;
+  background: rgba(244, 236, 216, 0.35);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.profile-achievements .stamp-grid {
+  margin: 0.5rem 0;
+}
+
+@media (max-width: 760px) {
   .profile-columns {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
+/* the column owns the spacing now */
 .profile-section {
-  margin: 1.5rem 0;
-}
-
-.profile-columns > .profile-section,
-.profile-column-side > .profile-section:first-child {
-  margin-top: 0;
+  margin: 0;
 }
 
 .profile-section h2 {
@@ -2521,34 +2669,46 @@
   text-transform: capitalize;
 }
 
-.heatmap {
+/* A year of weeks won't fit a narrow column, so the grid scrolls sideways
+   once the squares hit their minimum rather than shrinking past tappable. */
+.heatmap-scroll {
   overflow-x: auto;
-}
-
-@media (max-width: 700px) {
-  .heatmap-grid {
-    margin: 0 auto;
-  }
+  overscroll-behavior-x: contain;
+  padding-bottom: 0.35rem;
 }
 
 .heatmap-grid {
   display: flex;
   gap: 3px;
-  width: max-content;
+  width: 100%;
 }
 
 .heatmap-col {
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 3px;
+  /* small enough that a year fits a desktop column, never below a tappable
+     square, and never so large the squares stop reading as a grid */
+  min-width: 12px;
+  max-width: 22px;
 }
 
 .heatmap-cell {
-  width: 12px;
-  height: 12px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  padding: 0;
   border-radius: 2px;
   background: rgba(139, 105, 20, 0.14);
   border: 1px solid rgba(74, 52, 32, 0.28);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+button.heatmap-cell {
+  cursor: pointer;
 }
 
 .heatmap-cell.level-empty {
@@ -2567,10 +2727,34 @@
   background: #3d2817;
 }
 
-.heatmap-caption {
-  margin: 0.6rem 0 0;
-  font-size: 0.8rem;
-  color: var(--text);
+.heatmap-cell.is-active {
+  transform: scale(1.35);
+  border-color: #3d2817;
+  box-shadow: 0 1px 4px rgba(61, 40, 23, 0.45);
+}
+
+.heatmap-cell:focus-visible {
+  outline: 2px solid #8f6518;
+  outline-offset: 2px;
+}
+
+/* sits above the grid, outside its horizontal scroll box, so nothing clips it */
+.heatmap-readout {
+  min-height: 1.3rem;
+  margin: 0 0 0.5rem;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.88rem;
+  color: rgba(92, 74, 58, 0.85);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heatmap-cell {
+    transition: none;
+  }
+
+  .heatmap-cell.is-active {
+    transform: none;
+  }
 }
 
 .profile-username-form {
@@ -2588,24 +2772,61 @@
   color: var(--text);
 }
 
+/* input and button as one joined control - matched heights, shared border,
+   no gap between them */
+.profile-username-form .profile-username-row {
+  gap: 0;
+  border: 1px solid rgba(139, 115, 85, 0.5);
+  border-radius: 3px;
+  background: rgba(251, 245, 230, 0.75);
+  overflow: hidden;
+}
+
+.profile-username-form .profile-username-at {
+  padding: 0 0.1rem 0 0.55rem;
+  color: rgba(92, 74, 58, 0.7);
+  font-size: 0.9rem;
+  line-height: 32px;
+}
+
 .profile-username-row input {
   flex: 1;
-  padding: 0.3rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid rgba(74, 52, 32, 0.35);
-  background: #fbf5e6;
+  min-width: 0;
+  height: 32px;
+  padding: 0 0.4rem;
+  border: none;
+  background: none;
+  outline: none;
   color: var(--text-h);
-  font-size: 0.85rem;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.9rem;
 }
 
 .profile-username-row button {
-  padding: 0.3rem 0.7rem;
-  border-radius: 4px;
+  height: 32px;
+  padding: 0 0.9rem;
   border: none;
-  background: var(--accent);
-  color: #fff;
-  font-size: 0.8rem;
+  border-left: 1px solid rgba(139, 115, 85, 0.4);
+  background: #8f6518;
+  color: #f9f2df;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.profile-username-row button:hover:not(:disabled) {
+  background: #a4761f;
+}
+
+.profile-username-row button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.profile-username-form .profile-username-row:focus-within {
+  border-color: rgba(139, 115, 85, 0.9);
 }
 
 .profile-username-display {
@@ -2628,16 +2849,126 @@
   color: var(--text-h);
 }
 
+/* the plain back link on the friends pages (not the avatar row below) */
 .profile-friends-link {
   display: inline-block;
   margin: 0.1rem 0 1rem;
-  color: var(--text-h);
-  font-weight: 600;
+  color: #8f6518;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.9rem;
+  font-weight: 700;
   text-decoration: none;
 }
 
 .profile-friends-link:hover {
   text-decoration: underline;
+}
+
+/* a row of faces that opens the friends list - the avatars are the button, so
+   it has to look pressable rather than decorative */
+.friends-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid rgba(139, 115, 85, 0.4);
+  border-radius: 3px;
+  background: rgba(244, 236, 216, 0.45);
+  color: #3d2817;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+@media (hover: hover) {
+  .friends-row:hover {
+    border-color: rgba(139, 115, 85, 0.75);
+    background: rgba(244, 236, 216, 0.85);
+    transform: translateY(-1px);
+  }
+
+  .friends-row:hover .friend-avatar {
+    border-color: rgba(61, 40, 23, 0.5);
+  }
+}
+
+.friends-row:focus-visible {
+  outline: 2px solid #8f6518;
+  outline-offset: 3px;
+}
+
+.friends-row-heading {
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.friends-row-count {
+  margin-left: 0.35rem;
+  color: rgba(92, 74, 58, 0.75);
+  font-weight: 400;
+}
+
+.friends-row-empty {
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: rgba(92, 74, 58, 0.7);
+}
+
+/* overlapped, the way a stack of faces reads as a group */
+.friends-row-avatars {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding-left: 0.4rem;
+}
+
+.friend-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-left: -8px;
+  border: 2px solid #f4ecd8;
+  border-radius: 50%;
+  background: var(--friend-ink, #8f6518);
+  color: #f9f2df;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(61, 40, 23, 0.35);
+  transition: border-color 0.18s ease;
+}
+
+.friend-avatar:first-child {
+  margin-left: 0;
+}
+
+.friend-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.friend-avatar.is-overflow {
+  background: rgba(92, 74, 58, 0.18);
+  color: #5c4a3a;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 420px) {
+  .friends-row-avatars {
+    margin-left: 0;
+    padding-left: 0;
+  }
 }
 
 /* ---------- friends ---------- */

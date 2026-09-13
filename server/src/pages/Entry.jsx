@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { Trash2 } from "lucide-react";
 import { deleteItem, getItem, setFavorite } from "../lib/api";
 import AuthImage from "../components/AuthImage";
+import PageHeader from "../components/PageHeader";
 
 function formatCoords(latitude, longitude) {
   if (latitude == null || longitude == null) return null;
@@ -73,42 +74,53 @@ export default function Entry() {
     );
   }
 
+  // Resolved once when the find was saved; coordinates are the fallback for
+  // entries logged before that, or where the lookup came back empty.
+  const place = item.place_name;
   const coords = formatCoords(item.latitude, item.longitude);
   const when = formatWhen(item.time_taken);
 
   return (
     <main className="page-body entry-screen">
-      <h1>{item.name}</h1>
+      <PageHeader
+        title={item.name}
+        rule={false}
+        accent={item.category === "NATURAL" ? "#3f6b4e" : "#a8452f"}
+        aside={
+          <button
+            type="button"
+            className={`entry-favorite-toggle ${item.is_favorite ? "active" : ""}`}
+            onClick={toggleFavorite}
+            disabled={favoriteBusy}
+            aria-pressed={!!item.is_favorite}
+            aria-label={item.is_favorite ? "Remove as favorite" : "Mark as favorite"}
+          >
+            ★
+          </button>
+        }
+      />
 
       <figure className="entry-figure">
         <AuthImage className="entry-photo" path={item.image_path} alt={item.name} />
-        <button
-          type="button"
-          className={`entry-favorite-toggle ${item.is_favorite ? "active" : ""}`}
-          onClick={toggleFavorite}
-          disabled={favoriteBusy}
-          aria-pressed={!!item.is_favorite}
-          aria-label={item.is_favorite ? "Remove as favorite" : "Mark as favorite"}
-        >
-          ★
-        </button>
       </figure>
 
       <p className="entry-tags">
-        <span>{item.category}</span>
-        <span>{item.sub_category}</span>
-        {item.time_period && <span>{item.time_period}</span>}
+        <span className="entry-tags-label">Filed under</span>
+        <span className="entry-tag">{item.category}</span>
+        <span className="entry-tag">{item.sub_category}</span>
+        {item.time_period && <span className="entry-tag">{item.time_period}</span>}
       </p>
 
       <dl className="entry-meta">
-        <div>
-          <dt>Discovered at</dt>
-          <dd>{coords || "location not recorded"}</dd>
-        </div>
-        <div>
-          <dt>On</dt>
-          <dd>{when || "unknown"}</dd>
-        </div>
+        <dt>Discovered at</dt>
+        <dd
+          className={place || coords ? undefined : "is-unrecorded"}
+          title={place && coords ? coords : undefined}
+        >
+          {place || coords || "location not recorded"}
+        </dd>
+        <dt>on</dt>
+        <dd className={when ? undefined : "is-unrecorded"}>{when || "an unknown date"}</dd>
       </dl>
 
       {item.description && <p className="entry-description">{item.description}</p>}

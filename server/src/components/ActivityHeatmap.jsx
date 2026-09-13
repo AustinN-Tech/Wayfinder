@@ -1,5 +1,7 @@
+import { useEffect, useRef, useState } from "react";
+
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const WEEKS = 17; // ~4 months, enough to read on a phone without scrolling sideways
+const WEEKS = 53; // a full year back from today
 
 // Local calendar date, not UTC: toISOString() would shift "today" onto the
 // wrong grid cell for anyone east of UTC (a find logged this morning would
@@ -45,8 +47,23 @@ function levelFor(count) {
   return 3;
 }
 
+function describe(day) {
+  const when = day.date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return `${when} · ${day.count} ${day.count === 1 ? "find" : "finds"}`;
+}
+
 // items: HeritageItem[] with a time_taken unix-seconds field.
 export default function ActivityHeatmap({ items }) {
+  const [active, setActive] = useState(null);
+  const scroller = useRef(null);
+
+  // A year doesn't fit a phone, so the grid scrolls - and it should open on
+  // this week rather than on last autumn.
+  useEffect(() => {
+    const element = scroller.current;
+    if (element) element.scrollLeft = element.scrollWidth;
+  }, []);
+
   const countsByDay = {};
   for (const item of items) {
     if (!item.time_taken) continue;
@@ -55,11 +72,18 @@ export default function ActivityHeatmap({ items }) {
   }
 
   const weeks = buildWeeks(countsByDay);
-  const total = items.length;
 
   return (
     <div className="heatmap">
-      <div className="heatmap-grid">
+      {/* A readout rather than a floating tooltip: the grid scrolls sideways
+          on a phone, and anything positioned over a cell gets clipped by that
+          scroll container. This also gives touch somewhere to show up. */}
+      <p className="heatmap-readout" role="status">
+        {active ? describe(active) : "Tap a day to see what you logged"}
+      </p>
+
+      <div className="heatmap-scroll" ref={scroller}>
+        <div className="heatmap-grid">
         {weeks.map((week, weekIndex) => (
           <div className="heatmap-col" key={weekIndex}>
             {week.map((day) => (
@@ -70,11 +94,9 @@ export default function ActivityHeatmap({ items }) {
               />
             ))}
           </div>
-        ))}
+          ))}
+        </div>
       </div>
-      <p className="heatmap-caption">
-        {total} find{total === 1 ? "" : "s"} logged in total
-      </p>
     </div>
   );
 }
