@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { X } from "lucide-react";
 
 const SCAN_DURATION_MS = 2600;
 
@@ -60,6 +61,16 @@ export default function Camera() {
 
   return (
     <main className="camera-screen">
+      <button
+        type="button"
+        className="camera-close"
+        onClick={() => navigate(-1)}
+        disabled={isScanning}
+        aria-label="Close camera"
+      >
+        <X size={22} />
+      </button>
+
       <video
         ref={videoRef}
         autoPlay

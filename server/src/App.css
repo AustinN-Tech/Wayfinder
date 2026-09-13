@@ -283,6 +283,34 @@
   text-shadow: 0 0 12px rgba(220, 220, 225, 0.5);
 }
 
+.camera-close {
+  position: fixed;
+  top: calc(1rem + env(safe-area-inset-top));
+  left: 1rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  transition:
+    background 0.2s ease,
+    opacity 0.3s ease;
+}
+
+.camera-close:hover {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.camera-close:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 .capture-button {
   position: fixed;
   bottom: calc(2rem + env(safe-area-inset-bottom));
