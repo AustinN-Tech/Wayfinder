@@ -74,6 +74,9 @@ export default function Entry() {
     );
   }
 
+  // Resolved once when the find was saved; coordinates are the fallback for
+  // entries logged before that, or where the lookup came back empty.
+  const place = item.place_name;
   const coords = formatCoords(item.latitude, item.longitude);
   const when = formatWhen(item.time_taken);
 
@@ -110,8 +113,11 @@ export default function Entry() {
 
       <dl className="entry-meta">
         <dt>Discovered at</dt>
-        <dd className={coords ? undefined : "is-unrecorded"}>
-          {coords || "location not recorded"}
+        <dd
+          className={place || coords ? undefined : "is-unrecorded"}
+          title={place && coords ? coords : undefined}
+        >
+          {place || coords || "location not recorded"}
         </dd>
         <dt>on</dt>
         <dd className={when ? undefined : "is-unrecorded"}>{when || "an unknown date"}</dd>
