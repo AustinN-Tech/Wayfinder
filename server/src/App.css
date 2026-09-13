@@ -380,6 +380,22 @@
   color: #8a2f1f;
 }
 
+/* the message and both ways forward, with the photo still above them */
+.result-recovery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+.result-recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
 /* the way back when the analysis fails - centred under the message, in the
    same ochre as the journal's other buttons rather than browser default */
 .result-retake {
@@ -417,6 +433,20 @@
 .result-retake:focus-visible {
   outline: 2px solid #3d2817;
   outline-offset: 3px;
+}
+
+/* secondary: the same shape, without claiming to be the obvious move */
+.result-retake.is-secondary {
+  background: transparent;
+  color: #5c4a3a;
+  border: 1px solid rgba(139, 115, 85, 0.5);
+  box-shadow: none;
+}
+
+@media (hover: hover) {
+  .result-retake.is-secondary:hover {
+    background: rgba(244, 236, 216, 0.7);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

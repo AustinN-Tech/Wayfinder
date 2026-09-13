@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import logging
 
 from google import genai
@@ -16,6 +17,11 @@ from core.models import (
 logger = logging.getLogger(__name__)
 
 MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
+
+
+class TransientModelError(RuntimeError):
+    """The model was reachable but couldn't answer right now - overloaded,
+    rate limited, or timed out. Worth retrying; everything else isn't."""
 
 
 class QuotaExceededError(RuntimeError):
@@ -79,33 +85,65 @@ Return only the structured data.
 """
 
 
+# Most 503s from an overloaded model clear within a second or two, so these
+# retries absorb the majority of them before anyone sees an error.
+MAX_ATTEMPTS = 3
+BACKOFF_SECONDS = (1, 2, 4)
+
+
+def _is_transient(exc):
+    """Overloaded, rate limited or timed out - not a request we got wrong."""
+    if isinstance(exc, errors.ServerError):
+        return True
+    if isinstance(exc, errors.ClientError) and getattr(exc, "code", None) == 429:
+        return True
+    # the SDK surfaces transport timeouts from whatever HTTP client it uses,
+    # so match on the name rather than importing httpx just for this
+    return "timeout" in type(exc).__name__.lower()
+
+
+def _generate(client, image_bytes, mime_type):
+    return client.models.generate_content(
+        model=MODEL_NAME,
+        contents=[
+            types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+            PROMPT,
+        ],
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=SUGGESTION_SCHEMA,
+        ),
+    )
+
+
 def analyze_image(image_bytes, mime_type):
-    """Ask Gemini for 3 candidate classifications/descriptions for an item photo."""
+    """Ask Gemini for 3 candidate classifications/descriptions for an item photo.
+
+    Transient failures are retried with exponential backoff; anything else
+    (a malformed request, a bad key) fails on the first attempt, since
+    retrying it would only waste the caller's time.
+    """
     client = _get_client()
-    try:
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=[
-                types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-                PROMPT,
-            ],
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=SUGGESTION_SCHEMA,
-            ),
-        )
-    except errors.ClientError as exc:
-        if getattr(exc, "code", None) == 429:
-            logger.warning("Gemini quota/rate limit hit: %s", exc)
-            raise QuotaExceededError(
-                "Gemini API quota exceeded - wait a bit and try again, or check "
-                "your plan/billing at https://ai.google.dev/gemini-api/docs/rate-limits"
-            ) from exc
-        logger.error("Gemini client error: %s", exc)
-        raise ValueError(f"Gemini request failed: {exc}") from exc
-    except errors.APIError as exc:
-        logger.error("Gemini API error: %s", exc)
-        raise ValueError(f"Gemini request failed: {exc}") from exc
+    response = None
+
+    for attempt in range(MAX_ATTEMPTS):
+        try:
+            response = _generate(client, image_bytes, mime_type)
+            break
+        except Exception as exc:
+            if not _is_transient(exc):
+                if isinstance(exc, errors.ClientError) and getattr(exc, "code", None) == 429:
+                    raise QuotaExceededError("Gemini API quota exceeded") from exc
+                logger.error("Gemini request failed: %s", exc)
+                raise ValueError(f"Gemini request failed: {exc}") from exc
+
+            last = attempt == MAX_ATTEMPTS - 1
+            logger.warning(
+                "Gemini unavailable (attempt %s/%s): %s", attempt + 1, MAX_ATTEMPTS, exc
+            )
+            if last:
+                raise TransientModelError("The model is unavailable right now") from exc
+            time.sleep(BACKOFF_SECONDS[attempt])
 
     try:
         parsed = json.loads(response.text)

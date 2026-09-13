@@ -1,5 +1,6 @@
-import os
 import math
+import os
+import time
 import re
 from dataclasses import asdict
 from pathlib import Path
@@ -121,9 +122,22 @@ def get_item(item_id):
     return jsonify(_item_to_dict(item))
 
 
+# Enough to stop one person hammering the model; an in-memory stamp per user
+# is fine while this runs as a single process.
+IDENTIFY_INTERVAL_SECONDS = 3
+_last_identify = {}
+
+
 @app.post("/api/items/analyze")
 def analyze_item():
-    _current_user_id()
+    user_id = _current_user_id()
+
+    now = time.monotonic()
+    previous = _last_identify.get(user_id)
+    if previous is not None and now - previous < IDENTIFY_INTERVAL_SECONDS:
+        abort(429, description="too_fast")
+    _last_identify[user_id] = now
+
     if "image" not in request.files or request.files["image"].filename == "":
         abort(400, description="An 'image' file is required")
 
@@ -132,15 +146,14 @@ def analyze_item():
 
     try:
         suggestions = gemini_service.analyze_image(image_file.read(), mime_type)
-    except gemini_service.QuotaExceededError as exc:
-        abort(429, description=str(exc))
-    except RuntimeError as exc:
-        abort(503, description=str(exc))
-    except ValueError as exc:
-        abort(502, description=str(exc))
-    except Exception as exc:
+    except gemini_service.TransientModelError:
+        # already retried with backoff inside the service
+        abort(503, description="model_unavailable")
+    except gemini_service.QuotaExceededError:
+        abort(429, description="quota_exceeded")
+    except Exception:
         logger.exception("Gemini analysis failed")
-        abort(502, description=f"{type(exc).__name__}: {exc}")
+        abort(502, description="identify_failed")
 
     return jsonify(suggestions=suggestions)
 
