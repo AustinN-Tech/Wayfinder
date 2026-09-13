@@ -1,9 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import PageHeader from "../components/PageHeader";
 import { SUB_CATEGORY_LABELS } from "../components/subCategoryMeta";
 import { categoryLabel, sentenceCase } from "../components/categories";
 import { analyzeItem, createItem } from "../lib/api";
+
+// The backend answers with a stable code, never provider text. Anything
+// unrecognised falls through to the generic line.
+const ERROR_MESSAGES = {
+  model_unavailable:
+    "The identification desk is busy right now. Give it a moment and try again.",
+  too_fast: "One find at a time. Take a breath and try again in a moment.",
+  quota_exceeded: "The identification desk has had a long day. Try again shortly.",
+};
+const GENERIC_ERROR = "Something went wrong identifying this. Try again in a moment.";
 
 export default function Result() {
   const { state } = useLocation();
@@ -40,7 +50,9 @@ export default function Result() {
     );
   }, []);
 
-  useEffect(() => {
+  // Fires the request only - state changes land in the callbacks, so the
+  // first-run effect below isn't setting state synchronously.
+  const runIdentify = useCallback(() => {
     if (!photoBlob) return;
 
     analyzeItem(photoBlob)
@@ -49,10 +61,22 @@ export default function Result() {
         setStatus("ready");
       })
       .catch((err) => {
-        setErrorMessage(err.message);
+        setErrorMessage(ERROR_MESSAGES[err.message] || GENERIC_ERROR);
         setStatus("error");
       });
   }, [photoBlob]);
+
+  // The initial status is already "analyzing", so the first run just asks.
+  useEffect(() => {
+    runIdentify();
+  }, [runIdentify]);
+
+  // Retries send the same photo back, so a failure never costs you the capture.
+  function retryIdentify() {
+    setStatus("analyzing");
+    setErrorMessage("");
+    runIdentify();
+  }
 
   async function selectSuggestion(suggestion) {
     if (savingRef.current) return;
@@ -124,15 +148,24 @@ export default function Result() {
         </p>
       )}
 
-      {errorMessage && (
-        <p className="result-status is-error" role="alert">
-          {errorMessage}
-        </p>
-      )}
       {status === "error" && (
-        <button type="button" className="result-retake" onClick={retakePhoto}>
-          Take another photo
-        </button>
+        <div className="result-recovery">
+          <p className="result-status is-error" role="alert">
+            {errorMessage || GENERIC_ERROR}
+          </p>
+          <div className="result-recovery-actions">
+            <button type="button" className="result-retake" onClick={retryIdentify}>
+              Try again
+            </button>
+            <button
+              type="button"
+              className="result-retake is-secondary"
+              onClick={retakePhoto}
+            >
+              Take another photo
+            </button>
+          </div>
+        </div>
       )}
 
       {suggestions && (
