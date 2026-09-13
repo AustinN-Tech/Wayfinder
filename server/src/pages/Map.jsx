@@ -87,33 +87,6 @@ export default function Map() {
         </p>
       )}
 
-      {items && located.length > 0 && eras.length > 0 && (
-        <div className="timeline-controls">
-          <input
-            type="range"
-            className="era-slider"
-            min={0}
-            max={eras.length}
-            step={1}
-            value={eraIndex}
-            onChange={(e) => setEraIndex(Number(e.target.value))}
-            aria-label="Era"
-          />
-          <div className="era-label">
-            {selectedEra ? (
-              <>
-                <span className={`era-tag era-tag-${selectedEra.category.toLowerCase()}`}>
-                  {selectedEra.category === "NATURAL" ? "Natural" : "Cultural"}
-                </span>
-                {selectedEra.period}
-              </>
-            ) : (
-              "All eras"
-            )}
-          </div>
-        </div>
-      )}
-
       {items && (
         <div className="map-container">
           <MapContainer
@@ -138,6 +111,33 @@ export default function Map() {
               </Marker>
             ))}
           </MapContainer>
+        </div>
+      )}
+
+      {items && located.length > 0 && eras.length > 0 && (
+        <div className="timeline-controls">
+          <input
+            type="range"
+            className="era-slider"
+            min={0}
+            max={eras.length}
+            step={1}
+            value={eraIndex}
+            onChange={(e) => setEraIndex(Number(e.target.value))}
+            aria-label="Era"
+          />
+          <div className="era-label">
+            {selectedEra ? (
+              <>
+                <span className={`era-tag era-tag-${selectedEra.category.toLowerCase()}`}>
+                  {selectedEra.category === "NATURAL" ? "Natural" : "Cultural"}
+                </span>
+                {selectedEra.period}
+              </>
+            ) : (
+              "All eras"
+            )}
+          </div>
         </div>
       )}
     </main>
