@@ -78,6 +78,7 @@ class HackathonAchievementTests(unittest.TestCase):
             ("first_find", 1), ("small_collection", 5), ("medium_collection", 20),
             ("large_collection", 50), ("both_worlds", 2), ("time_traveler", 3),
             ("dino_hunter", 10), ("shiny", 10), ("world_traveler", 7),
+            ("connoisseur", 10),
         ])
         self.assertIsNone(db.get_achievement_by_code("getting_serious"))
 
@@ -160,8 +161,11 @@ class HackathonAchievementTests(unittest.TestCase):
             self.assertEqual(db.get_achievement_by_code(code).achievement_id, item_id)
             self.assertEqual(db.get_user_achievement(1, item_id).earned_at, 123)
         self.assertEqual(db.get_achievement_by_code("custom").achievement_id, 50)
-        self.assertEqual([state["code"] for state in achievements.get_all_with_progress(1)][:9],
-                         [definition.code for definition in achievements.DEFAULT_ACHIEVEMENTS])
+        expected = [definition.code for definition in achievements.DEFAULT_ACHIEVEMENTS]
+        self.assertEqual(
+            [state["code"] for state in achievements.get_all_with_progress(1)][:len(expected)],
+            expected,
+        )
 
 
 if __name__ == "__main__":
