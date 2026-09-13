@@ -1,7 +1,7 @@
 const COPY = {
-  loading: { title: "insitu", body: "Opening the journal..." },
+  loading: { title: "Artifact Journal", body: "Opening the journal..." },
   "signed-out": {
-    title: "insitu",
+    title: "Artifact Journal",
     body: "A journal of the things you come across. Sign in to open yours.",
   },
   error: { title: "Couldn't sign you in", body: null },
