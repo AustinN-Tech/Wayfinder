@@ -31,16 +31,19 @@ export const SUB_CATEGORY_WASH = {
 // HISTORICAL SITE/WILDLIFE/LANDFORM reuse art originally made for the
 // sub-categories they replaced (ARCHAEOLOGY/ANIMAL/LANDMARK) - same subject,
 // new name. The old plants-category-bg.png has no successor bucket under the
-// current list and is unused for now.
+// current list and is unused for now. OTHER's art covers both main
+// categories' catch-all bucket, since it's the same key either way.
 export const SUB_CATEGORY_BACKGROUND_IMAGES = {
   ART: "/images/category-bgs/art-category-bg.png",
   ARCHITECTURE: "/images/category-bgs/architecture-category-bg.png",
   MONUMENT: "/images/category-bgs/monuments-category-bg.png",
   ARTIFACT: "/images/category-bgs/artifacts-category-bg.png",
   "HISTORICAL SITE": "/images/category-bgs/archaeology-category-bg.png",
+  OTHER: "/images/category-bgs/other-category-bg.png",
 
   FOSSIL: "/images/category-bgs/fossils-category-bg.png",
   GEOLOGY: "/images/category-bgs/geology-category-bg.png",
   WILDLIFE: "/images/category-bgs/animals-category-bg.png",
+  AQUATIC: "/images/category-bgs/aquatic-life-category-bg.png",
   LANDFORM: "/images/category-bgs/landmarks-category-bg.png",
 };
