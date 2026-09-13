@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
-import PageDoodles from "../components/PageDoodles";
 import ActivityHeatmap from "../components/ActivityHeatmap";
 import AuthImage from "../components/AuthImage";
 import StampAlbum from "../components/StampAlbum";
-import { getFriendProfile } from "../lib/api";
+import { getFriendProfile, avatarSrc } from "../lib/api";
 import { toStampAchievements } from "../lib/achievements";
 
 // items_by_day comes back as a plain { "2026-09-01": 3, ... } map, but
@@ -61,8 +60,7 @@ export default function FriendProfile() {
 
   return (
     <main className="page-body profile-screen">
-      <PageDoodles variant="profile" />
-      <h1>{user.display_name || `@${user.username}`}</h1>
+      <h1>Profile</h1>
       <Link to="/friends" className="profile-friends-link">
         {"<-"} Back to friends
       </Link>
@@ -70,11 +68,12 @@ export default function FriendProfile() {
       <div className="profile-card">
         <img
           className="profile-avatar"
-          src={user.avatar_url || "/images/stamp-icons/first-find-stamp.png"}
+          src={avatarSrc(user.avatar_url) || "/images/stamp-icons/first-find-stamp.png"}
           alt=""
         />
         <div>
-          <p className="profile-name">@{user.username}</p>
+          <p className="profile-name">{user.display_name || `@${user.username}`}</p>
+          {user.display_name && <p className="profile-email">@{user.username}</p>}
         </div>
       </div>
 

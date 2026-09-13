@@ -115,6 +115,27 @@ export async function syncMyProfile({ displayName, avatarUrl }) {
   return parseOrThrow(response);
 }
 
+export async function uploadAvatar(imageFile) {
+  const formData = new FormData();
+  formData.append("image", imageFile);
+
+  const response = await fetch(`${API_BASE_URL}/api/me/avatar`, {
+    method: "POST",
+    headers: await authHeaders(),
+    body: formData,
+  });
+  return parseOrThrow(response);
+}
+
+// avatar_url is either a full URL (from Auth0's own profile picture,
+// synced on login) or a bare filename this app stored (from an upload) -
+// only the latter needs the images route prefixed on.
+export function avatarSrc(avatarUrl) {
+  if (!avatarUrl) return null;
+  if (avatarUrl.startsWith("http")) return avatarUrl;
+  return `${API_BASE_URL}/api/images/${avatarUrl}`;
+}
+
 export async function setMyUsername(username) {
   const formData = new FormData();
   formData.append("username", username);
