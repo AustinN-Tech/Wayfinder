@@ -2820,6 +2820,10 @@ input[type="search"]::-webkit-search-cancel-button {
 
 .profile-avatar {
   display: block;
+  /* the border has to count inside the 64px, or the disc renders 68px and
+     spills past the button it sits in - which left the Edit overlay (inset on
+     that button) covering everything but a crescent down the right and bottom */
+  box-sizing: border-box;
   width: 64px;
   height: 64px;
   border-radius: 50%;
