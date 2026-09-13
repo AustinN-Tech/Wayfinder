@@ -59,8 +59,10 @@ CULTURAL_TIME_PERIODS = [
     "contemporary"
 ]
 
+
 @dataclass
 class HeritageItem:
+    user_id: int
     name: str
     category: str
     sub_category: str
@@ -70,6 +72,38 @@ class HeritageItem:
     time_period: str
     description: str | None
     confidence: str
-    user_id: str
     id: int | None = None
     time_taken: int | None = None
+
+    def __post_init__(self):
+        if type(self.user_id) is not int or self.user_id <= 0:
+            raise ValueError("user_id must be a positive local user ID")
+
+
+@dataclass
+class Achievement:
+    achievement_id: int
+    code: str
+    name: str
+    rule_type: str
+    threshold: int
+    description: str | None = None
+    category: str | None = None
+
+
+@dataclass
+class User:
+    auth0_id: str
+    username: str | None = None
+    display_name: str | None = None
+    user_id: int | None = None
+    created_at: int | None = None
+
+
+@dataclass
+class UserAchievement:
+    user_id: int
+    achievement_id: int
+    progress: int | None = 0
+    completed: int | None = 0
+    earned_at: int | None = None
