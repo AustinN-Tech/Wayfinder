@@ -124,24 +124,22 @@ export function LandmarkIcon({ size = 32, ...props }) {
   );
 }
 
-export function AquaticIcon({ size = 32, ...props }) {
+// A catch-all "misc find" tag - for whatever doesn't fit a named bucket.
+export function TagIcon({ size = 32, ...props }) {
   return (
     <Svg size={size} {...props}>
-      <path d="M14 12c2.2 0 4-1.6 4-3.5S16.2 5 14 5c-1.6 0-3 1-3.6 2.4" />
-      <path d="M10.4 7.4C9.2 8.4 8.5 9.8 8.5 11.5 8.5 15 11.2 17.5 14.5 17.5c1.5 0 2.8-.5 3.9-1.3" />
-      <path d="M2.5 15c1.8-1.4 3.6-1.4 5.4 0s3.6 1.4 5.4 0 3.6-1.4 5.4 0 3.6 1.4 5.4 0" />
-      <path d="M2.5 19c1.8-1.4 3.6-1.4 5.4 0s3.6 1.4 5.4 0 3.6-1.4 5.4 0 3.6 1.4 5.4 0" opacity="0.5" />
+      <path d="M4 11.5V6c0-1.1.9-2 2-2h5.5L20 12.5l-7.5 7.5L4 11.5z" />
+      <circle cx="8" cy="8" r="1.3" fill="currentColor" stroke="none" />
     </Svg>
   );
 }
 
-export function OtherIcon({ size = 32, ...props }) {
+export function AquaticIcon({ size = 32, ...props }) {
   return (
     <Svg size={size} {...props}>
-      <path d="M4.5 4.5h6v6h-6z" />
-      <circle cx="16.5" cy="7.5" r="3" />
-      <path d="M4.5 14.5l6 6M10.5 14.5l-6 6" />
-      <path d="M14.5 17.5h6v3.5h-6z" />
+      <path d="M3 8c1.8-1.7 3.6-1.7 5.4 0s3.6 1.7 5.4 0 3.6-1.7 5.4 0" />
+      <path d="M3 13c1.8-1.7 3.6-1.7 5.4 0s3.6 1.7 5.4 0 3.6-1.7 5.4 0" />
+      <path d="M3 18c1.8-1.7 3.6-1.7 5.4 0s3.6 1.7 5.4 0 3.6-1.7 5.4 0" />
     </Svg>
   );
 }
