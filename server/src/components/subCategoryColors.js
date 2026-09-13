@@ -31,4 +31,8 @@ export const SUB_CATEGORY_BACKGROUND_IMAGES = {
   GEOLOGY: "/images/geology-category-bg.png",
   LANDMARK: "/images/landmarks-category-bg.png",
   PLANT: "/images/plants-category-bg.png",
+  ART: "/images/art-category-bg.png",
+  ARCHITECTURE: "/images/architecture-category-bg.png",
+  MONUMENT: "/images/monuments-category-bg.png",
+  ARCHAEOLOGY: "/images/archaeology-category-bg.png",
 };
