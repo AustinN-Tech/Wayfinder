@@ -1961,9 +1961,11 @@
     #c4ad8b;
 }
 
+/* Upright, and big enough to feel held rather than looked at: nearly the full
+   width of a phone, capped on desktop so it stays a book. */
 .signin-book {
   position: relative;
-  width: min(430px, 100%);
+  width: min(92vw, 520px);
   margin: auto;
 }
 
@@ -1982,7 +1984,20 @@
 .signin-cover {
   position: relative;
   z-index: 1;
-  padding: clamp(2.25rem, 6vw, 3rem) clamp(1.6rem, 5vw, 2.5rem) clamp(2rem, 5vw, 2.75rem);
+  /* The cover speaks in antique press rather than the handwriting used inside
+     the journal. Ships regular and italic only - no bold - and index.css sets
+     font-synthesis: none, so weights here are deliberately 400. */
+  --cover-font: "IM Fell English", Georgia, "Crimson Text", serif;
+  /* Upright, at the proportions of an actual hardback. Driven by ratio rather
+     than viewport height, which on a tall phone stretched it into something
+     longer and narrower than any real book. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 2 / 3;
+  max-height: min(82svh, 700px);
+  padding: clamp(2.5rem, 7vw, 3.5rem) clamp(1.6rem, 5vw, 2.5rem);
   /* the extra left inset clears the spine */
   padding-left: calc(clamp(1.6rem, 5vw, 2.5rem) + 22px);
   border-radius: 4px 9px 9px 4px;
@@ -2033,13 +2048,22 @@
   pointer-events: none;
 }
 
-/* stamped into the leather rather than printed on it */
+/* Stamped into the leather rather than printed on it. Weight 700 to match
+   every other title in the app - the global h1 is 500, and with Kalam only
+   shipping 400 and 700 (and font-synthesis off) that quietly rendered this
+   one at 400 while every page title rendered at 700. */
 .signin-cover h1 {
   position: relative;
-  margin: 0 0 0.6rem;
-  font-family: "Kalam", "Crimson Text", serif;
-  font-size: clamp(2rem, 6vw, 2.6rem);
-  line-height: 1.12;
+  margin: 0 0 0.7rem;
+  font-family: var(--cover-font);
+  /* larger than the handwriting it replaces: this face runs smaller on the
+     body for a given point size */
+  font-size: clamp(2.7rem, 10vw, 4rem);
+  font-weight: 400;
+  /* the global h1 tracks in by -1.68px, which crushes the letterforms -
+     every other page title resets this the same way */
+  letter-spacing: 0.01em;
+  line-height: 1.1;
   color: #e9c891;
   text-shadow:
     0 -1px 1px rgba(0, 0, 0, 0.6),
@@ -2048,58 +2072,73 @@
 
 .signin-cover p {
   position: relative;
-  max-width: 30ch;
-  margin: 0 auto 1.9rem;
-  font-family: "Kalam", "Crimson Text", serif;
-  font-size: 0.92rem;
+  max-width: 26ch;
+  margin: 0 auto 2.2rem;
+  /* the face's own italic, rather than a slanted serif from elsewhere */
+  font-family: var(--cover-font);
+  font-size: 1.05rem;
   font-style: italic;
-  line-height: 1.5;
+  line-height: 1.55;
   color: rgba(232, 209, 173, 0.72);
 }
 
-/* a brass clasp, in the same metal as the camera seal */
+/* A foil-stamped label pressed into the cover: matte gold lettering inside a
+   die-stamped frame, cut into the leather rather than sitting on it. No
+   gradient, no gloss - the depth is the impression, not a shine. */
 .signin-button {
   position: relative;
-  padding: 0.75rem 2rem;
-  border: 2px solid rgba(247, 235, 205, 0.5);
-  border-radius: 999px;
-  background: radial-gradient(circle at 35% 28%, #d8ae56, #b08a34 55%, #7d5f1d 100%);
-  color: #2e1b08;
-  font-family: "Kalam", "Crimson Text", serif;
-  font-size: 1.05rem;
-  font-weight: 700;
+  padding: 0.9rem 2.4rem;
+  border: 1px solid rgba(214, 176, 106, 0.5);
+  border-radius: 2px;
+  /* the darker patch where the die bit into the hide */
+  background: rgba(18, 10, 4, 0.3);
+  color: #e0bd7c;
+  font-family: var(--cover-font);
+  font-size: 1.1rem;
+  font-weight: 400;
+  /* opened up a little - stamped lettering reads better with air around it */
+  letter-spacing: 0.06em;
   cursor: pointer;
   box-shadow:
-    0 7px 16px rgba(26, 15, 6, 0.5),
-    0 0 0 1px rgba(60, 40, 14, 0.5),
-    inset 0 1px 1px rgba(255, 246, 220, 0.6),
-    inset 0 -3px 6px rgba(60, 38, 10, 0.45);
+    inset 0 2px 5px rgba(0, 0, 0, 0.55),
+    inset 0 -1px 0 rgba(233, 199, 148, 0.16),
+    0 1px 0 rgba(233, 199, 148, 0.1);
+  text-shadow:
+    0 -1px 1px rgba(0, 0, 0, 0.6),
+    0 1px 0 rgba(238, 206, 155, 0.18);
   transition:
-    transform 0.16s ease,
-    box-shadow 0.16s ease,
-    filter 0.16s ease;
+    color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+/* the second, inner rule of the die - the same blind-stamp language as the
+   frame around the cover */
+.signin-button::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(214, 176, 106, 0.22);
+  border-radius: 1px;
+  pointer-events: none;
 }
 
 @media (hover: hover) {
   .signin-button:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.07);
+    color: #f0d199;
+    border-color: rgba(224, 190, 124, 0.75);
     box-shadow:
-      0 11px 22px rgba(26, 15, 6, 0.55),
-      0 0 0 1px rgba(60, 40, 14, 0.5),
-      inset 0 1px 2px rgba(255, 246, 220, 0.7),
-      inset 0 -3px 7px rgba(60, 38, 10, 0.45);
+      inset 0 2px 5px rgba(0, 0, 0, 0.5),
+      inset 0 -1px 0 rgba(233, 199, 148, 0.24),
+      0 1px 0 rgba(233, 199, 148, 0.14);
   }
 }
 
-/* pressed - the clasp sinks and its highlight goes flat */
+/* pressed deeper into the hide */
 .signin-button:active {
-  transform: translateY(1px);
   box-shadow:
-    0 3px 7px rgba(26, 15, 6, 0.45),
-    0 0 0 1px rgba(60, 40, 14, 0.55),
-    inset 0 2px 6px rgba(52, 33, 9, 0.6),
-    inset 0 -1px 0 rgba(255, 246, 220, 0.25);
+    inset 0 3px 8px rgba(0, 0, 0, 0.7),
+    inset 0 -1px 0 rgba(233, 199, 148, 0.1);
 }
 
 .signin-button:focus-visible {
