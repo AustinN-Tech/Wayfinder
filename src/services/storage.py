@@ -18,6 +18,9 @@ SRC_DIR = Path(__file__).resolve().parent.parent # path to src directiory
 # automatically once a volume is attached to the service). Falls back to a local
 # folder for development.
 IMAGE_DIR = Path(os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", BASE_DIR / "image_storage"))
+# Created eagerly (not just lazily on first upload): the database file now
+# lives here too, and sqlite3 needs the parent directory to already exist.
+IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
