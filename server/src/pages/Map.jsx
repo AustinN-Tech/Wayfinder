@@ -90,7 +90,7 @@ export default function Map() {
 
       {items && located.length === 0 && !errorMessage && (
         <p>
-          Nothing placed on the map yet — allow location access next time you catalogue a
+          Nothing placed on the map yet. Allow location access next time you catalogue a
           find, and it'll show up here.
         </p>
       )}
