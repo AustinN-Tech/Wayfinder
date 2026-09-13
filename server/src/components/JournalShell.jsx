@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from "react-router";
+import { useAuth0 } from "@auth0/auth0-react";
 import { Camera } from "lucide-react";
 import { OpenBook, FoldedMap, PostageStamp } from "./icons";
 
@@ -15,6 +16,7 @@ function matches(item, pathname) {
 
 export default function JournalShell({ children }) {
   const { pathname } = useLocation();
+  const { user, logout } = useAuth0();
   const activeIndex = ITEMS.findIndex((item) => matches(item, pathname));
 
   return (
@@ -72,6 +74,16 @@ export default function JournalShell({ children }) {
               <Camera size={26} />
             </NavLink>
           </div>
+
+          <p className="page-signature">
+            {user?.name || user?.email}
+            <button
+              type="button"
+              onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+            >
+              Sign out
+            </button>
+          </p>
         </div>
       </div>
     </div>

@@ -1648,6 +1648,105 @@
   }
 }
 
+/* ---------- sign-in cover, and the signature line under every page ---------- */
+
+.signin-cover {
+  width: min(420px, 100%);
+  margin: auto;
+  padding: clamp(2rem, 5vw, 3rem);
+  border-radius: 3px 10px 12px 4px;
+  text-align: center;
+  color: #3d2817;
+  background: linear-gradient(168deg, #f4e9d0, #e6d3b0);
+  box-shadow:
+    0 18px 42px rgba(74, 52, 32, 0.4),
+    inset 0 0 70px rgba(139, 105, 66, 0.28);
+}
+
+.signin-cover h1 {
+  margin: 0 0 0.75rem;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: clamp(2rem, 6vw, 2.75rem);
+}
+
+.signin-cover p {
+  margin: 0 0 1.75rem;
+}
+
+.signin-button {
+  padding: 0.7rem 1.6rem;
+  border: none;
+  border-radius: 3px;
+  background: #8f6518;
+  color: #f9f2df;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow:
+    0 3px 9px rgba(74, 52, 32, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease;
+}
+
+@media (hover: hover) {
+  .signin-button:hover {
+    background: #a4761f;
+    transform: translateY(-2px);
+  }
+}
+
+.signin-spinner {
+  width: 34px;
+  height: 34px;
+  margin: 0 auto;
+  border: 3px solid rgba(61, 40, 23, 0.2);
+  border-top-color: #8f6518;
+  border-radius: 50%;
+  animation: signin-spin 0.8s linear infinite;
+}
+
+@keyframes signin-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signin-button:hover {
+    transform: none;
+  }
+
+  .signin-spinner {
+    animation: none;
+    border-top-color: rgba(61, 40, 23, 0.2);
+  }
+}
+
+.page-signature {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 0.9rem 0 0;
+  font-size: 0.82rem;
+  color: #5c4a3a;
+}
+
+.page-signature button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #8f6518;
+  font: inherit;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* page typography */
 
 .page h1 {
