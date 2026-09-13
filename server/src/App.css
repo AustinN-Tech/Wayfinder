@@ -1809,6 +1809,61 @@
   color: #3d2817;
 }
 
+.feed-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.feed-header h1 {
+  margin: 0;
+}
+
+.feed-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 1 240px;
+  padding: 0.5rem 1rem;
+  border: 1px dashed rgba(139, 115, 85, 0.55);
+  border-radius: 999px;
+  background: rgba(244, 236, 216, 0.55);
+  color: #6b5842;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.feed-search:focus-within {
+  border-color: rgba(139, 115, 85, 0.9);
+  background: rgba(244, 236, 216, 0.8);
+}
+
+.feed-search svg {
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+
+.feed-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.95rem;
+  color: #3d2817;
+}
+
+.feed-search input::placeholder {
+  color: rgba(61, 40, 23, 0.45);
+}
+
 .page h2 {
   font-family: "Kalam", "Crimson Text", serif;
   color: #5c4a3a;
