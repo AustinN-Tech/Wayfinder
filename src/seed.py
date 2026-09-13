@@ -42,9 +42,14 @@ from services.database import user_table
 
 SEED_IMAGES = SRC_DIR / "services" / "data" / "seed_images"
 
-# Not a real Auth0 subject, so this profile can never collide with - or be
-# signed into as - an actual account. It is only ever reached by opening
-# Mergo's profile from the friends list.
+# Default subject: deliberately not a real Auth0 one, so a demo profile can
+# never collide with an actual account. Nobody can sign in as this - it is only
+# ever reached by opening Mergo's profile from the friends list.
+#
+# Once Mergo exists in Auth0 for real, pass that subject with --auth0-id to
+# seed straight into it, or --migrate-to to move an already-seeded catalogue
+# across. The subject is the token's `sub` claim: "auth0|68c3...",
+# "google-oauth2|1003...".
 DEMO_AUTH0_ID = "seed|mergo"
 DEMO_USERNAME = "mergo"
 DEMO_DISPLAY_NAME = "Mergo"
@@ -284,14 +289,86 @@ def _backdate_user_created_at(conn: sqlite3.Connection, user_id: int, created_at
         conn.execute("UPDATE users SET created_at = ? WHERE user_id = ?", (created_at, user_id))
 
 
-def get_demo_user():
-    """Fetch or create Mergo through the real user service."""
-    user = user_table.get_or_create_user(DEMO_AUTH0_ID)
+def get_demo_user(auth0_id: str = DEMO_AUTH0_ID):
+    """Fetch or create Mergo through the real user service.
+
+    Signing into the app with this subject creates the same row by the same
+    call, so seeding first and signing in later lands on one profile, not two.
+    """
+    user = user_table.get_or_create_user(auth0_id)
     if user.username != DEMO_USERNAME:
         user_table.update_user(user, "username", DEMO_USERNAME)
     if user.display_name != DEMO_DISPLAY_NAME:
         user_table.update_user(user, "display_name", DEMO_DISPLAY_NAME)
     return user
+
+
+@db_connection_handling
+def _reassign_items(conn: sqlite3.Connection, from_user_id: int, to_user_id: int) -> int:
+    """Move every find from one profile to another.
+
+    The second write no service covers, for the same reason as created_at: the
+    running app has no concept of an entry changing hands, and shouldn't. A
+    migration does, so it reaches past that using the app's own connection.
+    """
+    with conn:
+        cursor = conn.execute(
+            "UPDATE heritage_items SET user_id = ? WHERE user_id = ?", (to_user_id, from_user_id),
+        )
+    return cursor.rowcount
+
+
+def migrate(auth0_id: str) -> None:
+    """Hand the seeded catalogue to a real Auth0 account, placeholder and all.
+
+    Everything moves: finds keep their images, dates, places and favourite,
+    stamps are recomputed on the far side, the journal-started date follows,
+    and any friendship the placeholder had is rebuilt against the new profile.
+    """
+    placeholder = user_table.get_user_by_auth0_id(DEMO_AUTH0_ID)
+    if placeholder is None:
+        raise SystemExit(f"Nothing to migrate: no profile with auth0_id {DEMO_AUTH0_ID!r}. "
+                         f"Seed first, or use --auth0-id to seed straight into the real account.")
+    if placeholder.auth0_id == auth0_id:
+        raise SystemExit("Source and target are the same profile")
+
+    # Who was friends with the placeholder, so the same people follow it over.
+    friends = [friend.user_id for friend in db.list_friends(placeholder.user_id)]
+
+    # The username index is UNIQUE, so the placeholder has to let go of the
+    # name before the real account can take it.
+    user_table.update_user(placeholder, "username", None)
+
+    target = user_table.get_or_create_user(auth0_id)
+    if target.user_id == placeholder.user_id:
+        raise SystemExit("Source and target resolved to the same row")
+    user_table.update_user(target, "username", DEMO_USERNAME)
+    user_table.update_user(target, "display_name", DEMO_DISPLAY_NAME)
+
+    moved = _reassign_items(placeholder.user_id, target.user_id)
+
+    # Stamps belong to the finds, so drop the placeholder's and recompute.
+    for link in db.get_user_achievements_by_user_id(placeholder.user_id):
+        db.delete_user_achievement(link)
+    achievements.evaluate_and_unlock(target.user_id)
+
+    items = db.return_all_items(target.user_id)
+    if items:
+        _backdate_user_created_at(target.user_id, min(item.time_taken for item in items))
+
+    for friend_id in friends:
+        db.remove_friendship(placeholder.user_id, friend_id)
+        db.remove_friendship(target.user_id, friend_id)
+        db.send_friend_request(target.user_id, friend_id)
+        db.accept_friend_request(friend_id, target.user_id)
+
+    user_table.delete_user(placeholder)
+
+    print(f"Migrated {moved} finds from {DEMO_AUTH0_ID!r} (user_id {placeholder.user_id}) "
+          f"to {auth0_id!r} (user_id {target.user_id})")
+    if friends:
+        print(f"Rebuilt {len(friends)} friendship(s) against the new profile")
+    print("Placeholder profile removed. Signing in as this Auth0 account now lands on Mergo's journal.")
 
 
 def reset(user) -> tuple[int, int]:
@@ -383,10 +460,20 @@ def main() -> None:
                         help="delete Mergo's existing finds and stamps before seeding")
     parser.add_argument("--no-geocode", action="store_true",
                         help="skip reverse geocoding; finds keep coordinates but get no place name")
+    parser.add_argument("--auth0-id", metavar="SUBJECT", default=DEMO_AUTH0_ID,
+                        help="seed into this Auth0 subject (the token's `sub` claim) instead of "
+                             f"the {DEMO_AUTH0_ID!r} placeholder")
+    parser.add_argument("--migrate-to", metavar="SUBJECT",
+                        help=f"move an already-seeded catalogue off the {DEMO_AUTH0_ID!r} "
+                             "placeholder onto this real Auth0 subject, then exit")
     parser.add_argument("--friend-with", metavar="USERNAME",
                         help="add Mergo to this account's friends list, so his profile "
                              "is reachable in the demo (friend profiles are gated on friendship)")
     args = parser.parse_args()
+
+    if args.migrate_to:
+        migrate(args.migrate_to)
+        return
 
     _validate_finds()
 
@@ -397,8 +484,9 @@ def main() -> None:
     db.create_friendships_db()
     achievements.seed_defaults()
 
-    user = get_demo_user()
-    print(f"Demo user: {DEMO_DISPLAY_NAME} (@{DEMO_USERNAME}, user_id={user.user_id})")
+    user = get_demo_user(args.auth0_id)
+    print(f"Demo user: {DEMO_DISPLAY_NAME} (@{DEMO_USERNAME}, user_id={user.user_id}, "
+          f"auth0_id={user.auth0_id!r})")
 
     if args.reset:
         finds_removed, stamps_removed = reset(user)
