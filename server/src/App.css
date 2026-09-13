@@ -2454,6 +2454,27 @@
   color: rgba(61, 40, 23, 0.45);
 }
 
+/* The clear button a search input draws itself, which otherwise arrives in the
+   browser's blue accent. Masking it lets the cross take an ink colour. */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  background-color: rgba(92, 74, 58, 0.75);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 2.5l7 7M9.5 2.5l-7 7' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 2.5l7 7M9.5 2.5l-7 7' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  input[type="search"]::-webkit-search-cancel-button:hover {
+    background-color: #3d2817;
+  }
+}
+
 @media (max-width: 640px) {
   .feed-search {
     flex: 1 1 auto;
@@ -3219,19 +3240,38 @@ button.heatmap-cell {
   color: var(--text-h);
 }
 
-/* the plain back link on the friends pages (not the avatar row below) */
-.profile-friends-link {
-  display: inline-block;
-  margin: 0.1rem 0 1rem;
+/* a proper control rather than a bare text link */
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0.1rem 0 1.1rem;
+  padding: 0.45rem 0.95rem 0.45rem 0.7rem;
+  border: 1px solid rgba(139, 115, 85, 0.45);
+  border-radius: 3px;
+  background: rgba(244, 236, 216, 0.55);
   color: #8f6518;
   font-family: "Kalam", "Crimson Text", serif;
   font-size: 0.9rem;
   font-weight: 700;
   text-decoration: none;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
 }
 
-.profile-friends-link:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .back-button:hover {
+    border-color: rgba(139, 115, 85, 0.8);
+    background: rgba(244, 236, 216, 0.9);
+    transform: translateY(-1px);
+  }
+}
+
+.back-button:focus-visible {
+  outline: 2px solid #8f6518;
+  outline-offset: 3px;
 }
 
 /* a row of faces that opens the friends list - the avatars are the button, so
@@ -3343,16 +3383,11 @@ button.heatmap-cell {
 
 /* ---------- friends ---------- */
 
+/* the same pill the category pages use, just wider here since it's the
+   page's main control rather than a header accessory */
 .friend-search {
-  width: 100%;
-  max-width: 360px;
-  padding: 0.55rem 0.7rem;
-  border-radius: 4px;
-  border: 1px solid rgba(74, 52, 32, 0.35);
-  background: #fbf5e6;
-  color: var(--text-h);
-  font: inherit;
-  margin-bottom: 0.75rem;
+  flex: 0 1 360px;
+  margin-bottom: 0.85rem;
 }
 
 .friend-list {
@@ -3398,23 +3433,52 @@ button.heatmap-cell {
   flex-shrink: 0;
 }
 
+/* the same ochre control as Back to entries, in the journal's own hand */
 .friend-row-actions button {
-  padding: 0.35rem 0.7rem;
-  border-radius: 4px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 3px;
   border: none;
-  background: var(--accent);
-  color: #fff;
-  font-size: 0.85rem;
+  background: #8f6518;
+  color: #f9f2df;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   cursor: pointer;
+  box-shadow:
+    0 2px 6px rgba(74, 52, 32, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: background 0.18s ease;
+}
+
+@media (hover: hover) {
+  .friend-row-actions button:hover:not(:disabled) {
+    background: #a4761f;
+  }
+}
+
+.friend-row-actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .friend-row-decline {
   background: transparent !important;
-  color: var(--text) !important;
-  border: 1px solid rgba(74, 52, 32, 0.35) !important;
+  color: #5c4a3a !important;
+  border: 1px solid rgba(139, 115, 85, 0.5) !important;
+  box-shadow: none !important;
 }
 
 .friend-row-pending {
-  font-size: 0.8rem;
-  color: var(--text);
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: rgba(92, 74, 58, 0.8);
+}
+
+.friend-search-empty {
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: rgba(92, 74, 58, 0.8);
 }
