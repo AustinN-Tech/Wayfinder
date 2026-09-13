@@ -65,13 +65,17 @@ def _get_token_from_header():
 def _verify_token(token):
     """Decode+verify a bearer token, returning its payload. Raises PyJWTError."""
     signing_key = _get_jwks_client().get_signing_key_from_jwt(token)
-    return jwt.decode(
+    payload = jwt.decode(
         token,
         signing_key.key,
         algorithms=["RS256"],
         audience=AUTH0_AUDIENCE,
         issuer=f"https://{AUTH0_DOMAIN}/",
+        options={"require": ["exp", "sub"]},
     )
+    if not isinstance(payload["sub"], str) or not payload["sub"].strip():
+        raise jwt.InvalidTokenError("Token subject must be a non-empty string")
+    return payload
 
 
 def load_current_user():
