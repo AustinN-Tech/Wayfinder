@@ -644,15 +644,6 @@
 }
 
 
-.entry-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 1.75rem 1.5rem;
-  margin: 1.5rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
 /* each entry is a small print tacked to the page */
 .entry-card {
   display: block;
@@ -667,15 +658,6 @@
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease;
-}
-
-/* alternating tilt, so the grid reads as pasted in by hand */
-.entry-grid li:nth-child(odd) .entry-card {
-  transform: rotate(-0.8deg);
-}
-
-.entry-grid li:nth-child(even) .entry-card {
-  transform: rotate(0.7deg);
 }
 
 /* clips the photo so it can pan and zoom inside its mount */
@@ -762,8 +744,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .entry-card,
-  .entry-grid li:nth-child(odd) .entry-card,
-  .entry-grid li:nth-child(even) .entry-card,
   .entry-card img,
   .entry-card-frame::after {
     transition: none;
@@ -772,6 +752,262 @@
 
   .entry-card:hover img {
     transform: none;
+  }
+}
+
+/* ---------- paginated entry spread ---------- */
+
+.entry-pages {
+  /* The knob that decides whether all four thumbnails clear the fold on a
+     phone: two of these rows plus the header stack and the nav have to fit
+     the viewport. svh (not vh) so a visible browser toolbar is accounted for. */
+  --entry-slot-h: clamp(116px, 23svh, 215px);
+  /* Held just under half the phone's width so two still fit a row, and never
+     wider than the row is tall - otherwise a wide or short window stretches
+     the prints into squat landscape banners. */
+  --entry-slot-w: min(clamp(128px, 40vw, 200px), var(--entry-slot-h));
+  /* hugs the spread, so the page nav centres under the grid rather than
+     under the whole page */
+  width: fit-content;
+  margin-top: 1.25rem;
+}
+
+.entry-page-grid {
+  display: grid;
+  grid-template-columns: repeat(2, var(--entry-slot-w));
+  grid-template-rows: repeat(2, var(--entry-slot-h));
+  gap: 0.9rem 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry-slot {
+  min-width: 0;
+}
+
+/* the same alternating tilt the scrolling grid had */
+.entry-page-grid .entry-slot:nth-child(odd) .entry-card,
+.entry-page-grid .entry-slot:nth-child(odd) .entry-mount {
+  transform: rotate(-0.8deg);
+}
+
+.entry-page-grid .entry-slot:nth-child(even) .entry-card,
+.entry-page-grid .entry-slot:nth-child(even) .entry-mount {
+  transform: rotate(0.7deg);
+}
+
+/* thumbnail proportions - the print takes whatever the caption leaves */
+.entry-page-grid .entry-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 7px 7px 9px;
+}
+
+.entry-page-grid .entry-card-frame {
+  flex: 1;
+  min-height: 0;
+}
+
+.entry-page-grid .entry-card img {
+  height: 100%;
+  aspect-ratio: auto;
+}
+
+/* one line each, so every mount on the spread is the same height */
+.entry-page-grid .entry-card strong {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entry-page-grid .entry-card-date {
+  font-size: 0.7rem;
+}
+
+/* a slot waiting to be filled on a short last page */
+.entry-mount {
+  display: block;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px dashed rgba(139, 115, 85, 0.3);
+  border-radius: 2px;
+  background: rgba(253, 248, 234, 0.28);
+}
+
+/* ---------- turning the page ---------- */
+
+.page-turn {
+  position: relative;
+  /* a sheet mid-turn reaches past the page edge; clip it so the document
+     never picks up a horizontal scrollbar, but leave the prints' shadows room */
+  overflow: hidden;
+  overflow: clip;
+  overflow-clip-margin: 28px;
+}
+
+.page-turn-sheet {
+  animation-duration: var(--turn-ms, 400ms);
+  animation-timing-function: cubic-bezier(0.33, 0.1, 0.25, 1);
+  animation-fill-mode: both;
+  /* hinged at the spine, which is the journal's left edge */
+  transform-origin: left center;
+}
+
+.page-turn-sheet.is-leaving {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.page-turn[data-direction="next"] .is-entering {
+  animation-name: sheet-in-next;
+}
+
+.page-turn[data-direction="next"] .is-leaving {
+  animation-name: sheet-out-next;
+}
+
+.page-turn[data-direction="prev"] .is-entering {
+  animation-name: sheet-in-prev;
+}
+
+.page-turn[data-direction="prev"] .is-leaving {
+  animation-name: sheet-out-prev;
+}
+
+@keyframes sheet-in-next {
+  from {
+    opacity: 0;
+    transform: perspective(1400px) rotateY(-7deg) translateX(12%);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(0deg) translateX(0);
+  }
+}
+
+@keyframes sheet-out-next {
+  from {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(0deg) translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: perspective(1400px) rotateY(7deg) translateX(-12%);
+  }
+}
+
+@keyframes sheet-in-prev {
+  from {
+    opacity: 0;
+    transform: perspective(1400px) rotateY(7deg) translateX(-12%);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(0deg) translateX(0);
+  }
+}
+
+@keyframes sheet-out-prev {
+  from {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(0deg) translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: perspective(1400px) rotateY(-7deg) translateX(12%);
+  }
+}
+
+.page-turn-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.9rem;
+}
+
+.page-turn-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(139, 115, 85, 0.45);
+  border-radius: 50%;
+  background: rgba(244, 236, 216, 0.6);
+  color: #8f6518;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.page-turn-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .page-turn-btn:hover:not(:disabled) {
+    background: rgba(244, 236, 216, 0.95);
+    transform: translateY(-1px);
+  }
+}
+
+.page-turn-btn:focus-visible {
+  outline: 2px solid #8f6518;
+  outline-offset: 3px;
+}
+
+.page-turn-indicator {
+  min-width: 9ch;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.85rem;
+  color: #6b5842;
+  text-align: center;
+}
+
+/* must follow the direction rules above - same specificity, so source order
+   is what lets it win */
+@media (prefers-reduced-motion: reduce) {
+  .page-turn[data-direction] .is-entering {
+    animation-name: sheet-fade-in;
+  }
+
+  .page-turn[data-direction] .is-leaving {
+    animation-name: sheet-fade-out;
+  }
+
+  .page-turn-btn {
+    transition: none;
+  }
+
+  .page-turn-btn:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+@keyframes sheet-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 
@@ -943,6 +1179,67 @@
   }
 }
 
+.entry-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.entry-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.3rem;
+  border: none;
+  border-radius: 3px;
+  background: #8a2f1f;
+  color: #f9f2df;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow:
+    0 3px 9px rgba(74, 52, 32, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease;
+}
+
+@media (hover: hover) {
+  .entry-delete:hover:not(:disabled) {
+    background: #b1402c;
+    transform: translateY(-2px);
+  }
+}
+
+.entry-delete:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.entry-delete:focus-visible {
+  outline: 2px solid #3d2817;
+  outline-offset: 3px;
+}
+
+.entry-delete:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entry-delete {
+    transition: none;
+  }
+
+  .entry-delete:hover {
+    transform: none;
+  }
+}
+
 .suggestion-list {
   display: flex;
   flex-direction: column;
@@ -1081,8 +1378,8 @@
   color: #3d2817;
   font-size: 1.05rem;
   background:
-    /* fibrous paper grain */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)' opacity='0.32'/%3E%3C/svg%3E"),
+    /* laid-paper fibres and aging blotches ride on top of the photographed
+       sheet, so they still read once the wash has softened it */
     repeating-linear-gradient(
       52deg,
       rgba(140, 106, 66, 0.022) 0 1px,
@@ -1097,7 +1394,16 @@
     radial-gradient(ellipse at 84% 24%, rgba(150, 115, 74, 0.13), transparent 42%),
     radial-gradient(ellipse at 70% 82%, rgba(158, 122, 80, 0.15), transparent 48%),
     radial-gradient(ellipse at 30% 68%, rgba(176, 142, 98, 0.1), transparent 40%),
+    /* the sheet is kraft-toned; this wash pulls it back to the journal's
+       cream without flattening the fibre. Raise the alpha to mute it further. */
+    linear-gradient(rgba(248, 240, 220, 0.74), rgba(248, 240, 220, 0.74)),
+    url("/images/textures/paper-texture.png"),
+    /* shows through only while the texture loads, or if it ever 404s */
     linear-gradient(168deg, #f4e9d0, #ecdcbd 55%, #e6d3b0);
+  /* the sheet is seamless, so it tiles at a fixed size (half its 1254px
+     natural size, which lands 1:1 on a 2x display) rather than stretching.
+     Every other layer keeps its default sizing. */
+  background-size: auto, auto, auto, auto, auto, auto, auto, 640px, auto;
   box-shadow:
     0 18px 42px rgba(74, 52, 32, 0.35),
     /* aged, darkened edges */ inset 0 0 70px rgba(139, 105, 66, 0.28),
@@ -1838,6 +2144,145 @@
   color: #3d2817;
 }
 
+/* ---------- shared page header ---------- */
+
+.page-header {
+  margin-bottom: 1.75rem;
+}
+
+.page-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.5rem;
+}
+
+.page-header-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+/* the ink rule is absolutely placed, so this box stays exactly as wide as
+   the badge and title it underlines */
+.page-header-titleline {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: fit-content;
+  max-width: 100%;
+  padding-bottom: 0.7rem;
+}
+
+.page-header-titleline h1 {
+  margin: 0;
+  line-height: 1.1;
+}
+
+.page-header-rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 10px;
+  color: var(--header-accent, #8f6518);
+  opacity: 0.75;
+}
+
+/* a wax-stamped badge, set down a degree or two off square */
+.page-header-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: clamp(38px, 8vw, 48px);
+  height: clamp(38px, 8vw, 48px);
+  border: 1px solid rgba(139, 115, 85, 0.5);
+  border-radius: 50%;
+  background: rgba(244, 236, 216, 0.6);
+  color: var(--header-accent, #8f6518);
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.6);
+  transform: rotate(-3deg);
+}
+
+.page-header-badge svg {
+  width: 58%;
+  height: 58%;
+}
+
+.page-header-subtitle {
+  max-width: 54ch;
+  margin: 0.65rem 0 0;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.92rem;
+  font-style: italic;
+  line-height: 1.45;
+  color: rgba(92, 74, 58, 0.85);
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding-bottom: 0.2rem;
+}
+
+@media (max-width: 640px) {
+  .page-header-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+.feed-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 1 240px;
+  padding: 0.5rem 1rem;
+  border: 1px dashed rgba(139, 115, 85, 0.55);
+  border-radius: 999px;
+  background: rgba(244, 236, 216, 0.55);
+  color: #6b5842;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.feed-search:focus-within {
+  border-color: rgba(139, 115, 85, 0.9);
+  background: rgba(244, 236, 216, 0.8);
+}
+
+.feed-search svg {
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+
+.feed-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.95rem;
+  color: #3d2817;
+}
+
+.feed-search input::placeholder {
+  color: rgba(61, 40, 23, 0.45);
+}
+
+@media (max-width: 640px) {
+  .feed-search {
+    flex: 1 1 auto;
+  }
+}
+
 .page h2 {
   font-family: "Kalam", "Crimson Text", serif;
   color: #5c4a3a;
@@ -1909,6 +2354,13 @@
 
 .era-tag-cultural {
   background: #a8452f;
+}
+
+.era-years {
+  font-family: var(--sans);
+  text-transform: none;
+  font-size: 0.85em;
+  opacity: 0.65;
 }
 
 .map-container {
