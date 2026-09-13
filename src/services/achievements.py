@@ -29,13 +29,17 @@ DEFAULT_ACHIEVEMENTS = [
                 "Discover 10 geology finds.", category="NATURAL"),
     Achievement(9, "world_traveler", "World Traveler", "distinct_continents", len(geography.CONTINENTS),
                 "Log at least one item on every continent."),
+    Achievement(11, "connoisseur", "Connoisseur", "art_count", 10,
+                "Discover 10 works of art.", category="CULTURAL"),
 ]
 _DISPLAY_ORDER = {definition.code: index for index, definition in enumerate(DEFAULT_ACHIEVEMENTS, 1)}
 
 
 def seed_defaults() -> None:
     """Install the teammate's catalog and retire the old Getting Serious placeholder."""
-    db.sync_achievement_definitions(DEFAULT_ACHIEVEMENTS, retired_codes=("getting_serious",))
+    db.sync_achievement_definitions(
+        DEFAULT_ACHIEVEMENTS, retired_codes=("getting_serious", "seasoned_explorer")
+    )
 
 
 def _counts_for_user(user_id: int, definitions: list[Achievement]) -> dict[str, int]:

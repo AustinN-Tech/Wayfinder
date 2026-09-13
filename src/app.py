@@ -294,6 +294,8 @@ def _user_to_dict(user):
         "username": user.username,
         "display_name": user.display_name,
         "avatar_url": user.avatar_url,
+        # when the journal was opened - already on the row, just never served
+        "created_at": user.created_at,
     }
 
 

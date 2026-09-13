@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
+import { ChevronLeft } from "lucide-react";
 import ActivityHeatmap from "../components/ActivityHeatmap";
 import AuthImage from "../components/AuthImage";
 import StampAlbum from "../components/StampAlbum";
@@ -65,8 +66,9 @@ export default function FriendProfile() {
   return (
     <main className="page-body profile-screen">
       <h1>Profile</h1>
-      <Link to="/friends" className="profile-friends-link">
-        {"<-"} Back to friends
+      <Link to="/friends" className="back-button">
+        <ChevronLeft size={16} aria-hidden="true" />
+        Back to friends
       </Link>
 
       <div className="profile-card">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
+import { ChevronLeft, Search } from "lucide-react";
 import {
   getFriends,
   searchUsers,
@@ -32,6 +33,7 @@ export default function Friends() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [busyId, setBusyId] = useState(null);
+  const [searchBusy, setSearchBusy] = useState(false);
 
   function reload() {
     getFriends().then(setData).catch((err) => setErrorMessage(err.message));
@@ -52,9 +54,11 @@ export default function Friends() {
     }
 
     const timeout = setTimeout(() => {
+      setSearchBusy(true);
       searchUsers(trimmed)
         .then((users) => !cancelled && setResults(users))
-        .catch(() => !cancelled && setResults([]));
+        .catch(() => !cancelled && setResults([]))
+        .finally(() => !cancelled && setSearchBusy(false));
     }, 250);
     return () => {
       cancelled = true;
@@ -73,23 +77,37 @@ export default function Friends() {
       .finally(() => setBusyId(null));
   }
 
+  // a search takes the page over, so your own lists aren't competing with
+  // the results underneath them
+  const searching = query.trim().length >= 2;
+
   return (
     <main className="page-body friends-screen">
       <h1>Friends</h1>
-      <Link to="/profile" className="profile-friends-link">
-        {"<-"} Back to profile
+      <Link to="/profile" className="back-button">
+        <ChevronLeft size={16} aria-hidden="true" />
+        Back to profile
       </Link>
 
       {errorMessage && <p role="alert">{errorMessage}</p>}
 
       <section className="profile-section">
-        <input
-          type="search"
-          className="friend-search"
-          placeholder="Search by username"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <label className="feed-search friend-search">
+          <Search size={16} aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Search by username"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search by username"
+          />
+        </label>
+        {searching && results.length === 0 && !searchBusy && (
+          <p className="friend-search-empty">
+            No one found for &ldquo;{query.trim()}&rdquo;. Usernames have to match exactly.
+          </p>
+        )}
+
         {results.length > 0 && (
           <ul className="friend-list">
             {results.map((user) => (
@@ -107,7 +125,7 @@ export default function Friends() {
         )}
       </section>
 
-      {data && data.incoming.length > 0 && (
+      {!searching && data && data.incoming.length > 0 && (
         <section className="profile-section">
           <h2>Requests</h2>
           <ul className="friend-list">
@@ -134,7 +152,7 @@ export default function Friends() {
         </section>
       )}
 
-      {data && data.outgoing.length > 0 && (
+      {!searching && data && data.outgoing.length > 0 && (
         <section className="profile-section">
           <h2>Pending</h2>
           <ul className="friend-list">
@@ -147,9 +165,10 @@ export default function Friends() {
         </section>
       )}
 
+      {!searching && (
       <section className="profile-section">
         <h2>Friends {data ? `(${data.friends.length})` : ""}</h2>
-        {data && data.friends.length === 0 && <p>No friends yet — search for a username above.</p>}
+        {data && data.friends.length === 0 && <p>No friends yet. Search for a username above.</p>}
         {data && data.friends.length > 0 && (
           <ul className="friend-list">
             {data.friends.map((user) => (
@@ -167,6 +186,7 @@ export default function Friends() {
           </ul>
         )}
       </section>
+      )}
     </main>
   );
 }
