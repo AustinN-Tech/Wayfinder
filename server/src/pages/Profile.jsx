@@ -6,8 +6,15 @@ import AuthImage from "../components/AuthImage";
 import FriendsRow from "../components/FriendsRow";
 import PageHeader from "../components/PageHeader";
 import StampAlbum from "../components/StampAlbum";
-import { FAKE_FRIENDS } from "../lib/friends";
-import { getItems, getAchievements, getMe, setMyUsername, uploadAvatar, avatarSrc } from "../lib/api";
+import {
+  getItems,
+  getAchievements,
+  getFriends,
+  getMe,
+  setMyUsername,
+  uploadAvatar,
+  avatarSrc,
+} from "../lib/api";
 import { toStampAchievements } from "../lib/achievements";
 
 function UsernameEditor({ me, onSaved }) {
@@ -75,6 +82,7 @@ export default function Profile() {
   const [items, setItems] = useState(null);
   const [achievements, setAchievements] = useState(null);
   const [me, setMe] = useState(null);
+  const [friends, setFriends] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [avatarBusy, setAvatarBusy] = useState(false);
   const fileInputRef = useRef(null);
@@ -83,6 +91,7 @@ export default function Profile() {
     getItems().then(setItems).catch((err) => setErrorMessage(err.message));
     getAchievements().then(setAchievements).catch(() => {});
     getMe().then(setMe).catch(() => {});
+    getFriends().then((data) => setFriends(data.friends)).catch(() => {});
   }, []);
 
   function handleAvatarPick(e) {
@@ -150,7 +159,7 @@ export default function Profile() {
             </div>
           </div>
 
-          <FriendsRow friends={FAKE_FRIENDS} />
+          <FriendsRow friends={friends} />
 
           <section className="profile-section">
             <h2>Activity</h2>
