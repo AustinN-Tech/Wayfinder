@@ -1,5 +1,6 @@
 import logging
 import sqlite3
+from contextlib import nullcontext
 from pathlib import Path
 
 from core.models import HeritageItem
@@ -10,13 +11,50 @@ from .connections import db_connection_handling
 logger = logging.getLogger(__name__)
 
 
+@error_handling
+@db_connection_handling
+def update_item_fields(conn: sqlite3.Connection, item: HeritageItem, changes: dict, *, user_id: int) -> None:
+    """Commit an entire edit together, including replacement image rollback."""
+    validate_user_id(user_id)
+    if not changes or any(key not in UPDATABLE_COLUMNS for key in changes):
+        raise ValueError("Invalid or empty item update")
+    values = dict(changes)
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        row = conn.execute(
+            f"SELECT {ITEM_COLUMNS} FROM heritage_items WHERE id = ? AND user_id = ?",
+            (item.id, user_id),
+        ).fetchone()
+        if row is None:
+            raise ValueError(f"Item {item.id} does not exist")
+        stored_item = row_to_heritage_item(row)
+        replacement = (image_replacement(stored_item, values["image_path"])
+                       if "image_path" in values else nullcontext())
+        with replacement as image_path:
+            if "image_path" in values:
+                values["image_path"] = str(image_path)
+            assignments = ", ".join(f"{UPDATABLE_COLUMNS[key]} = ?" for key in values)
+            with conn:
+                conn.execute(
+                    f"UPDATE heritage_items SET {assignments} WHERE id = ? AND user_id = ?",
+                    (*values.values(), item.id, user_id),
+                )
+    except Exception:
+        conn.rollback()
+        raise
+    for key, value in values.items():
+        setattr(item, "confidence" if key == "confidence_score" else key,
+                Path(value) if key == "image_path" else value)
+    logger.info("Updated item '%s'", item.name)
+
+
 def validate_user_id(user_id: int) -> None:
     if type(user_id) is not int or user_id <= 0:
         raise ValueError("user_id must be a positive local user ID")
 
 ITEM_COLUMNS = (
     "id, name, category, sub_category, image_path, latitude, longitude, "
-    "time_taken, time_period, description, confidence_score, user_id, is_favorite"
+    "time_taken, time_period, description, confidence_score, user_id, is_favorite, place_name"
 )
 
 UPDATABLE_COLUMNS = {
@@ -32,6 +70,7 @@ UPDATABLE_COLUMNS = {
     "confidence": "confidence_score",
     "confidence_score": "confidence_score",
     "is_favorite": "is_favorite",
+    "place_name": "place_name",
 }
 
 def row_to_heritage_item(row) -> HeritageItem:
@@ -50,6 +89,7 @@ def row_to_heritage_item(row) -> HeritageItem:
         confidence=row[10],
         user_id=row[11],
         is_favorite=row[12],
+        place_name=row[13],
     )
 
 

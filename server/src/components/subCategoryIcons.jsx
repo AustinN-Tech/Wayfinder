@@ -1,5 +1,5 @@
 // One hand-drawn badge icon per sub-category, matching the ink-line style used
-// throughout the journal (icons.jsx, PageDoodles). Each is a plain stroke
+// throughout the journal (see icons.jsx). Each is a plain stroke
 // drawing on currentColor so the album can recolor/mute it for the
 // locked/unlocked states without swapping assets.
 

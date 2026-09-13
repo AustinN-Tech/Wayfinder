@@ -4,9 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import AuthImage from "../components/AuthImage";
-import PageDoodles from "../components/PageDoodles";
 import PageHeader from "../components/PageHeader";
-import { CompassRose } from "../components/icons";
 import { getItems, getCategories } from "../lib/api";
 import { ERA_YEAR_RANGES } from "../lib/eraYears";
 
@@ -77,11 +75,9 @@ export default function Map() {
 
   return (
     <main className="page-body map-screen">
-      <PageDoodles variant="map" />
       <PageHeader
         title="Map"
         subtitle="Every located find, pinned where you came across it. Drag the slider to travel by era."
-        icon={CompassRose}
         accent="#3f6b4e"
       />
 

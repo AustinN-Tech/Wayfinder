@@ -7,11 +7,19 @@ const SCAN_DURATION_MS = 2600;
 export default function Camera() {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+  const activeRef = useRef(false);
+  const captureBusyRef = useRef(false);
+  const timerRef = useRef(null);
+  const previewUrlRef = useRef(null);
   const navigate = useNavigate();
   const [isScanning, setIsScanning] = useState(false);
   const [capturedUrl, setCapturedUrl] = useState(null);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+    activeRef.current = true;
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -19,44 +27,72 @@ export default function Camera() {
           audio: false,
         });
 
+        if (cancelled || !videoRef.current) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
         streamRef.current = stream;
         videoRef.current.srcObject = stream;
       } catch (error) {
+        if (cancelled) return;
         console.error("Camera error:", error);
-        alert("Could not access your camera. Allow camera permission and try again.");
+        setErrorMessage("Could not access your camera. Allow camera permission and try again.");
       }
     }
 
     startCamera();
 
     return () => {
+      cancelled = true;
+      activeRef.current = false;
+      clearTimeout(timerRef.current);
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
       streamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
 
   function capturePhoto() {
-    if (isScanning) return;
+    if (captureBusyRef.current) return;
 
     const video = videoRef.current;
-    const canvas = document.createElement("canvas");
+    if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
+    captureBusyRef.current = true;
+    setIsScanning(true);
+    setErrorMessage("");
+    function captureFailed() {
+      captureBusyRef.current = false;
+      if (!activeRef.current) return;
+      setIsScanning(false);
+      setErrorMessage("Could not capture the photo. Please try again.");
+    }
+    try {
+      const canvas = document.createElement("canvas");
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
 
-    const context = canvas.getContext("2d");
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const context = canvas.getContext("2d");
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    canvas.toBlob((blob) => {
-      if (!blob) return;
+      canvas.toBlob((blob) => {
+        if (!activeRef.current) return;
+        if (!blob) {
+          captureFailed();
+          return;
+        }
 
-      const photoUrl = URL.createObjectURL(blob);
-      setCapturedUrl(photoUrl);
-      setIsScanning(true);
+        const photoUrl = URL.createObjectURL(blob);
+        previewUrlRef.current = photoUrl;
+        setCapturedUrl(photoUrl);
+        setIsScanning(true);
 
-      setTimeout(() => {
-        navigate("/result", { state: { photoUrl, photoBlob: blob } });
-      }, SCAN_DURATION_MS);
-    }, "image/jpeg");
+        timerRef.current = setTimeout(() => {
+          if (activeRef.current) navigate("/result", { state: { photoBlob: blob } });
+        }, SCAN_DURATION_MS);
+      }, "image/jpeg");
+    } catch {
+      captureFailed();
+    }
   }
 
   return (
@@ -75,10 +111,13 @@ export default function Camera() {
         ref={videoRef}
         autoPlay
         playsInline
+        onLoadedData={() => setCameraReady(true)}
+        onEmptied={() => setCameraReady(false)}
         className={`camera-preview ${isScanning ? "scanning" : ""}`}
       />
 
-      {isScanning && (
+      {errorMessage && <p role="alert">{errorMessage}</p>}
+      {capturedUrl && (
         <img src={capturedUrl} className="frozen-frame" alt="" aria-hidden="true" />
       )}
 
@@ -94,7 +133,7 @@ export default function Camera() {
       <button
         className="capture-button"
         onClick={capturePhoto}
-        disabled={isScanning}
+        disabled={isScanning || !cameraReady}
         aria-label="Capture photo"
       />
     </main>

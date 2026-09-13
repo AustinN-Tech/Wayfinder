@@ -1,13 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
+import PageHeader from "../components/PageHeader";
 import { analyzeItem, createItem } from "../lib/api";
-import PageDoodles from "../components/PageDoodles";
 
 export default function Result() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const photoUrl = state?.photoUrl;
   const photoBlob = state?.photoBlob;
+  const previewRef = useRef(null);
+  const savingRef = useRef(false);
+
+  useEffect(() => {
+    if (!photoBlob || !previewRef.current) return;
+    const url = URL.createObjectURL(photoBlob);
+    previewRef.current.src = url;
+    return () => URL.revokeObjectURL(url);
+  }, [photoBlob]);
 
   const [suggestions, setSuggestions] = useState(null);
   const [coords, setCoords] = useState(null);
@@ -45,6 +53,9 @@ export default function Result() {
   }, [photoBlob]);
 
   async function selectSuggestion(suggestion) {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setErrorMessage("");
     setStatus("saving");
     try {
       const saved = await createItem(
@@ -54,12 +65,14 @@ export default function Result() {
           sub_category: suggestion.sub_category || "",
           time_period: suggestion.time_period || "",
           description: suggestion.description || "",
+          confidence: suggestion.confidence ?? "",
           ...(coords || {}),
         },
         photoBlob
       );
       navigate(`/entry/${saved.item.id}`);
     } catch (err) {
+      savingRef.current = false;
       setErrorMessage(err.message);
       setStatus("ready");
     }
@@ -69,7 +82,7 @@ export default function Result() {
     navigate("/camera");
   }
 
-  if (!photoUrl || !photoBlob) {
+  if (!photoBlob) {
     return (
       <main className="result-screen">
         <h1>What did you find?</h1>
@@ -81,13 +94,13 @@ export default function Result() {
 
   return (
     <main className="page-body result-screen">
-      <PageDoodles variant="result" />
       <h1>What did you find?</h1>
-      <img className="captured-photo" src={photoUrl} alt="Captured" />
+      <img ref={previewRef} className="captured-photo" alt="Captured" />
 
       {status === "analyzing" && <p>Identifying what you found...</p>}
       {status === "saving" && <p>Saving...</p>}
-      {status === "error" && <p role="alert">{errorMessage}</p>}
+      {errorMessage && <p role="alert">{errorMessage}</p>}
+      {status === "error" && <button onClick={retakePhoto}>Take another photo</button>}
 
       {suggestions && (
         <div className="suggestion-list">

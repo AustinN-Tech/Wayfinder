@@ -1,4 +1,6 @@
 import os
+import math
+import re
 from dataclasses import asdict
 from pathlib import Path
 
@@ -19,6 +21,7 @@ from core.models import (
 from services import achievements
 from services import database as db
 from services import gemini_service
+from services import geocoding
 from services import storage
 from services.auth import load_current_user
 from services.storage import IMAGE_DIR
@@ -142,6 +145,24 @@ def analyze_item():
     return jsonify(suggestions=suggestions)
 
 
+def _parse_coordinates(form):
+    coordinates = {}
+    for key, limit in (("latitude", 90), ("longitude", 180)):
+        if key not in form:
+            continue
+        raw = form[key].strip()
+        if not raw:
+            coordinates[key] = None
+            continue
+        try:
+            value = float(raw)
+        except ValueError:
+            abort(400, description=f"{key} must be a number")
+        if not math.isfinite(value) or not -limit <= value <= limit:
+            abort(400, description=f"{key} must be between {-limit} and {limit}")
+        coordinates[key] = value
+    return coordinates
+
 def _validate_category_fields(category, sub_category, time_period):
     if category not in CATEGORIES:
         abort(400, description=f"category must be one of {CATEGORIES}")
@@ -158,14 +179,16 @@ def create_item():
     name = form.get("name")
     category = form.get("category")
     sub_category = form.get("sub_category")
-    time_period = form.get("time_period")
+    time_period = form.get("time_period", "")
 
-    if not name or not category or not sub_category:
+    if not name or not name.strip() or not category or not sub_category:
         abort(400, description="name, category, and sub_category are required")
     _validate_category_fields(category, sub_category, time_period)
 
     if "image" not in request.files or request.files["image"].filename == "":
         abort(400, description="An 'image' file is required - you have to record what you actually saw")
+
+    coordinates = _parse_coordinates(form)
 
     try:
         tmp_image_path = storage.save_upload_to_tempfile(request.files["image"])
@@ -178,8 +201,8 @@ def create_item():
         category=category,
         sub_category=sub_category,
         image_path=tmp_image_path,
-        latitude=form.get("latitude", type=float),
-        longitude=form.get("longitude", type=float),
+        latitude=coordinates.get("latitude"),
+        longitude=coordinates.get("longitude"),
         time_period=time_period,
         description=form.get("description"),
         confidence=form.get("confidence", ""),
@@ -188,6 +211,12 @@ def create_item():
         db.add_item(item)
     finally:
         tmp_image_path.unlink(missing_ok=True)  # add_item copies from this, never deletes it itself
+
+    # Looked up once, here, rather than every time the entry is opened. Soft
+    # failure: without it the entry just shows its coordinates.
+    place = geocoding.place_for_coordinates(item.latitude, item.longitude)
+    if place:
+        db.update_item(item, "place_name", place, user_id=user_id)
 
     unlocked = achievements.evaluate_and_unlock(user_id)
     return jsonify(item=_item_to_dict(item), unlocked=unlocked), 201
@@ -201,50 +230,39 @@ def update_item(item_id):
         abort(404, description="Item not found")
 
     form = request.form
-    effective_category = form.get("category", item.category)
-    effective_time_period = form.get("time_period", item.time_period)
-    if "category" in form or "sub_category" in form:
-        _validate_category_fields(
-            effective_category,
-            form.get("sub_category", item.sub_category),
-            None,
-        )
-    if "time_period" in form and effective_time_period:
-        if effective_time_period not in TIME_PERIODS_BY_CATEGORY.get(effective_category, []):
-            abort(400, description=f"time_period must be one of {TIME_PERIODS_BY_CATEGORY.get(effective_category, [])}")
-
-    updated_any = False
+    changes = {key: form[key] for key in (
+        "name", "category", "sub_category", "time_period", "description", "confidence"
+    ) if key in form}
+    if "name" in changes and not changes["name"].strip():
+        abort(400, description="name must not be empty")
+    _validate_category_fields(
+        changes.get("category", item.category),
+        changes.get("sub_category", item.sub_category),
+        changes.get("time_period", item.time_period),
+    )
+    changes.update(_parse_coordinates(form))
+    if "is_favorite" in form:
+        if form["is_favorite"] not in ("0", "1"):
+            abort(400, description="is_favorite must be 0 or 1")
+        changes["is_favorite"] = int(form["is_favorite"])
+    tmp_image_path = None
     try:
-        for key in ("name", "category", "sub_category", "time_period", "description", "confidence"):
-            if key in form:
-                db.update_item(item, key, form.get(key), user_id=user_id)
-                updated_any = True
-        for key in ("latitude", "longitude"):
-            if key in form:
-                db.update_item(item, key, form.get(key, type=float), user_id=user_id)
-                updated_any = True
-        if "is_favorite" in form:
-            db.update_item(item, "is_favorite", form.get("is_favorite", type=int) or 0, user_id=user_id)
-            updated_any = True
-    except ValueError:
-        abort(404, description="Item not found")
-
-    if "image" in request.files and request.files["image"].filename != "":
+        if "image" in request.files and request.files["image"].filename:
+            try:
+                tmp_image_path = storage.save_upload_to_tempfile(request.files["image"])
+            except ValueError as exc:
+                abort(400, description=str(exc))
+            changes["image_path"] = tmp_image_path
+        if not changes:
+            abort(400, description="No fields provided to update")
         try:
-            tmp_image_path = storage.save_upload_to_tempfile(request.files["image"])
-        except ValueError as exc:
-            abort(400, description=str(exc))
-        try:
-            db.update_item(item, "image_path", tmp_image_path, user_id=user_id)
+            db.update_item_fields(item, changes, user_id=user_id)
         except ValueError:
             abort(404, description="Item not found")
-        finally:
-            tmp_image_path.unlink(missing_ok=True)  # update_item copies from this, never deletes it itself
-        updated_any = True
-
-    if not updated_any:
-        abort(400, description="No fields provided to update")
-
+    finally:
+        if tmp_image_path is not None:
+            tmp_image_path.unlink(missing_ok=True)
+    achievements.evaluate_and_unlock(user_id)
     return jsonify(_item_to_dict(item))
 
 
@@ -411,7 +429,9 @@ def get_image(filename):
     # of protecting anything. Filenames are random (uuid4-based, see
     # storage.py), so this relies on that unguessability rather than an
     # ownership check - the same privacy model as an unlisted link.
-    return send_from_directory(IMAGE_DIR, filename)
+    if re.fullmatch(r"image_[A-Za-z0-9_-]+\.jpg", filename) is None:
+        abort(404, description="Image not found")
+    return send_from_directory(storage.IMAGE_DIR, filename)
 
 
 if __name__ == "__main__":

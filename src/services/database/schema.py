@@ -35,6 +35,7 @@ def create_items_db(conn: sqlite3.Connection) -> None:
             )
         """)
         _add_column_if_missing(conn, "heritage_items", "is_favorite", "is_favorite INTEGER NOT NULL DEFAULT 0")
+        _add_column_if_missing(conn, "heritage_items", "place_name", "place_name TEXT")
         conn.execute("CREATE INDEX IF NOT EXISTS heritage_items_user_id ON heritage_items(user_id)") # basically makes it more efficient to reduce lookup time
 
 
@@ -59,6 +60,7 @@ def create_achievements_db(conn: sqlite3.Connection) -> None:
 @db_connection_handling
 def create_users_db(conn: sqlite3.Connection) -> None:
     with conn:
+        conn.execute("BEGIN IMMEDIATE")
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
