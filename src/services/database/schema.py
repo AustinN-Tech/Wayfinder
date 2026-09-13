@@ -59,6 +59,7 @@ def create_achievements_db(conn: sqlite3.Connection) -> None:
 @db_connection_handling
 def create_users_db(conn: sqlite3.Connection) -> None:
     with conn:
+        conn.execute("BEGIN IMMEDIATE")
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,

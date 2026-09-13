@@ -132,6 +132,7 @@ def sync_achievement_definitions(
     """
     with conn:
         conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("BEGIN IMMEDIATE")
         for code in retired_codes:
             row = conn.execute(
                 "SELECT achievement_id FROM achievements WHERE code = ?", (code,)
