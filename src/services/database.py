@@ -45,7 +45,7 @@ def db_connection_handling(func):
 
 @error_handling
 @db_connection_handling
-def create_db(conn: sqlite3.Connection) -> None:
+def create_items_db(conn: sqlite3.Connection) -> None:
     with conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS items (
@@ -257,36 +257,24 @@ def full_delete(conn: sqlite3.Connection, item: HeritageItem) -> None:
 
 # --- Achievements ---------------------------------------------------------
 
-ACHIEVEMENT_COLUMNS = "code, name, description, rule_type, threshold, sort_order"
-
-
 @error_handling
 @db_connection_handling
-def seed_achievement(
-    conn: sqlite3.Connection,
-    code: str,
-    name: str,
-    description: str,
-    rule_type: str,
-    threshold: int,
-    sort_order: int = 0,
-) -> None:
-    """Insert an achievement definition if it doesn't already exist (by code)."""
+def create_achievements_db(conn: sqlite3.Connection):
     with conn:
         conn.execute("""
-            INSERT OR IGNORE INTO achievements
-                (code, name, description, rule_type, threshold, sort_order)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (code, name, description, rule_type, threshold, sort_order))
+            CREATE TABLE IF NOT EXISTS achievements (
+                achievement_id INT NOT NULL UNIQUE,
+                code TEXT NOT NULL UNIQUE,
+                name TEXT NOT NULL,
+                description TEXT,
+                category TEXT,
+                rule_type TEXT NOT NULL,
+                threshold INTEGER NOT NULL
+            )
+        """)
 
 
-@error_handling
-@db_connection_handling
-def get_all_achievements(conn: sqlite3.Connection) -> list[tuple]:
-    return conn.execute(
-        f"SELECT {ACHIEVEMENT_COLUMNS} FROM achievements ORDER BY sort_order, code"
-    ).fetchall()
-
+# --- Users ---------------------------------------------------------
 
 @error_handling
 @db_connection_handling
@@ -308,6 +296,7 @@ def unlock_achievement(conn: sqlite3.Connection, user_id: str, code: str) -> Non
         )
     logger.info("Unlocked achievement for %s: %s", user_id, code)
 
+                PRIMARY KEY (user_id, achievement_id),
 
 @error_handling
 @db_connection_handling
