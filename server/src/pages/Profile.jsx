@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { useAuth0 } from "@auth0/auth0-react";
 import ActivityHeatmap from "../components/ActivityHeatmap";
 import AuthImage from "../components/AuthImage";
+import PageHeader from "../components/PageHeader";
 import StampAlbum from "../components/StampAlbum";
 import { getItems, getAchievements, getMe, setMyUsername, uploadAvatar, avatarSrc } from "../lib/api";
 import { toStampAchievements } from "../lib/achievements";
@@ -111,7 +112,12 @@ export default function Profile() {
 
   return (
     <main className="page-body profile-screen">
-      <h1>Profile</h1>
+      <PageHeader
+        title="Profile"
+        subtitle="Your record so far, and the stamps it has earned you."
+        accent="#8f6518"
+        note={items ? `${items.length} ${items.length === 1 ? "find" : "finds"} logged` : undefined}
+      />
 
       <div className="profile-card">
         <button

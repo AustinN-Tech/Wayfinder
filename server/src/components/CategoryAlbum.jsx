@@ -70,7 +70,7 @@ export default function CategoryAlbum({ items, subcategoriesByCategory }) {
                     <span className="album-card-scrim" />
                     <span className="album-card-content">
                       <strong className="album-card-title">{label}</strong>
-                      <span className="album-card-locked-note">Not yet discovered</span>
+                      <span className="album-card-locked-note">Not yet catalogued</span>
                     </span>
                   </div>
                 </li>
@@ -111,7 +111,7 @@ export default function CategoryAlbum({ items, subcategoriesByCategory }) {
                 {!backgroundImage && <Icon size={190} className="album-card-motif" />}
                 <span className="album-card-content">
                   <strong className="album-card-title">{label}</strong>
-                  <span className="album-card-stamp">{count} catalogued</span>
+                  <span className="album-card-count">{count} catalogued</span>
                 </span>
               </Link>
             </li>
