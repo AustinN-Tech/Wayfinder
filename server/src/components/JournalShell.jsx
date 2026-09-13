@@ -70,8 +70,9 @@ export default function JournalShell({ children }) {
           {children}
 
           <div className="page-seal-row">
-            <NavLink to="/camera" className="page-seal" aria-label="New entry">
+            <NavLink to="/camera" className="page-seal" aria-label="Capture artifact">
               <Camera size={26} />
+              <span className="page-seal-label">Capture Artifact</span>
             </NavLink>
           </div>
 
