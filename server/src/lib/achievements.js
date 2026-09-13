@@ -10,7 +10,7 @@
 // artwork, so a progress bar is filled in that stamp's colour
 const STAMP_DISPLAY = [
   ["first_find", "/images/stamp-icons/first-find-stamp.png", "item logged", "#2a6f4d"],
-  ["shiny", "/images/stamp-icons/shiny-stamp.png", "crystals discovered", "#6f3d2a"],
+  ["shiny", "/images/stamp-icons/shiny-stamp.png", "geology items discovered", "#6f3d2a"],
   ["time_traveler", "/images/stamp-icons/time-traveler-stamp.png", "eras discovered", "#3b5280"],
   ["small_collection", "/images/stamp-icons/small-collection-stamp.png", "items discovered", "#a18a35"],
   ["medium_collection", "/images/stamp-icons/medium-collection-stamp.png", "items discovered", "#a66430"],
