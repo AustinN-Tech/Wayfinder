@@ -1,7 +1,18 @@
-# ![Logo](server/public/readme_icon.png) Wayfinder
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)   ![Python](https://img.shields.io/badge/Python-3.13-blue) [![Flask](https://img.shields.io/badge/Flask-3.1-purple)](https://flask.palletsprojects.com/) [![SQLite](https://img.shields.io/badge/SQLite-Database-purple)](https://sqlite.org/) [![Railway](https://img.shields.io/badge/Deployed-Railway-red)](https://railway.app/)
+<div align="center">
 
-> An explorer's journal at your fingertips.
+<img src="server/public/readme_icon.png" alt="Wayfinder logo" width="120" />
+
+# Wayfinder
+
+**An explorer's journal at your fingertips.**
+
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+![Python](https://img.shields.io/badge/Python-3.13-blue)
+[![Flask](https://img.shields.io/badge/Flask-3.1-purple)](https://flask.palletsprojects.com/)
+[![SQLite](https://img.shields.io/badge/SQLite-Database-purple)](https://sqlite.org/)
+[![Railway](https://img.shields.io/badge/Deployed-Railway-red)](https://railway.app/)
+
+</div>
 
 Wayfinder is an image-recognition-powered web app that lets users take photos of objects with heritage significance around them, including cultural items such as art, artifacts, and historical sites, as well as natural items such as fossils, geology, and landforms.
 ### Core Features
