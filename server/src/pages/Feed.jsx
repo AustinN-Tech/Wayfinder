@@ -21,7 +21,6 @@ export default function Feed() {
     <main className="page-body screen">
       <PageHeader
         title="Entries"
-        subtitle="Everything you've catalogued so far, gathered by what it is."
         accent="#8f6518"
       />
 

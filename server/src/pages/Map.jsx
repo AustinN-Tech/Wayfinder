@@ -77,7 +77,6 @@ export default function Map() {
     <main className="page-body map-screen">
       <PageHeader
         title="Map"
-        subtitle="Each find pinned where you came across it. Drag to travel by era."
         accent="#3f6b4e"
       />
 
