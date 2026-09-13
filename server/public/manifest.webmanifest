@@ -1,6 +1,6 @@
 {
-  "name": "Artifact Journal",
-  "short_name": "Journal",
+  "name": "Wayfinder",
+  "short_name": "Wayfinder",
   "description": "A journal of the things you come across.",
   "start_url": "/",
   "scope": "/",
