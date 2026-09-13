@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { analyzeItem, createItem } from "../lib/api";
-import PageDoodles from "../components/PageDoodles";
 
 export default function Result() {
   const { state } = useLocation();
@@ -81,7 +80,6 @@ export default function Result() {
 
   return (
     <main className="page-body result-screen">
-      <PageDoodles variant="result" />
       <h1>What did you find?</h1>
       <img className="captured-photo" src={photoUrl} alt="Captured" />
 

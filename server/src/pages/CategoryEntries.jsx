@@ -2,10 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import AuthImage from "../components/AuthImage";
-import PageDoodles from "../components/PageDoodles";
 import PageHeader from "../components/PageHeader";
 import PageTurn from "../components/PageTurn";
-import { SUB_CATEGORY_ICONS, SUB_CATEGORY_LABELS } from "../components/subCategoryMeta";
+import { SUB_CATEGORY_LABELS } from "../components/subCategoryMeta";
 import { getItems } from "../lib/api";
 
 // A fixed 2x2 spread, so a page holds the same four slots at every width and
@@ -100,7 +99,6 @@ export default function CategoryEntries() {
 
   return (
     <main className="page-body screen">
-      <PageDoodles variant="feed" />
 
       <Link to="/feed" className="category-back">
         &larr; All entries
@@ -111,9 +109,8 @@ export default function CategoryEntries() {
         subtitle={
           items ? `${items.length} ${items.length === 1 ? "entry" : "entries"} catalogued here.` : undefined
         }
-        icon={SUB_CATEGORY_ICONS[subCategory]}
         accent={category === "NATURAL" ? "#3f6b4e" : "#a8452f"}
-        actions={
+        aside={
           <label className="feed-search">
             <Search size={16} aria-hidden="true" />
             <input
