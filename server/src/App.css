@@ -514,16 +514,15 @@
   text-shadow: 0 2px 6px rgba(61, 40, 23, 0.45);
 }
 
-.album-card-stamp {
-  padding: 0.25rem 0.85rem;
-  border: 1.5px solid rgba(249, 242, 223, 0.65);
-  border-radius: 999px;
-  transform: rotate(-2deg);
-  background: rgba(61, 40, 23, 0.28);
-  font-size: 0.78rem;
+/* the count written onto the card in ink - no chip, no border. Shadowed
+   rather than backed, so the card texture stays visible behind it. */
+.album-card-count {
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 1.02rem;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  line-height: 1.1;
+  color: rgba(249, 242, 223, 0.96);
+  text-shadow: 0 1px 5px rgba(34, 22, 12, 0.65);
 }
 
 @media (hover: hover) {
@@ -582,10 +581,14 @@
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
+/* pencilled in rather than inked - the same catalogue note, left faint so a
+   locked card recedes behind the discovered ones */
 .album-card-locked-note {
-  font-size: 0.8rem;
-  font-style: italic;
-  color: rgba(249, 242, 223, 0.65);
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 0.95rem;
+  line-height: 1.1;
+  color: rgba(249, 242, 223, 0.55);
+  text-shadow: 0 1px 4px rgba(26, 17, 9, 0.5);
 }
 
 @media (max-width: 560px) {
@@ -1579,230 +1582,16 @@
 }
 
 
-/* ---------- page marginalia ---------- */
+/* ---------- routed page body ---------- */
 
-/* every routed page gets this, so the doodle layer has something to fill */
 .page-body {
   position: relative;
   flex: 1;
 }
 
-/* real content always rides above the doodles */
-.page-body > *:not(.doodles) {
+.page-body > * {
   position: relative;
   z-index: 1;
-}
-
-.doodles {
-  position: absolute;
-  /* pushed out into the page's padding so the doodles occupy the paper's
-     margins rather than the column the content fills */
-  inset: calc(clamp(1.75rem, 4vw, 3.5rem) * -1);
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.doodles svg {
-  stroke: #3d2817;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
-}
-
-.doodle {
-  position: absolute;
-  color: #3d2817;
-  opacity: 0.13;
-}
-
-/* --- home: compass high right, quill down the left margin --- */
-.doodles-home .doodle-compass {
-  top: 0.25rem;
-  right: 0.25rem;
-}
-
-.doodles-home .doodle-feather {
-  top: 26%;
-  left: -1rem;
-  width: 48px;
-  opacity: 0.12;
-}
-
-.doodles-home .doodle-stars {
-  bottom: 3rem;
-  left: 0.5rem;
-  width: 78px;
-  opacity: 0.15;
-}
-
-.doodles-home .doodle-curl {
-  right: 0.5rem;
-  bottom: 0.5rem;
-  width: 78px;
-  opacity: 0.11;
-}
-
-/* --- feed: the busiest page, doodles ring the whole margin --- */
-.doodles-feed .doodle-compass {
-  top: 0.25rem;
-  right: 0.25rem;
-}
-
-.doodles-feed .doodle-stars {
-  top: 0.5rem;
-  left: 0.25rem;
-  width: 74px;
-  opacity: 0.16;
-}
-
-.doodles-feed .doodle-fern {
-  top: 30%;
-  left: -1.25rem;
-  width: 54px;
-  opacity: 0.12;
-}
-
-.doodles-feed .doodle-shell {
-  top: 46%;
-  right: -1.75rem;
-  width: 70px;
-  opacity: 0.11;
-}
-
-.doodles-feed .doodle-mountains {
-  bottom: 0.75rem;
-  left: 0.25rem;
-  width: 160px;
-  opacity: 0.15;
-}
-
-.doodles-feed .doodle-route {
-  right: 0.5rem;
-  bottom: 2rem;
-  width: 140px;
-  opacity: 0.14;
-}
-
-.doodles-feed .doodle-glass {
-  right: 11rem;
-  bottom: 0.5rem;
-  width: 60px;
-  opacity: 0.14;
-}
-
-/* --- map: cartography — route across the top, range along the foot --- */
-.doodles-map .doodle-route {
-  top: 1rem;
-  right: 0.5rem;
-  width: 152px;
-  opacity: 0.15;
-}
-
-.doodles-map .doodle-mountains {
-  bottom: 0.5rem;
-  left: 0.25rem;
-  width: 170px;
-  opacity: 0.15;
-}
-
-.doodles-map .doodle-compass {
-  right: 1rem;
-  bottom: 1rem;
-  opacity: 0.12;
-}
-
-.doodles-map .doodle-compass svg {
-  width: 68px;
-  height: 68px;
-}
-
-.doodles-map .doodle-stars {
-  top: 0.75rem;
-  left: 0.5rem;
-  width: 78px;
-  opacity: 0.14;
-}
-
-/* --- entry: quietest, the page already carries a photo --- */
-.doodles-entry .doodle-ammonite {
-  top: 24%;
-  left: -1.25rem;
-  width: 66px;
-  opacity: 0.12;
-}
-
-.doodles-entry .doodle-stars {
-  top: 1rem;
-  right: 0.5rem;
-  width: 70px;
-  opacity: 0.13;
-}
-
-.doodles-entry .doodle-fern {
-  top: 46%;
-  right: -1.5rem;
-  width: 50px;
-  opacity: 0.1;
-  transform: scaleX(-1);
-}
-
-.doodles-entry .doodle-glass {
-  bottom: 1rem;
-  left: 0.5rem;
-  width: 58px;
-  opacity: 0.12;
-}
-
-/* --- result: barely there, it's a decision screen --- */
-.doodles-result .doodle-feather {
-  top: 30%;
-  left: -1.25rem;
-  width: 44px;
-  opacity: 0.1;
-}
-
-.doodles-result .doodle-stars {
-  top: 12%;
-  right: -0.5rem;
-  width: 66px;
-  opacity: 0.11;
-}
-
-.doodles-result .doodle-curl {
-  right: 0.5rem;
-  bottom: 0.75rem;
-  width: 66px;
-  opacity: 0.1;
-}
-
-/* the gutters mostly vanish on a narrow page, so keep only the corners */
-@media (max-width: 780px) {
-  .doodle-fern,
-  .doodle-shell,
-  .doodle-glass,
-  .doodle-feather,
-  .doodle-ammonite {
-    display: none;
-  }
-
-  .doodle-compass svg {
-    width: 76px;
-    height: 76px;
-  }
-
-  .doodle-mountains {
-    width: 118px;
-  }
-
-  .doodle-route {
-    width: 104px;
-  }
-
-  .doodle-curl {
-    width: 58px;
-  }
 }
 
 /* the camera, pressed into the foot of the page like a wax seal */
@@ -2147,15 +1936,27 @@
 /* ---------- shared page header ---------- */
 
 .page-header {
-  margin-bottom: 1.75rem;
+  /* the band closes on a journal rule rather than trailing off into blank
+     paper, which is what left the heading looking stranded */
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.95rem;
+  border-bottom: 1px dashed rgba(139, 115, 85, 0.4);
+}
+
+/* Each page's first block carries its own top margin for standing alone
+   (.category-album 1.5rem, .stamp-grid 1.75rem, .map-container 1.25rem),
+   which collapsed against the header's and made the gap both too big and a
+   different size on every page. The header owns that spacing now. */
+.page-header + * {
+  margin-top: 0;
 }
 
 .page-header-row {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.9rem 1.5rem;
+  gap: 0.55rem 1.5rem;
 }
 
 .page-header-heading {
@@ -2166,12 +1967,11 @@
 }
 
 /* the ink rule is absolutely placed, so this box stays exactly as wide as
-   the badge and title it underlines */
+   the title it underlines */
 .page-header-titleline {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.85rem;
   width: fit-content;
   max-width: 100%;
   padding-bottom: 0.7rem;
@@ -2192,30 +1992,9 @@
   opacity: 0.75;
 }
 
-/* a wax-stamped badge, set down a degree or two off square */
-.page-header-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: clamp(38px, 8vw, 48px);
-  height: clamp(38px, 8vw, 48px);
-  border: 1px solid rgba(139, 115, 85, 0.5);
-  border-radius: 50%;
-  background: rgba(244, 236, 216, 0.6);
-  color: var(--header-accent, #8f6518);
-  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.6);
-  transform: rotate(-3deg);
-}
-
-.page-header-badge svg {
-  width: 58%;
-  height: 58%;
-}
-
 .page-header-subtitle {
   max-width: 54ch;
-  margin: 0.65rem 0 0;
+  margin: 0.45rem 0 0;
   font-family: "Kalam", "Crimson Text", serif;
   font-size: 0.92rem;
   font-style: italic;
@@ -2223,17 +2002,38 @@
   color: rgba(92, 74, 58, 0.85);
 }
 
-.page-header-actions {
+.page-header-aside {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  min-width: 0;
   margin-left: auto;
-  padding-bottom: 0.2rem;
 }
 
+/* a count pencilled at the right edge of the band, not a UI chip */
+.page-header-note {
+  margin: 0;
+  font-family: "Kalam", "Crimson Text", serif;
+  font-size: 1.02rem;
+  line-height: 1.3;
+  text-align: right;
+  color: var(--header-accent, #8f6518);
+  opacity: 0.88;
+}
+
+/* stacked under the title on a phone, reading left to right like the rest of
+   the page rather than clinging to the right edge */
 @media (max-width: 640px) {
-  .page-header-actions {
+  .page-header-aside {
     width: 100%;
     margin-left: 0;
+    justify-content: flex-start;
+  }
+
+  .page-header-note {
+    text-align: left;
+    font-size: 0.95rem;
   }
 }
 
@@ -2363,13 +2163,59 @@
   opacity: 0.65;
 }
 
+/* the map sits in a cream mount, the way the prints do elsewhere, rather
+   than floating on the paper as a bare rectangle */
 .map-container {
+  position: relative;
   height: min(70vh, 560px);
-  margin-top: 1rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: var(--shadow);
+  margin-top: 1.25rem;
+  padding: 11px;
+  /* crisp, not an app-card radius - a mounted chart reads better square */
+  border-radius: 3px;
+  background: linear-gradient(168deg, #fdf8ea, #f2e7cf);
+  box-shadow:
+    0 10px 24px rgba(74, 52, 32, 0.34),
+    0 0 0 1px rgba(139, 115, 85, 0.32);
+}
+
+/* plate line and a soft edge, drawn over the tiles so they settle into the
+   mount instead of ending on a hard crop. Below Leaflet's marker (600) and
+   popup (700) panes, so pins and popups stay clear of it. */
+.map-container::after {
+  content: "";
+  position: absolute;
+  inset: 11px;
+  z-index: 450;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 1px rgba(74, 52, 32, 0.3),
+    inset 0 0 24px rgba(101, 74, 45, 0.18);
+}
+
+.map-container .leaflet-container {
+  border-radius: 1px;
+}
+
+/* Leaflet's own chrome ships bright white and blue - tone both into the
+   palette, but keep the attribution legible and intact */
+.map-container .leaflet-control-attribution {
+  background: rgba(244, 236, 216, 0.85);
+  color: #5c4a3a;
+  font-family: var(--sans);
+}
+
+.map-container .leaflet-control-attribution a {
+  color: #8f6518;
+}
+
+.map-container .leaflet-bar a {
+  background: rgba(249, 242, 223, 0.95);
+  border-bottom-color: rgba(139, 115, 85, 0.35);
+  color: #3d2817;
+}
+
+.map-container .leaflet-bar a:hover {
+  background: #f4ecd8;
 }
 
 /* Leaflet renders its own DOM outside React's control, so these target it

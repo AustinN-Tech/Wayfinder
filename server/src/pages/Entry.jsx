@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from "react-router";
 import { Trash2 } from "lucide-react";
 import { deleteItem, getItem, setFavorite } from "../lib/api";
 import AuthImage from "../components/AuthImage";
-import PageDoodles from "../components/PageDoodles";
 
 function formatCoords(latitude, longitude) {
   if (latitude == null || longitude == null) return null;
@@ -79,7 +78,6 @@ export default function Entry() {
 
   return (
     <main className="page-body entry-screen">
-      <PageDoodles variant="entry" />
       <h1>{item.name}</h1>
 
       <figure className="entry-figure">
