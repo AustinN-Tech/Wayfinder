@@ -19,67 +19,27 @@ const pinIcon = L.divIcon({
 const WORLD_CENTER = [20, 0];
 const WORLD_ZOOM = 2;
 
-// Cultural and Natural periods are entirely different vocabularies (Bronze
-// Age vs Jurassic) with no real shared timeline, so the range slider always
-// scopes to one category's own ordered list rather than pretending they're
-// comparable on one axis.
-const CATEGORY_TOGGLES = [
-  { key: "NATURAL", label: "Natural" },
-  { key: "CULTURAL", label: "Cultural" },
-];
-
-function TimelineSlider({ periods, range, onChange }) {
-  const max = periods.length - 1;
-  const [lowIndex, highIndex] = range;
-
-  function updateLow(value) {
-    onChange([Math.min(Number(value), highIndex), highIndex]);
-  }
-
-  function updateHigh(value) {
-    onChange([lowIndex, Math.max(Number(value), lowIndex)]);
-  }
-
-  return (
-    <div className="timeline-slider">
-      <div className="timeline-track-wrap">
-        <div
-          className="timeline-track-fill"
-          style={{
-            left: `${(lowIndex / max) * 100}%`,
-            right: `${100 - (highIndex / max) * 100}%`,
-          }}
-        />
-        <input
-          type="range"
-          min={0}
-          max={max}
-          value={lowIndex}
-          onChange={(e) => updateLow(e.target.value)}
-          aria-label="Earliest period"
-        />
-        <input
-          type="range"
-          min={0}
-          max={max}
-          value={highIndex}
-          onChange={(e) => updateHigh(e.target.value)}
-          aria-label="Latest period"
-        />
-      </div>
-      <div className="timeline-labels">
-        <span>{periods[lowIndex]}</span>
-        <span>{periods[highIndex]}</span>
-      </div>
-    </div>
-  );
+// Index 0 is "All eras" (no filtering); every index after that is one era,
+// natural (deep geological time) followed by cultural (historical time) -
+// there's no true shared timeline between the two, but a single slider
+// moving through both lists back to back is the simplest one-control view.
+function buildEraList(categoryData) {
+  if (!categoryData) return [];
+  const natural = (categoryData.time_periods?.NATURAL || []).map((period) => ({
+    period,
+    category: "NATURAL",
+  }));
+  const cultural = (categoryData.time_periods?.CULTURAL || []).map((period) => ({
+    period,
+    category: "CULTURAL",
+  }));
+  return [...natural, ...cultural];
 }
 
 export default function Map() {
   const [items, setItems] = useState(null);
   const [categoryData, setCategoryData] = useState(null);
-  const [category, setCategory] = useState("NATURAL");
-  const [range, setRange] = useState(null);
+  const [eraIndex, setEraIndex] = useState(0); // 0 = All eras
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -91,21 +51,8 @@ export default function Map() {
       .catch((err) => setErrorMessage(err.message));
   }, []);
 
-  const periods = useMemo(
-    () => categoryData?.time_periods?.[category] || [],
-    [categoryData, category]
-  );
-
-  // Reset to the full span whenever the category (and so the period list)
-  // changes, rather than carrying over an index range from a different list.
-  // Adjusted during render (React's recommended pattern for this) instead of
-  // an effect, so switching categories doesn't cost an extra render pass.
-  const rangeKey = `${category}:${periods.length}`;
-  const [initializedRangeKey, setInitializedRangeKey] = useState(null);
-  if (periods.length && initializedRangeKey !== rangeKey) {
-    setInitializedRangeKey(rangeKey);
-    setRange([0, periods.length - 1]);
-  }
+  const eras = useMemo(() => buildEraList(categoryData), [categoryData]);
+  const selectedEra = eraIndex > 0 ? eras[eraIndex - 1] : null;
 
   const located = useMemo(
     () => (items || []).filter((item) => item.latitude != null && item.longitude != null),
@@ -113,15 +60,11 @@ export default function Map() {
   );
 
   const filtered = useMemo(() => {
-    if (!range) return located;
-    return located.filter((item) => {
-      if (item.category !== category) return false;
-      if (!item.time_period) return true; // unknown period - don't hide a real find
-      const index = periods.indexOf(item.time_period);
-      if (index === -1) return true;
-      return index >= range[0] && index <= range[1];
-    });
-  }, [located, category, periods, range]);
+    if (!selectedEra) return located;
+    return located.filter(
+      (item) => item.category === selectedEra.category && item.time_period === selectedEra.period
+    );
+  }, [located, selectedEra]);
 
   const center = filtered.length
     ? [filtered[0].latitude, filtered[0].longitude]
@@ -143,26 +86,30 @@ export default function Map() {
         </p>
       )}
 
-      {items && located.length > 0 && (
+      {items && located.length > 0 && eras.length > 0 && (
         <div className="timeline-controls">
-          <div className="timeline-toggle" role="tablist" aria-label="Category">
-            {CATEGORY_TOGGLES.map(({ key, label }) => (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={category === key}
-                className={`timeline-toggle-btn ${category === key ? "active" : ""}`}
-                onClick={() => setCategory(key)}
-              >
-                {label}
-              </button>
-            ))}
+          <input
+            type="range"
+            className="era-slider"
+            min={0}
+            max={eras.length}
+            step={1}
+            value={eraIndex}
+            onChange={(e) => setEraIndex(Number(e.target.value))}
+            aria-label="Era"
+          />
+          <div className="era-label">
+            {selectedEra ? (
+              <>
+                <span className={`era-tag era-tag-${selectedEra.category.toLowerCase()}`}>
+                  {selectedEra.category === "NATURAL" ? "Natural" : "Cultural"}
+                </span>
+                {selectedEra.period}
+              </>
+            ) : (
+              "All eras"
+            )}
           </div>
-
-          {range && periods.length > 1 && (
-            <TimelineSlider periods={periods} range={range} onChange={setRange} />
-          )}
         </div>
       )}
 
