@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { Trash2 } from "lucide-react";
-import { deleteItem, getItem } from "../lib/api";
+import { deleteItem, getItem, setFavorite } from "../lib/api";
 import AuthImage from "../components/AuthImage";
 import PageDoodles from "../components/PageDoodles";
 
@@ -24,11 +24,8 @@ export default function Entry() {
   const navigate = useNavigate();
   const [item, setItem] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-<<<<<<< HEAD
   const [deleting, setDeleting] = useState(false);
-=======
   const [favoriteBusy, setFavoriteBusy] = useState(false);
->>>>>>> origin
 
   useEffect(() => {
     getItem(id)
@@ -36,7 +33,6 @@ export default function Entry() {
       .catch((err) => setErrorMessage(err.message));
   }, [id]);
 
-<<<<<<< HEAD
   async function handleDelete() {
     if (deleting || !item) return;
     if (!window.confirm(`Delete "${item.name}"? This can't be undone.`)) return;
@@ -49,7 +45,8 @@ export default function Entry() {
       setErrorMessage(err.message);
       setDeleting(false);
     }
-=======
+  }
+
   function toggleFavorite() {
     if (favoriteBusy) return;
     setFavoriteBusy(true);
@@ -57,7 +54,6 @@ export default function Entry() {
       .then(setItem)
       .catch((err) => setErrorMessage(err.message))
       .finally(() => setFavoriteBusy(false));
->>>>>>> origin
   }
 
   if (errorMessage) {
