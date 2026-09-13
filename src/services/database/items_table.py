@@ -217,11 +217,13 @@ def get_item_rule_counts(conn: sqlite3.Connection, user_id: int) -> dict[str, in
         SELECT COUNT(*), COUNT(image_path), COUNT(DISTINCT category),
                COUNT(DISTINCT sub_category), COUNT(DISTINCT NULLIF(TRIM(time_period), '')),
                COUNT(CASE WHEN category = 'NATURAL' AND sub_category = 'FOSSIL' THEN 1 END),
-               COUNT(CASE WHEN category = 'NATURAL' AND sub_category = 'GEOLOGY' THEN 1 END)
+               COUNT(CASE WHEN category = 'NATURAL' AND sub_category = 'GEOLOGY' THEN 1 END),
+               COUNT(CASE WHEN category = 'CULTURAL' AND sub_category = 'ART' THEN 1 END)
         FROM heritage_items WHERE user_id = ?
     """, (user_id,)).fetchone()
     return dict(zip(("entry_count", "with_photo", "distinct_categories",
-                     "distinct_sub_categories", "distinct_time_periods", "fossil_count", "geology_count"), row))
+                     "distinct_sub_categories", "distinct_time_periods", "fossil_count",
+                     "geology_count", "art_count"), row))
 
 
 @error_handling
