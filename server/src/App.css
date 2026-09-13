@@ -1784,3 +1784,111 @@
     border-right-color: var(--border);
   }
 }
+
+/* ---------- map ---------- */
+
+.timeline-controls {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem 1rem;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.era-slider {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.era-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-family: var(--heading);
+  font-size: 1.05rem;
+  color: var(--text-h);
+  text-transform: capitalize;
+}
+
+.era-tag {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  color: #fff;
+}
+
+.era-tag-natural {
+  background: #3f6b4e;
+}
+
+.era-tag-cultural {
+  background: #a8452f;
+}
+
+.map-container {
+  height: min(70vh, 560px);
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+/* Leaflet renders its own DOM outside React's control, so these target it
+   with plain global selectors rather than scoped component classes. */
+.leaflet-container {
+  font-family: var(--sans);
+  background: #e9dfc6;
+}
+
+.map-pin-dot {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50% 50% 50% 0;
+  background: var(--accent);
+  border: 2px solid var(--text-h);
+  transform: rotate(-45deg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--bg);
+  color: var(--text-h);
+  border-radius: 8px;
+}
+
+.leaflet-popup-tip {
+  background: var(--bg);
+}
+
+.map-popup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 120px;
+  text-decoration: none;
+  color: var(--text-h);
+  text-align: center;
+}
+
+.map-popup img {
+  width: 100%;
+  max-width: 140px;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.map-popup span {
+  font-size: 0.8rem;
+  color: var(--text);
+  text-transform: capitalize;
+}

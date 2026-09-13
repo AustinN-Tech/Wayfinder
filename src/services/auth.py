@@ -4,7 +4,19 @@ Frontend logs the user in via Auth0 and attaches the resulting access token
 to every API request as `Authorization: Bearer <token>`. Flask never sees a
 password - it just verifies the token was really issued by our Auth0 tenant,
 for this API, and hasn't expired, then reads the user's stable Auth0 id
-(the `sub` claim) off it.
+(the `sub` claim) off it and resolves/creates the matching local User row.
+
+`load_current_user()` runs on every request (see app.py's before_request) and
+is best-effort: a missing or invalid token just leaves `g.user` unset, it
+never aborts. Enforcement happens per-route via app.py's `_current_user_id()`,
+which aborts 401 if `g.user` isn't a real, persisted user - that's what lets
+public routes (health, categories) work with no token at all, while item/
+achievement routes require one.
+
+With no Auth0 tenant configured (AUTH0_DOMAIN/AUTH0_AUDIENCE unset), there's
+nothing to verify a token against, so local dev runs unauthenticated as a
+single fixed user instead of every request failing. Setting both env vars
+turns real verification back on with no other code change.
 """
 
 import logging
@@ -17,11 +29,8 @@ from flask import abort, g, request
 AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN")
 AUTH0_AUDIENCE = os.environ.get("AUTH0_AUDIENCE")
 
-# With no Auth0 tenant configured there is nothing to verify a token against, so
-# local dev runs unauthenticated as a single fixed user. Setting AUTH0_DOMAIN and
-# AUTH0_AUDIENCE turns real verification back on with no other change.
 AUTH_DISABLED = not (AUTH0_DOMAIN and AUTH0_AUDIENCE)
-DEV_USER_ID = "local-dev"
+DEV_AUTH0_ID = "local-dev"
 
 # Running unauthenticated is expected on a laptop and worth shouting about on a
 # deployed host, so the warning is scoped to where it actually matters. (It has
@@ -30,8 +39,8 @@ DEV_USER_ID = "local-dev"
 if AUTH_DISABLED and any(key.startswith("RAILWAY") for key in os.environ):
     logging.getLogger(__name__).warning(
         "AUTH0_DOMAIN/AUTH0_AUDIENCE are not set - API routes are UNAUTHENTICATED "
-        "and every request is treated as user %r.",
-        DEV_USER_ID,
+        "and every request is treated as the same local user (%r).",
+        DEV_AUTH0_ID,
     )
 
 _jwks_client = None
@@ -53,14 +62,57 @@ def _get_token_from_header():
     return header[len("Bearer "):].strip()
 
 
+def _verify_token(token):
+    """Decode+verify a bearer token, returning its payload. Raises PyJWTError."""
+    signing_key = _get_jwks_client().get_signing_key_from_jwt(token)
+    return jwt.decode(
+        token,
+        signing_key.key,
+        algorithms=["RS256"],
+        audience=AUTH0_AUDIENCE,
+        issuer=f"https://{AUTH0_DOMAIN}/",
+    )
+
+
+def load_current_user():
+    """Best-effort: resolve (or create) the local user for this request and
+    stash it on g.user. Call once per request, before any route runs. Never
+    aborts - see module docstring.
+
+    With AUTH_DISABLED, every request resolves to the same fixed local user
+    with no token needed. Otherwise a missing/invalid bearer token just
+    leaves g.user unset.
+    """
+    from services.user_service import get_or_create_user
+
+    if AUTH_DISABLED:
+        g.user = get_or_create_user(DEV_AUTH0_ID)
+        return
+
+    token = _get_token_from_header()
+    if not token:
+        return
+
+    try:
+        payload = _verify_token(token)
+    except jwt.exceptions.PyJWTError:
+        return
+
+    g.user = get_or_create_user(payload["sub"])
+
+
 def require_auth(view_func):
-    """Route decorator: verifies the bearer token and sets g.user_id (the
-    Auth0 `sub` claim) before calling the view. Aborts with 401 otherwise."""
+    """Route decorator alternative to app.py's _current_user_id(): verifies
+    the bearer token (or resolves the fixed dev user, if AUTH_DISABLED) and
+    aborts 401 immediately if authentication fails, rather than deferring to
+    the route body to check g.user."""
 
     @wraps(view_func)
     def wrapper(*args, **kwargs):
+        from services.user_service import get_or_create_user
+
         if AUTH_DISABLED:
-            g.user_id = DEV_USER_ID
+            g.user = get_or_create_user(DEV_AUTH0_ID)
             return view_func(*args, **kwargs)
 
         token = _get_token_from_header()
@@ -70,18 +122,11 @@ def require_auth(view_func):
             abort(503, description="AUTH0_AUDIENCE environment variable is not set")
 
         try:
-            signing_key = _get_jwks_client().get_signing_key_from_jwt(token)
-            payload = jwt.decode(
-                token,
-                signing_key.key,
-                algorithms=["RS256"],
-                audience=AUTH0_AUDIENCE,
-                issuer=f"https://{AUTH0_DOMAIN}/",
-            )
+            payload = _verify_token(token)
         except jwt.exceptions.PyJWTError as exc:
             abort(401, description=f"Invalid token: {exc}")
 
-        g.user_id = payload["sub"]
+        g.user = get_or_create_user(payload["sub"])
         return view_func(*args, **kwargs)
 
     return wrapper
