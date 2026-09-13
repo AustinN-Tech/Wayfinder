@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import PageHeader from "../components/PageHeader";
+import { SUB_CATEGORY_LABELS } from "../components/subCategoryMeta";
+import { categoryLabel, sentenceCase } from "../components/categories";
 import { analyzeItem, createItem } from "../lib/api";
 
 export default function Result() {
@@ -145,7 +147,7 @@ export default function Result() {
             >
               <strong>{suggestion.name}</strong>
               <div className="suggestion-meta">
-                {suggestion.category} - {suggestion.sub_category} - {suggestion.time_period}
+                {categoryLabel(suggestion.category)} · {SUB_CATEGORY_LABELS[suggestion.sub_category] || suggestion.sub_category} · {sentenceCase(suggestion.time_period)}
               </div>
               <div>{suggestion.description}</div>
               <div className="confidence">

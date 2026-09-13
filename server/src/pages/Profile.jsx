@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { useAuth0 } from "@auth0/auth0-react";
 import ActivityHeatmap from "../components/ActivityHeatmap";
 import AuthImage from "../components/AuthImage";
+import { SUB_CATEGORY_LABELS } from "../components/subCategoryMeta";
 import CategoryBars from "../components/CategoryBars";
 import FriendsRow from "../components/FriendsRow";
 import PageHeader from "../components/PageHeader";
@@ -209,7 +210,7 @@ export default function Profile() {
                 <AuthImage path={favorite.image_path} alt={favorite.name} />
                 <div>
                   <strong>{favorite.name}</strong>
-                  <span>{favorite.sub_category}</span>
+                  <span>{SUB_CATEGORY_LABELS[favorite.sub_category] || favorite.sub_category}</span>
                 </div>
               </Link>
             ) : (

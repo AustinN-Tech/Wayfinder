@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router";
 import { ChevronLeft } from "lucide-react";
 import ActivityHeatmap from "../components/ActivityHeatmap";
 import AuthImage from "../components/AuthImage";
+import { SUB_CATEGORY_LABELS } from "../components/subCategoryMeta";
 import StampAlbum from "../components/StampAlbum";
 import { getFriendProfile, avatarSrc } from "../lib/api";
 import { toStampAchievements } from "../lib/achievements";
@@ -99,7 +100,7 @@ export default function FriendProfile() {
                 <AuthImage path={favorite.image_path} alt={favorite.name} />
                 <div>
                   <strong>{favorite.name}</strong>
-                  <span>{favorite.sub_category}</span>
+                  <span>{SUB_CATEGORY_LABELS[favorite.sub_category] || favorite.sub_category}</span>
                 </div>
               </div>
             ) : (
