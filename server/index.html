@@ -4,9 +4,11 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-
-    <!-- Added to a home screen, this launches without browser chrome. iOS
-         reads the touch icon and these metas; Android reads the manifest. -->
+    <!-- Added to a home screen, this launches full-screen with no browser
+         chrome - which is exactly when content can end up drawn under the
+         notch/Dynamic Island/front camera; env(safe-area-inset-*) in App.css
+         is what pushes real content clear of that area. iOS reads the touch
+         icon and these metas; Android reads the manifest. -->
     <link rel="apple-touch-icon" sizes="180x180" href="/app-touch-icon-180.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#3b2310" />

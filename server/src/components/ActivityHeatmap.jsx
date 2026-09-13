@@ -30,7 +30,6 @@ function buildWeeks(countsByDay) {
   for (let i = 0; i < totalDays; i++) {
     const date = new Date(start.getTime() + i * MS_PER_DAY);
     const key = dateKey(date);
-    // the date rides along so the readout can name the day
     days.push({ key, date, count: countsByDay[key] || 0 });
   }
 
@@ -98,18 +97,10 @@ export default function ActivityHeatmap({ items }) {
                 that has already happened - none are placeholders */}
             {week.map((day) => (
               <button
-                key={day.key}
                 type="button"
-                className={`heatmap-cell level-${levelFor(day.count)} ${
-                  active?.key === day.key ? "is-active" : ""
-                }`}
-                aria-label={describe(day)}
-                onPointerEnter={() => setActive(day)}
-                onPointerLeave={() =>
-                  setActive((current) => (current?.key === day.key ? null : current))
-                }
-                onFocus={() => setActive(day)}
-                onBlur={() => setActive(null)}
+                key={day.key}
+                className={`heatmap-cell level-${levelFor(day.count)} ${active?.key === day.key ? "is-active" : ""}`}
+                title={`${day.count} find${day.count === 1 ? "" : "s"} on ${day.key}`}
                 onClick={() => setActive(day)}
               />
             ))}
