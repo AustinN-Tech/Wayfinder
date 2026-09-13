@@ -5,7 +5,10 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import AuthImage from "../components/AuthImage";
 import PageDoodles from "../components/PageDoodles";
+import PageHeader from "../components/PageHeader";
+import { CompassRose } from "../components/icons";
 import { getItems, getCategories } from "../lib/api";
+import { ERA_YEAR_RANGES } from "../lib/eraYears";
 
 // A simple ink-drop pin, on-brand instead of Leaflet's default blue marker
 // (which also needs asset-path workarounds under Vite - this sidesteps that).
@@ -75,14 +78,19 @@ export default function Map() {
   return (
     <main className="page-body map-screen">
       <PageDoodles variant="map" />
-      <h1>Map</h1>
+      <PageHeader
+        title="Map"
+        subtitle="Every located find, pinned where you came across it. Drag the slider to travel by era."
+        icon={CompassRose}
+        accent="#3f6b4e"
+      />
 
       {errorMessage && <p role="alert">{errorMessage}</p>}
       {!items && !errorMessage && <p>Charting your discoveries...</p>}
 
       {items && located.length === 0 && !errorMessage && (
         <p>
-          Nothing placed on the map yet — allow location access next time you catalogue a
+          Nothing placed on the map yet. Allow location access next time you catalogue a
           find, and it'll show up here.
         </p>
       )}
@@ -133,6 +141,9 @@ export default function Map() {
                   {selectedEra.category === "NATURAL" ? "Natural" : "Cultural"}
                 </span>
                 {selectedEra.period}
+                {ERA_YEAR_RANGES[selectedEra.period] && (
+                  <span className="era-years">({ERA_YEAR_RANGES[selectedEra.period]})</span>
+                )}
               </>
             ) : (
               "All eras"
