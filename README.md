@@ -60,7 +60,11 @@ python -m run
 
 
 ## Roadmap
-- [ ] More achievements
+- [ ] More achievements   
+Add more achievements such as `Deep Diver - Discover 10 Maritime Items`, `Seasoned Explorer - Discover 10 Landmarks`, etc...
 - [ ] View friend's collection
+Users able to view the entirety of collections of other users who are on their friend's list
 - [ ] Weekly challenge
+Global challenge available for all users, changes weekly
 - [ ] Friendly challenge
+Users able make a friendly challenge (ie: 'Obtain 5 new fossils by the end of the week') to other users on their friend's list
