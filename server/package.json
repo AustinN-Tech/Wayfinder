@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.24.1",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.469.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-leaflet": "^5.0.0",
     "react-router": "^8.3.1"
   },
   "devDependencies": {
