@@ -127,11 +127,14 @@ export default function Profile() {
     return marked.length > 0 ? marked[marked.length - 1] : null;
   }, [items]);
 
-  const unlockedCount = achievements?.filter((a) => a.unlocked).length ?? 0;
   const unlockedStamps = useMemo(() => {
     if (!achievements) return null;
     return toStampAchievements(achievements).filter((stamp) => stamp.unlocked);
   }, [achievements]);
+  // Counted off the shelf rather than the API response: an achievement with no
+  // stamp art yet is real on the backend but never rendered here, so counting
+  // the raw list claimed one more badge than the shelf could show.
+  const unlockedCount = unlockedStamps?.length ?? 0;
 
   const startedAt = useMemo(() => {
     if (me?.created_at) return me.created_at;
