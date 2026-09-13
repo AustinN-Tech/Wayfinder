@@ -8,6 +8,10 @@ import { getItems, getAchievements, getMe, setMyUsername, uploadAvatar, avatarSr
 import { toStampAchievements } from "../lib/achievements";
 
 function UsernameEditor({ me, onSaved }) {
+  // Editing by default only while there's nothing to show yet - claiming a
+  // username is the thing that needs doing; once set, it's just a fact,
+  // so it collapses to plain text with a small edit trigger.
+  const [editing, setEditing] = useState(!me.username);
   const [value, setValue] = useState(me.username || "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -18,9 +22,28 @@ function UsernameEditor({ me, onSaved }) {
     setBusy(true);
     setError("");
     setMyUsername(value.trim().toLowerCase())
-      .then(onSaved)
+      .then((updated) => {
+        onSaved(updated);
+        setEditing(false);
+      })
       .catch((err) => setError(err.message))
       .finally(() => setBusy(false));
+  }
+
+  if (!editing) {
+    return (
+      <div className="profile-username-row profile-username-display">
+        <span>@{me.username}</span>
+        <button
+          type="button"
+          className="profile-username-edit-trigger"
+          onClick={() => setEditing(true)}
+          aria-label="Edit username"
+        >
+          ⋯
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -33,9 +56,10 @@ function UsernameEditor({ me, onSaved }) {
           onChange={(e) => setValue(e.target.value)}
           placeholder="explorer_jane"
           maxLength={24}
+          autoFocus
         />
         <button type="submit" disabled={busy}>
-          {me.username ? "Update" : "Claim"}
+          {me.username ? "Save" : "Claim"}
         </button>
       </div>
       {error && <p role="alert">{error}</p>}

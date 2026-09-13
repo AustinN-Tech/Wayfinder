@@ -2110,6 +2110,12 @@
   overflow-x: auto;
 }
 
+@media (max-width: 700px) {
+  .heatmap-grid {
+    margin: 0 auto;
+  }
+}
+
 .heatmap-grid {
   display: flex;
   gap: 3px;
@@ -2185,6 +2191,26 @@
   color: #fff;
   font-size: 0.8rem;
   cursor: pointer;
+}
+
+.profile-username-display {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.profile-username-edit-trigger {
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.profile-username-edit-trigger:hover {
+  color: var(--text-h);
 }
 
 .profile-friends-link {
