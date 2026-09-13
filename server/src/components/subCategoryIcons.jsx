@@ -123,3 +123,23 @@ export function LandmarkIcon({ size = 32, ...props }) {
     </Svg>
   );
 }
+
+// A catch-all "misc find" tag - for whatever doesn't fit a named bucket.
+export function TagIcon({ size = 32, ...props }) {
+  return (
+    <Svg size={size} {...props}>
+      <path d="M4 11.5V6c0-1.1.9-2 2-2h5.5L20 12.5l-7.5 7.5L4 11.5z" />
+      <circle cx="8" cy="8" r="1.3" fill="currentColor" stroke="none" />
+    </Svg>
+  );
+}
+
+export function AquaticIcon({ size = 32, ...props }) {
+  return (
+    <Svg size={size} {...props}>
+      <path d="M3 8c1.8-1.7 3.6-1.7 5.4 0s3.6 1.7 5.4 0 3.6-1.7 5.4 0" />
+      <path d="M3 13c1.8-1.7 3.6-1.7 5.4 0s3.6 1.7 5.4 0 3.6-1.7 5.4 0" />
+      <path d="M3 18c1.8-1.7 3.6-1.7 5.4 0s3.6 1.7 5.4 0 3.6-1.7 5.4 0" />
+    </Svg>
+  );
+}

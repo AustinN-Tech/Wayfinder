@@ -320,7 +320,6 @@ def unlock_achievement(conn: sqlite3.Connection, user_id: str, code: str) -> Non
         )
     logger.info("Unlocked achievement for %s: %s", user_id, code)
 
-                PRIMARY KEY (user_id, achievement_id),
 
 @error_handling
 @db_connection_handling
