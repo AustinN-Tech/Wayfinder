@@ -147,8 +147,9 @@ export function FoldedMap({ size = 28, ...props }) {
       {...props}
     >
       <path d="M3.4 6.1 9 4.1l6 2 5.6-1.9v13.7L15 19.9l-6-2-5.6 1.9z" />
-      <path d="M9 4.1v13.8M15 6.1v13.8" strokeWidth="1.3" opacity="0.7" />
-      <path d="M10.3 10.1 13.3 13.1M13.3 10.1 10.3 13.1" strokeWidth="1.9" />
+      {/* the folds sit back from the outline, or the panels read as separate
+          boxes rather than one sheet creased twice */}
+      <path d="M9 4.1v13.8M15 6.1v13.8" strokeWidth="1.2" opacity="0.5" />
     </svg>
   );
 }
