@@ -46,6 +46,7 @@ def _ensure_db():
     db.create_db()
     db.create_achievements_db()
     db.create_user_achievements_db()
+    db.create_friendships_db()
     achievements.seed_defaults()
     load_current_user()  # best-effort: sets g.user if a valid token was sent
 
@@ -222,6 +223,9 @@ def update_item(item_id):
             if key in form:
                 db.update_item(item, key, form.get(key, type=float), user_id=user_id)
                 updated_any = True
+        if "is_favorite" in form:
+            db.update_item(item, "is_favorite", form.get("is_favorite", type=int) or 0, user_id=user_id)
+            updated_any = True
     except ValueError:
         abort(404, description="Item not found")
 
@@ -264,6 +268,139 @@ def remove_item(item_id):
 @app.get("/api/achievements")
 def list_achievements():
     return jsonify(achievements.get_all_with_progress(_current_user_id()))
+
+
+def _user_to_dict(user):
+    return {
+        "user_id": user.user_id,
+        "username": user.username,
+        "display_name": user.display_name,
+        "avatar_url": user.avatar_url,
+    }
+
+
+@app.get("/api/me")
+def get_me():
+    user = db.get_user_by_id(_current_user_id())
+    return jsonify(_user_to_dict(user))
+
+
+@app.put("/api/me/profile")
+def update_my_profile():
+    """Best-effort sync of display_name/avatar_url from the Auth0 profile.
+
+    Called once after login - never touches username, which the user sets
+    deliberately below since it's the public, shareable identifier. Also
+    never overwrites an avatar_url the user already has (from a previous
+    login's sync, or from /api/me/avatar), so uploading a custom picture
+    sticks across future logins instead of being clobbered by Auth0's.
+    """
+    user = db.get_user_by_id(_current_user_id())
+    form = request.form
+    if form.get("display_name"):
+        db.update_user(user, "display_name", form.get("display_name"))
+    if form.get("avatar_url") and not user.avatar_url:
+        db.update_user(user, "avatar_url", form.get("avatar_url"))
+    return jsonify(_user_to_dict(user))
+
+
+@app.post("/api/me/avatar")
+def upload_my_avatar():
+    user = db.get_user_by_id(_current_user_id())
+    if "image" not in request.files or request.files["image"].filename == "":
+        abort(400, description="An 'image' file is required")
+    try:
+        tmp_path = storage.save_upload_to_tempfile(request.files["image"])
+    except ValueError as exc:
+        abort(400, description=str(exc))
+    try:
+        stored_path = storage.add_image_file(tmp_path)
+    finally:
+        tmp_path.unlink(missing_ok=True)
+    db.update_user(user, "avatar_url", stored_path.name)
+    return jsonify(_user_to_dict(user))
+
+
+@app.put("/api/me/username")
+def update_my_username():
+    user = db.get_user_by_id(_current_user_id())
+    username = (request.form.get("username") or "").strip().lower()
+    if not (3 <= len(username) <= 24) or not username.replace("_", "").isalnum():
+        abort(400, description="Username must be 3-24 characters: letters, numbers, underscores")
+    try:
+        db.update_user(user, "username", username)
+    except Exception as exc:
+        if "UNIQUE" in str(exc):
+            abort(400, description="That username is already taken")
+        raise
+    return jsonify(_user_to_dict(user))
+
+
+@app.get("/api/users/search")
+def search_users():
+    query = (request.args.get("q") or "").strip().lower()
+    if len(query) < 2:
+        return jsonify([])
+    matches = db.search_users_by_username(query, exclude_user_id=_current_user_id())
+    return jsonify([_user_to_dict(match) for match in matches])
+
+
+@app.get("/api/friends")
+def list_friends():
+    user_id = _current_user_id()
+    return jsonify(
+        friends=[_user_to_dict(u) for u in db.list_friends(user_id)],
+        incoming=[_user_to_dict(u) for u in db.list_incoming_requests(user_id)],
+        outgoing=[_user_to_dict(u) for u in db.list_outgoing_requests(user_id)],
+    )
+
+
+@app.post("/api/friends/<int:target_user_id>")
+def send_friend_request(target_user_id):
+    user_id = _current_user_id()
+    if db.get_user_by_id(target_user_id) is None:
+        abort(404, description="User not found")
+    try:
+        db.send_friend_request(user_id, target_user_id)
+    except ValueError as exc:
+        abort(400, description=str(exc))
+    return "", 201
+
+
+@app.post("/api/friends/<int:requester_user_id>/accept")
+def accept_friend_request(requester_user_id):
+    user_id = _current_user_id()
+    try:
+        db.accept_friend_request(user_id, requester_user_id)
+    except ValueError as exc:
+        abort(400, description=str(exc))
+    return "", 204
+
+
+@app.delete("/api/friends/<int:other_user_id>")
+def remove_friend(other_user_id):
+    db.remove_friendship(_current_user_id(), other_user_id)
+    return "", 204
+
+
+@app.get("/api/users/<int:other_user_id>/profile")
+def get_public_profile(other_user_id):
+    """A friend's profile only - achievements, activity, favorite find. Never
+    their full catalog of entries (location, descriptions, etc)."""
+    user_id = _current_user_id()
+    if not db.are_friends(user_id, other_user_id):
+        abort(404, description="User not found")
+    other = db.get_user_by_id(other_user_id)
+    if other is None:
+        abort(404, description="User not found")
+
+    favorite = db.get_favorite_item(other_user_id)
+    return jsonify(
+        user=_user_to_dict(other),
+        achievements=achievements.get_all_with_progress(other_user_id),
+        activity=db.get_activity_by_day(other_user_id),
+        favorite=_item_to_dict(favorite) if favorite else None,
+    )
 
 
 @app.get("/api/images/<path:filename>")

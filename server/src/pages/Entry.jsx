@@ -24,7 +24,11 @@ export default function Entry() {
   const navigate = useNavigate();
   const [item, setItem] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+<<<<<<< HEAD
   const [deleting, setDeleting] = useState(false);
+=======
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
+>>>>>>> origin
 
   useEffect(() => {
     getItem(id)
@@ -32,6 +36,7 @@ export default function Entry() {
       .catch((err) => setErrorMessage(err.message));
   }, [id]);
 
+<<<<<<< HEAD
   async function handleDelete() {
     if (deleting || !item) return;
     if (!window.confirm(`Delete "${item.name}"? This can't be undone.`)) return;
@@ -44,6 +49,15 @@ export default function Entry() {
       setErrorMessage(err.message);
       setDeleting(false);
     }
+=======
+  function toggleFavorite() {
+    if (favoriteBusy) return;
+    setFavoriteBusy(true);
+    setFavorite(item.id, !item.is_favorite)
+      .then(setItem)
+      .catch((err) => setErrorMessage(err.message))
+      .finally(() => setFavoriteBusy(false));
+>>>>>>> origin
   }
 
   if (errorMessage) {
@@ -74,6 +88,16 @@ export default function Entry() {
 
       <figure className="entry-figure">
         <AuthImage className="entry-photo" path={item.image_path} alt={item.name} />
+        <button
+          type="button"
+          className={`entry-favorite-toggle ${item.is_favorite ? "active" : ""}`}
+          onClick={toggleFavorite}
+          disabled={favoriteBusy}
+          aria-pressed={!!item.is_favorite}
+          aria-label={item.is_favorite ? "Remove as favorite" : "Mark as favorite"}
+        >
+          ★
+        </button>
       </figure>
 
       <p className="entry-tags">
