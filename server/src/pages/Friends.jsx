@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import PageDoodles from "../components/PageDoodles";
 import {
   getFriends,
   searchUsers,
   sendFriendRequest,
   acceptFriendRequest,
   removeFriend,
+  avatarSrc,
 } from "../lib/api";
 
 function UserRow({ user, children }) {
@@ -15,7 +15,7 @@ function UserRow({ user, children }) {
       <Link to={`/friends/${user.user_id}`} className="friend-row-identity">
         <img
           className="friend-row-avatar"
-          src={user.avatar_url || "/images/stamp-icons/first-find-stamp.png"}
+          src={avatarSrc(user.avatar_url) || "/images/stamp-icons/first-find-stamp.png"}
           alt=""
         />
         <span>{user.display_name || `@${user.username}`}</span>
@@ -74,7 +74,6 @@ export default function Friends() {
 
   return (
     <main className="page-body friends-screen">
-      <PageDoodles variant="profile" />
       <h1>Friends</h1>
       <Link to="/profile" className="profile-friends-link">
         {"<-"} Back to profile
@@ -83,7 +82,6 @@ export default function Friends() {
       {errorMessage && <p role="alert">{errorMessage}</p>}
 
       <section className="profile-section">
-        <h2>Find people</h2>
         <input
           type="search"
           className="friend-search"

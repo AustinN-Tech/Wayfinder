@@ -290,13 +290,34 @@ def update_my_profile():
     """Best-effort sync of display_name/avatar_url from the Auth0 profile.
 
     Called once after login - never touches username, which the user sets
-    deliberately below since it's the public, shareable identifier.
+    deliberately below since it's the public, shareable identifier. Also
+    never overwrites an avatar_url the user already has (from a previous
+    login's sync, or from /api/me/avatar), so uploading a custom picture
+    sticks across future logins instead of being clobbered by Auth0's.
     """
     user = db.get_user_by_id(_current_user_id())
     form = request.form
-    for key in ("display_name", "avatar_url"):
-        if form.get(key):
-            db.update_user(user, key, form.get(key))
+    if form.get("display_name"):
+        db.update_user(user, "display_name", form.get("display_name"))
+    if form.get("avatar_url") and not user.avatar_url:
+        db.update_user(user, "avatar_url", form.get("avatar_url"))
+    return jsonify(_user_to_dict(user))
+
+
+@app.post("/api/me/avatar")
+def upload_my_avatar():
+    user = db.get_user_by_id(_current_user_id())
+    if "image" not in request.files or request.files["image"].filename == "":
+        abort(400, description="An 'image' file is required")
+    try:
+        tmp_path = storage.save_upload_to_tempfile(request.files["image"])
+    except ValueError as exc:
+        abort(400, description=str(exc))
+    try:
+        stored_path = storage.add_image_file(tmp_path)
+    finally:
+        tmp_path.unlink(missing_ok=True)
+    db.update_user(user, "avatar_url", stored_path.name)
     return jsonify(_user_to_dict(user))
 
 

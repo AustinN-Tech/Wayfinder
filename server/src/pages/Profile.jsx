@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useAuth0 } from "@auth0/auth0-react";
-import PageDoodles from "../components/PageDoodles";
 import ActivityHeatmap from "../components/ActivityHeatmap";
 import AuthImage from "../components/AuthImage";
 import StampAlbum from "../components/StampAlbum";
-import { getItems, getAchievements, getMe, setMyUsername } from "../lib/api";
+import { getItems, getAchievements, getMe, setMyUsername, uploadAvatar, avatarSrc } from "../lib/api";
 import { toStampAchievements } from "../lib/achievements";
 
 function UsernameEditor({ me, onSaved }) {
@@ -26,9 +25,6 @@ function UsernameEditor({ me, onSaved }) {
 
   return (
     <form className="profile-username-form" onSubmit={save}>
-      <label htmlFor="username">
-        {me.username ? "Your public username" : "Claim a public username to add friends"}
-      </label>
       <div className="profile-username-row">
         <span className="profile-username-at">@</span>
         <input
@@ -53,12 +49,25 @@ export default function Profile() {
   const [achievements, setAchievements] = useState(null);
   const [me, setMe] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     getItems().then(setItems).catch((err) => setErrorMessage(err.message));
     getAchievements().then(setAchievements).catch(() => {});
     getMe().then(setMe).catch(() => {});
   }, []);
+
+  function handleAvatarPick(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || avatarBusy) return;
+    setAvatarBusy(true);
+    uploadAvatar(file)
+      .then(setMe)
+      .catch((err) => setErrorMessage(err.message))
+      .finally(() => setAvatarBusy(false));
+  }
 
   const favorite = useMemo(() => {
     if (!items || items.length === 0) return null;
@@ -74,25 +83,35 @@ export default function Profile() {
     return toStampAchievements(achievements).filter((stamp) => stamp.unlocked);
   }, [achievements]);
 
+  const avatarUrl = me?.avatar_url ? avatarSrc(me.avatar_url) : user?.picture;
+
   return (
     <main className="page-body profile-screen">
-      <PageDoodles variant="profile" />
       <h1>Profile</h1>
 
       <div className="profile-card">
-        <img
-          className="profile-avatar"
-          src={user?.picture}
-          alt=""
-          referrerPolicy="no-referrer"
+        <button
+          type="button"
+          className="profile-avatar-button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={avatarBusy}
+          aria-label="Change profile picture"
+        >
+          <img className="profile-avatar" src={avatarUrl} alt="" referrerPolicy="no-referrer" />
+          <span className="profile-avatar-edit">{avatarBusy ? "..." : "Edit"}</span>
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={handleAvatarPick}
         />
-        <div>
+        <div className="profile-identity">
           <p className="profile-name">{user?.name || user?.nickname || "Explorer"}</p>
-          <p className="profile-email">{user?.email}</p>
+          {me && <UsernameEditor me={me} onSaved={setMe} />}
         </div>
       </div>
-
-      {me && <UsernameEditor me={me} onSaved={setMe} />}
 
       <Link to="/friends" className="profile-friends-link">
         Friends {"->"}

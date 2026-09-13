@@ -1979,10 +1979,23 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin: 1.5rem 0;
+  margin: 1rem 0 0.75rem;
+}
+
+.profile-avatar-button {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .profile-avatar {
+  display: block;
   width: 64px;
   height: 64px;
   border-radius: 50%;
@@ -1991,8 +2004,32 @@
   background: var(--accent-bg);
 }
 
+.profile-avatar-edit {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(61, 40, 23, 0.55);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.profile-avatar-button:hover .profile-avatar-edit,
+.profile-avatar-button:focus-visible .profile-avatar-edit {
+  opacity: 1;
+}
+
+.profile-identity {
+  min-width: 0;
+}
+
 .profile-name {
-  margin: 0;
+  margin: 0 0 0.35rem;
   font-size: 1.15rem;
   font-weight: 600;
   color: var(--text-h);
@@ -2005,12 +2042,12 @@
 }
 
 .profile-section {
-  margin: 2rem 0;
+  margin: 1.5rem 0;
 }
 
 .profile-section h2 {
-  margin: 0 0 0.75rem;
-  font-size: 1rem;
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
   color: var(--text-h);
 }
 
@@ -2060,10 +2097,11 @@
 }
 
 .heatmap-cell {
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   border-radius: 2px;
-  background: var(--accent-bg);
+  background: rgba(139, 105, 20, 0.14);
+  border: 1px solid rgba(74, 52, 32, 0.28);
 }
 
 .heatmap-cell.level-empty {
@@ -2089,21 +2127,14 @@
 }
 
 .profile-username-form {
-  margin: 0 0 0.5rem;
-}
-
-.profile-username-form label {
-  display: block;
-  margin-bottom: 0.35rem;
-  font-size: 0.8rem;
-  color: var(--text);
+  margin: 0;
 }
 
 .profile-username-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  max-width: 360px;
+  gap: 0.4rem;
+  max-width: 300px;
 }
 
 .profile-username-at {
@@ -2112,27 +2143,27 @@
 
 .profile-username-row input {
   flex: 1;
-  padding: 0.5rem 0.6rem;
+  padding: 0.3rem 0.5rem;
   border-radius: 4px;
   border: 1px solid rgba(74, 52, 32, 0.35);
   background: #fbf5e6;
   color: var(--text-h);
-  font: inherit;
+  font-size: 0.85rem;
 }
 
 .profile-username-row button {
-  padding: 0.5rem 0.9rem;
+  padding: 0.3rem 0.7rem;
   border-radius: 4px;
   border: none;
   background: var(--accent);
   color: #fff;
-  font: inherit;
+  font-size: 0.8rem;
   cursor: pointer;
 }
 
 .profile-friends-link {
   display: inline-block;
-  margin: 0.25rem 0 1.25rem;
+  margin: 0.1rem 0 1rem;
   color: var(--text-h);
   font-weight: 600;
   text-decoration: none;
