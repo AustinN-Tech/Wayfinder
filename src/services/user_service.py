@@ -7,13 +7,7 @@ from utilities.util import error_handling
 
 @error_handling
 def get_or_create_user(auth0_id: str) -> User:
-    user = get_user_by_auth0_id(auth0_id)
-
-    if user is None:
-        user = User(auth0_id=auth0_id)
-        add_user(user)
-
-    return user
+    return user_table.get_or_create_user(auth0_id)
 
 @error_handling
 def update_user(auth0_id: str, column: str, value: str | None) -> User:
@@ -43,4 +37,4 @@ def delete_auth0_user(auth0_id: str):
 
 def delete_account(user: User):
     delete_auth0_user(user.auth0_id)
-    delete_user(user.user_id)
+    delete_user(user)
