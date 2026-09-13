@@ -30,7 +30,8 @@ function buildWeeks(countsByDay) {
   for (let i = 0; i < totalDays; i++) {
     const date = new Date(start.getTime() + i * MS_PER_DAY);
     const key = dateKey(date);
-    days.push({ key, count: countsByDay[key] || 0 });
+    // the date rides along so the readout can name the day
+    days.push({ key, date, count: countsByDay[key] || 0 });
   }
 
   const weeks = [];
@@ -46,6 +47,13 @@ function levelFor(count) {
   if (count <= 3) return 2;
   return 3;
 }
+
+// A mouse reads this by hovering, a phone by tapping - so the prompt shouldn't
+// tell a desktop user to tap. Hover capability doesn't change at runtime.
+const CAN_HOVER = typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches;
+const PROMPT = CAN_HOVER
+  ? "Hover over a day to see what you logged"
+  : "Tap a day to see what you logged";
 
 function describe(day) {
   const when = day.date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -79,18 +87,30 @@ export default function ActivityHeatmap({ items }) {
           on a phone, and anything positioned over a cell gets clipped by that
           scroll container. This also gives touch somewhere to show up. */}
       <p className="heatmap-readout" role="status">
-        {active ? describe(active) : "Tap a day to see what you logged"}
+        {active ? describe(active) : PROMPT}
       </p>
 
       <div className="heatmap-scroll" ref={scroller}>
         <div className="heatmap-grid">
         {weeks.map((week, weekIndex) => (
           <div className="heatmap-col" key={weekIndex}>
+            {/* the rolling window ends today, so every cell is a real day
+                that has already happened - none are placeholders */}
             {week.map((day) => (
-              <div
+              <button
                 key={day.key}
-                className={`heatmap-cell level-${levelFor(day.count)}`}
-                title={`${day.count} find${day.count === 1 ? "" : "s"} on ${day.key}`}
+                type="button"
+                className={`heatmap-cell level-${levelFor(day.count)} ${
+                  active?.key === day.key ? "is-active" : ""
+                }`}
+                aria-label={describe(day)}
+                onPointerEnter={() => setActive(day)}
+                onPointerLeave={() =>
+                  setActive((current) => (current?.key === day.key ? null : current))
+                }
+                onFocus={() => setActive(day)}
+                onBlur={() => setActive(null)}
+                onClick={() => setActive(day)}
               />
             ))}
           </div>

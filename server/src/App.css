@@ -2662,6 +2662,18 @@
   margin: 0.5rem 0;
 }
 
+/* The album's tooltip normally drops below its stamp, which this scroll box
+   clips - so you had to scroll to read it. Inside the box it sits over the
+   stamp instead, which always lands in view. */
+.profile-achievements .stamp-tooltip {
+  top: auto;
+  bottom: 8px;
+}
+
+.profile-achievements .stamp-tooltip::before {
+  display: none;
+}
+
 @media (max-width: 760px) {
   .profile-columns {
     grid-template-columns: minmax(0, 1fr);
