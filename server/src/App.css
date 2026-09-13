@@ -1421,7 +1421,7 @@
   color: rgba(139, 115, 85, 0.6);
 }
 
-/* one centred line - "Discovered at [where] on [when]" - reading as a single
+/* one centred line - "Discovered in [where] on [when]" - reading as a single
    fact. The rule runs the full column width regardless of how short it is. */
 .entry-meta {
   display: flex;
