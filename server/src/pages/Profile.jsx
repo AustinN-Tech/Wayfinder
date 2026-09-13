@@ -121,36 +121,38 @@ export default function Profile() {
       {!items && !errorMessage && <p>Gathering your history...</p>}
 
       {items && (
-        <>
+        <div className="profile-columns">
           <section className="profile-section">
             <h2>Activity</h2>
             <ActivityHeatmap items={items} />
           </section>
 
-          <section className="profile-section">
-            <h2>Favorite find</h2>
-            {favorite ? (
-              <Link to={`/entry/${favorite.id}`} className="profile-favorite">
-                <AuthImage path={favorite.image_path} alt={favorite.name} />
-                <div>
-                  <strong>{favorite.name}</strong>
-                  <span>{favorite.sub_category}</span>
-                </div>
-              </Link>
-            ) : (
-              <p>Nothing logged yet — your first find will show up here.</p>
-            )}
-          </section>
+          <div className="profile-column-side">
+            <section className="profile-section">
+              <h2>Favorite find</h2>
+              {favorite ? (
+                <Link to={`/entry/${favorite.id}`} className="profile-favorite">
+                  <AuthImage path={favorite.image_path} alt={favorite.name} />
+                  <div>
+                    <strong>{favorite.name}</strong>
+                    <span>{favorite.sub_category}</span>
+                  </div>
+                </Link>
+              ) : (
+                <p>Nothing logged yet — your first find will show up here.</p>
+              )}
+            </section>
 
-          <section className="profile-section">
-            <h2>Achievements ({unlockedCount})</h2>
-            {unlockedStamps && unlockedStamps.length > 0 ? (
-              <StampAlbum achievements={unlockedStamps} />
-            ) : (
-              <p>Log finds and earn your first stamp — see them all on the Stamps page.</p>
-            )}
-          </section>
-        </>
+            <section className="profile-section">
+              <h2>Achievements ({unlockedCount})</h2>
+              {unlockedStamps && unlockedStamps.length > 0 ? (
+                <StampAlbum achievements={unlockedStamps} />
+              ) : (
+                <p>Log finds and earn your first stamp — see them all on the Stamps page.</p>
+              )}
+            </section>
+          </div>
+        </div>
       )}
     </main>
   );

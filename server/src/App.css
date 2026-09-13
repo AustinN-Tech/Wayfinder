@@ -2041,8 +2041,34 @@
   color: var(--text);
 }
 
+.profile-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0 2.5rem;
+  align-items: start;
+}
+
+.profile-column-side {
+  min-width: 0;
+}
+
+.profile-column-side .stamp-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 700px) {
+  .profile-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
 .profile-section {
   margin: 1.5rem 0;
+}
+
+.profile-columns > .profile-section,
+.profile-column-side > .profile-section:first-child {
+  margin-top: 0;
 }
 
 .profile-section h2 {
