@@ -24,6 +24,7 @@ from .items_table import (
     update_item,
     return_all_items,
     get_item_rule_counts,
+    get_user_item_coordinates,
     get_item_by_name,
     get_item_by_id,
     full_delete,
@@ -38,6 +39,7 @@ from .achievements_table import (
     return_all_achievements,
     update_achievement,
     delete_achievement,
+    sync_achievement_definitions,
 )
 from .user_table import (
     USER_COLUMNS,

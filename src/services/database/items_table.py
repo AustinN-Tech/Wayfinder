@@ -173,11 +173,25 @@ def get_item_rule_counts(conn: sqlite3.Connection, user_id: int) -> dict[str, in
     validate_user_id(user_id)
     row = conn.execute("""
         SELECT COUNT(*), COUNT(image_path), COUNT(DISTINCT category),
-               COUNT(DISTINCT sub_category), COUNT(DISTINCT time_period)
+               COUNT(DISTINCT sub_category), COUNT(DISTINCT NULLIF(TRIM(time_period), '')),
+               COUNT(CASE WHEN category = 'NATURAL' AND sub_category = 'FOSSIL' THEN 1 END),
+               COUNT(CASE WHEN category = 'NATURAL' AND sub_category = 'GEOLOGY' THEN 1 END)
         FROM heritage_items WHERE user_id = ?
     """, (user_id,)).fetchone()
     return dict(zip(("entry_count", "with_photo", "distinct_categories",
-                     "distinct_sub_categories", "distinct_time_periods"), row))
+                     "distinct_sub_categories", "distinct_time_periods", "fossil_count", "geology_count"), row))
+
+
+@error_handling
+@db_connection_handling
+def get_user_item_coordinates(conn: sqlite3.Connection, user_id: int) -> list[tuple[float, float]]:
+    """Return distinct recorded coordinates for this user's discoveries only."""
+    validate_user_id(user_id)
+    return conn.execute(
+        "SELECT DISTINCT latitude, longitude FROM heritage_items "
+        "WHERE user_id = ? AND latitude IS NOT NULL AND longitude IS NOT NULL",
+        (user_id,),
+    ).fetchall()
 
 
 @error_handling
