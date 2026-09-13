@@ -2354,12 +2354,18 @@
 
 /* ---------- map ---------- */
 
+/* the same sheet as the page underneath it, washed a shade lighter so the
+   strip still reads as its own piece of paper */
 .timeline-controls {
   margin-top: 1rem;
   padding: 0.85rem 1rem 1rem;
-  background: var(--code-bg);
   border: 1px solid var(--border);
   border-radius: 10px;
+  background:
+    linear-gradient(rgba(250, 243, 226, 0.8), rgba(250, 243, 226, 0.8)),
+    url("/images/textures/paper-texture.png"),
+    linear-gradient(168deg, #f4e9d0, #ecdcbd 55%, #e6d3b0);
+  background-size: auto, 640px, auto;
 }
 
 .era-slider {

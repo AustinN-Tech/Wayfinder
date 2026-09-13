@@ -79,7 +79,6 @@ export default function Map() {
         title="Map"
         subtitle="Every located find, pinned where you came across it. Drag the slider to travel by era."
         accent="#3f6b4e"
-        note={items ? `${located.length} ${located.length === 1 ? "find" : "finds"} pinned` : undefined}
       />
 
       {errorMessage && <p role="alert">{errorMessage}</p>}
