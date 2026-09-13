@@ -176,6 +176,127 @@
   transition: filter 0.8s ease;
 }
 
+/* Shown when getUserMedia refuses. The viewfinder is a black full-bleed
+   surface, so anything in normal flow after the video is pushed out of sight
+   by overflow: hidden - this has to sit over the top of it. */
+.camera-trouble {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 5vw, 2rem);
+  background: rgba(18, 11, 5, 0.82);
+}
+
+.camera-trouble-card {
+  box-sizing: border-box;
+  width: min(30rem, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: clamp(1.35rem, 4vw, 1.9rem);
+  border-radius: 4px;
+  color: #3d2817;
+  text-align: center;
+  background:
+    linear-gradient(rgba(248, 240, 220, 0.82), rgba(248, 240, 220, 0.82)),
+    url("/images/textures/paper-texture.png"),
+    linear-gradient(168deg, #f4e9d0, #e6d3b0);
+  background-size: auto, 640px, auto;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
+}
+
+.camera-trouble-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 0.7rem;
+  border-radius: 50%;
+  color: #f9f2df;
+  background: #8f6518;
+}
+
+.camera-trouble-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.camera-trouble-card p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.camera-trouble-steps {
+  margin: 0.9rem 0 0;
+  padding-left: 1.3rem;
+  text-align: left;
+  line-height: 1.6;
+}
+
+.camera-trouble-steps li {
+  margin-bottom: 0.2rem;
+}
+
+.camera-trouble-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-top: 1.2rem;
+}
+
+.camera-trouble-btn {
+  padding: 0.55rem 1.15rem;
+  border: 1px solid #8f6518;
+  border-radius: 3px;
+  font: inherit;
+  font-size: 0.95rem;
+  color: #f9f2df;
+  background: #8f6518;
+  cursor: pointer;
+}
+
+.camera-trouble-btn.is-secondary {
+  color: #5a4026;
+  background: transparent;
+  border-color: rgba(90, 64, 38, 0.5);
+}
+
+.camera-trouble-btn:focus-visible {
+  outline: 2px solid #3d2817;
+  outline-offset: 2px;
+}
+
+/* A capture failure, unlike the panel above, leaves the viewfinder usable -
+   so it sits above the frame as a notice rather than covering it. */
+.camera-capture-error {
+  position: absolute;
+  left: 50%;
+  top: clamp(4.5rem, 12vh, 7rem);
+  z-index: 4;
+  max-width: min(26rem, calc(100% - 2rem));
+  margin: 0;
+  padding: 0.6rem 1rem;
+  transform: translateX(-50%);
+  border-radius: 3px;
+  text-align: center;
+  color: #f9f2df;
+  background: rgba(24, 15, 7, 0.88);
+}
+
+@media (hover: hover) {
+  .camera-trouble-btn:hover {
+    background: #7a5614;
+  }
+
+  .camera-trouble-btn.is-secondary:hover {
+    background: rgba(90, 64, 38, 0.1);
+  }
+}
+
 .camera-preview.scanning {
   filter: blur(24px) brightness(0.6);
 }
