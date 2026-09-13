@@ -23,7 +23,6 @@ export default function Feed() {
         title="Entries"
         subtitle="Everything you've catalogued so far, gathered by what it is."
         accent="#8f6518"
-        note={items ? `${items.length} ${items.length === 1 ? "find" : "finds"} catalogued` : undefined}
       />
 
       {errorMessage && <p role="alert">{errorMessage}</p>}

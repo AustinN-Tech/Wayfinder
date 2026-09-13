@@ -18,7 +18,7 @@ export default function Stamps() {
     <main className="page-body screen">
       <PageHeader
         title="Stamps"
-        subtitle="Earned along the way. Hover or tap a stamp to see your progress."
+        subtitle="Earned along the way. Hover or tap a stamp for its progress."
         accent="#6b4a7d"
         note={
           achievements

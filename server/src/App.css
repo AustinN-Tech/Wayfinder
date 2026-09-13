@@ -2274,7 +2274,9 @@
 }
 
 .page-header-subtitle {
-  max-width: 54ch;
+  /* wide enough that the captions sit on one line on a desktop - they're all
+     kept under this, and still wrap on a phone where one line can't fit */
+  max-width: 70ch;
   margin: 0.45rem 0 0;
   font-family: "Kalam", "Crimson Text", serif;
   font-size: 0.92rem;
