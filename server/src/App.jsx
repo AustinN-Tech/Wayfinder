@@ -1,5 +1,4 @@
-import { Routes, Route, useLocation } from "react-router";
-import Home from "./pages/Home";
+import { Routes, Route, Navigate, useLocation } from "react-router";
 import Feed from "./pages/Feed";
 import Map from "./pages/Map";
 import JournalShell from "./components/JournalShell";
@@ -14,7 +13,7 @@ function App() {
 
   const routes = (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Navigate to="/feed" replace />} />
       <Route path="/feed" element={<Feed />} />
       <Route path="/map" element={<Map />} />
       <Route path="/camera" element={<Camera />} />

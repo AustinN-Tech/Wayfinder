@@ -1,9 +1,8 @@
 import { NavLink, useLocation } from "react-router";
 import { Camera } from "lucide-react";
-import { CompassRose, OpenBook, FoldedMap, Medal } from "./icons";
+import { OpenBook, FoldedMap, Medal } from "./icons";
 
 const ITEMS = [
-  { to: "/", label: "Home", Icon: CompassRose, color: "#a8452f", end: true },
   { to: "/feed", label: "Entries", Icon: OpenBook, color: "#8f6518" },
   { to: "/map", label: "Map", Icon: FoldedMap, color: "#3f6b4e" },
   { label: "Awards", Icon: Medal, color: "#6b4a7d" },

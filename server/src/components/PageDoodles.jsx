@@ -89,7 +89,6 @@ const SHAPES = {
 };
 
 const VARIANTS = {
-  home: ["compass", "feather", "stars", "curl"],
   feed: ["compass", "stars", "fern", "shell", "mountains", "route", "glass"],
   map: ["route", "mountains", "compass", "stars"],
   entry: ["ammonite", "stars", "fern", "glass"],
