@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import AuthImage from "../components/AuthImage";
 import PageDoodles from "../components/PageDoodles";
 import { getItems, getCategories } from "../lib/api";
+import { ERA_YEAR_RANGES } from "../lib/eraYears";
 
 // A simple ink-drop pin, on-brand instead of Leaflet's default blue marker
 // (which also needs asset-path workarounds under Vite - this sidesteps that).
@@ -133,6 +134,9 @@ export default function Map() {
                   {selectedEra.category === "NATURAL" ? "Natural" : "Cultural"}
                 </span>
                 {selectedEra.period}
+                {ERA_YEAR_RANGES[selectedEra.period] && (
+                  <span className="era-years">({ERA_YEAR_RANGES[selectedEra.period]})</span>
+                )}
               </>
             ) : (
               "All eras"
