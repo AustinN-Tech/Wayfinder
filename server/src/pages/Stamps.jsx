@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import StampAlbum from "../components/StampAlbum";
-import { PostageStamp } from "../components/icons";
 import { getAchievements } from "../lib/api";
 import { toStampAchievements } from "../lib/achievements";
 
@@ -20,8 +19,12 @@ export default function Stamps() {
       <PageHeader
         title="Stamps"
         subtitle="Earned along the way. Hover or tap a stamp to see your progress."
-        icon={PostageStamp}
         accent="#6b4a7d"
+        note={
+          achievements
+            ? `${achievements.filter((stamp) => stamp.unlocked).length} of ${achievements.length} earned`
+            : undefined
+        }
       />
 
       {errorMessage && <p role="alert">{errorMessage}</p>}
